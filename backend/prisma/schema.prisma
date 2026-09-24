@@ -1,0 +1,373 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  PRINCIPAL
+  ADMISSION_OFFICE
+  HOD
+  FACULTY
+  STUDENT
+  PARENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+  LATE
+}
+
+enum LeaveType {
+  CASUAL
+  SICK
+  ON_DUTY_EVENT
+  ACADEMIC_DUTY
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+}
+
+enum ExamModerationStatus {
+  DRAFT
+  SUBMITTED_TO_HOD
+  VERIFIED_BY_HOD
+  PUBLISHED_BY_PRINCIPAL
+}
+
+model User {
+  id                      String         @id @default(uuid())
+  email                   String         @unique
+  username                String         @unique
+  passwordHash            String
+  role                    Role
+  firstName               String
+  lastName                String
+  phone                   String?
+  avatarUrl               String?
+  departmentId            String?
+  department              Department?    @relation("UserDepartment", fields: [departmentId], references: [id])
+  isActive                Boolean        @default(true)
+  isPasswordResetRequired Boolean        @default(false)
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+
+  studentProfile          Student?
+  facultyProfile          Faculty?
+  submittedLeaves         LeaveRequest[] @relation("ApplicantLeaves")
+  reviewedLeaves          LeaveRequest[] @relation("HODReviewedLeaves")
+  auditLogs               AuditLog[]
+}
+
+model Department {
+  id          String             @id @default(uuid())
+  code        String             @unique // "CSE", "BCA", "AIML", "ME", "ECE", "ISE", "BS"
+  name        String
+  usnCode     String             @unique // "CS", "BC", "AI", "ME", "EC", "IS"
+  hodUserId   String?            @unique
+  users       User[]             @relation("UserDepartment")
+  faculties   Faculty[]          @relation("FacultyHomeDept")
+  courses     Course[]
+  semesters   AcademicSemester[]
+  leaves      LeaveRequest[]
+}
+
+model AcademicSemester {
+  id             String               @id @default(uuid())
+  departmentId   String
+  department     Department           @relation(fields: [departmentId], references: [id])
+  semesterNumber Int                  // 1 to 8
+  academicYear   String               // "2026-2027"
+  startDate      DateTime             @db.Date
+  endDate        DateTime             @db.Date
+  isActive       Boolean              @default(false)
+  isLocked       Boolean              @default(false)
+
+  enrollments    SemesterEnrollment[]
+  offerings      CourseOffering[]
+  invoices       Invoice[]
+
+  @@unique([departmentId, semesterNumber, academicYear])
+}
+
+model Student {
+  id              String               @id @default(uuid())
+  userId          String               @unique
+  user            User                 @relation(fields: [userId], references: [id])
+  
+  usn             String               @unique
+  usnCollegeCode  String               @default("1RR")
+  usnYear         Int
+  usnBranch       String
+  usnSequence     Int
+  
+  dateOfBirth     DateTime             @db.Date
+  admissionDate   DateTime             @default(now()) @db.Date
+  currentSemester Int                  @default(1)
+  quota           String               // "MERIT", "MANAGEMENT", "CET"
+  guardianName    String?
+  guardianPhone   String?
+  
+  isActive        Boolean              @default(true)
+  deletedAt       DateTime?
+  deletionReason  String?
+  deletedById     String?
+
+  enrollments     SemesterEnrollment[]
+  attendance      AttendanceRecord[]
+  submissions     AssignmentSubmission[]
+  marks           MarksEntry[]
+  invoices        Invoice[]
+
+  @@index([usnYear, usnBranch, usnSequence])
+}
+
+model SemesterEnrollment {
+  id                 String           @id @default(uuid())
+  studentId          String
+  student            Student          @relation(fields: [studentId], references: [id])
+  academicSemesterId String
+  academicSemester   AcademicSemester @relation(fields: [academicSemesterId], references: [id])
+  section            String           // "A", "B"
+  sgpa               Decimal?         @db.Decimal(4, 2)
+  isDetained         Boolean          @default(false)
+
+  @@unique([studentId, academicSemesterId])
+}
+
+model Faculty {
+  id              String                @id @default(uuid())
+  userId          String                @unique
+  user            User                  @relation(fields: [userId], references: [id])
+  employeeCode    String                @unique
+  designation     String                // "Assistant Professor", "HOD", "Professor"
+  homeDeptId      String
+  homeDepartment  Department            @relation("FacultyHomeDept", fields: [homeDeptId], references: [id])
+  
+  isActive        Boolean               @default(true)
+  deletedAt       DateTime?
+  deletedById     String?
+
+  assignedCourses CourseOffering[]
+  substitutions   FacultySubstitution[]
+}
+
+model Course {
+  id           String           @id @default(uuid())
+  departmentId String
+  department   Department       @relation(fields: [departmentId], references: [id])
+  code         String           @unique
+  name         String
+  credits      Int
+  offerings    CourseOffering[]
+}
+
+model CourseOffering {
+  id                 String              @id @default(uuid())
+  academicSemesterId String
+  academicSemester   AcademicSemester    @relation(fields: [academicSemesterId], references: [id])
+  courseId           String
+  course             Course              @relation(fields: [courseId], references: [id])
+  facultyId          String
+  faculty            Faculty             @relation(fields: [facultyId], references: [id])
+  section            String
+
+  timetableSlots     TimetableSlot[]
+  attendanceSessions AttendanceSession[]
+  assignments        Assignment[]
+  studyMaterials     StudyMaterial[]
+  examSchedules      ExamSchedule[]
+
+  @@unique([academicSemesterId, courseId, section])
+}
+
+model TimetableSlot {
+  id               String                @id @default(uuid())
+  courseOfferingId String
+  courseOffering   CourseOffering        @relation(fields: [courseOfferingId], references: [id])
+  dayOfWeek        Int                   // 1 = Monday ... 6 = Saturday
+  startTimeMinutes Int                   // 09:00 = 540
+  endTimeMinutes   Int                   // 10:00 = 600
+  roomNumber       String
+
+  substitutions    FacultySubstitution[]
+
+  @@index([dayOfWeek, startTimeMinutes, endTimeMinutes, roomNumber])
+}
+
+model AttendanceSession {
+  id               String             @id @default(uuid())
+  courseOfferingId String
+  courseOffering   CourseOffering     @relation(fields: [courseOfferingId], references: [id])
+  sessionDate      DateTime           @db.Date
+  periodNumber     Int
+  markedById       String
+  isLocked         Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+
+  records          AttendanceRecord[]
+
+  @@index([courseOfferingId, sessionDate])
+}
+
+model AttendanceRecord {
+  id        String            @id @default(uuid())
+  sessionId String
+  session   AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student           @relation(fields: [studentId], references: [id])
+  status    AttendanceStatus  @default(PRESENT)
+  remarks   String?
+
+  @@unique([sessionId, studentId])
+}
+
+model LeaveRequest {
+  id              String                @id @default(uuid())
+  applicantId     String
+  applicant       User                  @relation("ApplicantLeaves", fields: [applicantId], references: [id])
+  departmentId    String
+  department      Department            @relation(fields: [departmentId], references: [id])
+  leaveType       LeaveType
+  startDate       DateTime              @db.Date
+  endDate         DateTime              @db.Date
+  reason          String
+  documentUrl     String?
+  status          LeaveStatus           @default(PENDING)
+  reviewedById    String?
+  reviewedBy      User?                 @relation("HODReviewedLeaves", fields: [reviewedById], references: [id])
+  rejectionReason String?
+  createdAt       DateTime              @default(now())
+
+  substitutions   FacultySubstitution[]
+}
+
+model FacultySubstitution {
+  id                  String        @id @default(uuid())
+  leaveRequestId      String
+  leaveRequest        LeaveRequest  @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  timetableSlotId     String
+  timetableSlot       TimetableSlot @relation(fields: [timetableSlotId], references: [id])
+  date                DateTime      @db.Date
+  substituteFacultyId String
+  substituteFaculty   Faculty       @relation(fields: [substituteFacultyId], references: [id])
+}
+
+model ExamSchedule {
+  id               String               @id @default(uuid())
+  courseOfferingId String
+  courseOffering   CourseOffering       @relation(fields: [courseOfferingId], references: [id])
+  examType         String               // "CIE_1", "CIE_2", "SEE_FINAL"
+  maxMarks         Decimal              @db.Decimal(5, 2)
+  weightage        Decimal              @db.Decimal(5, 2)
+  examDate         DateTime             @db.Date
+  status           ExamModerationStatus @default(DRAFT)
+
+  marksEntries     MarksEntry[]
+}
+
+model MarksEntry {
+  id             String       @id @default(uuid())
+  examScheduleId String
+  examSchedule   ExamSchedule @relation(fields: [examScheduleId], references: [id])
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id])
+  marksObtained  Decimal      @db.Decimal(5, 2)
+  isAbsent       Boolean      @default(false)
+
+  @@unique([examScheduleId, studentId])
+}
+
+model Invoice {
+  id                 String               @id @default(uuid())
+  invoiceNumber      String               @unique
+  studentId          String
+  student            Student              @relation(fields: [studentId], references: [id])
+  academicSemesterId String
+  academicSemester   AcademicSemester     @relation(fields: [academicSemesterId], references: [id])
+  totalAmount        Decimal              @db.Decimal(10, 2)
+  paidAmount         Decimal              @default(0.00) @db.Decimal(10, 2)
+  status             InvoiceStatus        @default(PENDING)
+  dueDate            DateTime             @db.Date
+  createdAt          DateTime             @default(now())
+
+  transactions       PaymentTransaction[]
+}
+
+model PaymentTransaction {
+  id              String   @id @default(uuid())
+  invoiceId       String
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id])
+  gatewayRef      String   @unique
+  amount          Decimal  @db.Decimal(10, 2)
+  mode            String   // "UPI", "CARD", "CASH"
+  status          String   // "SUCCESS", "FAILED"
+  transactionDate DateTime @default(now())
+}
+
+model StudyMaterial {
+  id               String         @id @default(uuid())
+  courseOfferingId String
+  courseOffering   CourseOffering @relation(fields: [courseOfferingId], references: [id])
+  title            String
+  description      String?
+  fileUrl          String
+  unitNumber       Int
+  createdAt        DateTime       @default(now())
+}
+
+model Assignment {
+  id                String                 @id @default(uuid())
+  courseOfferingId  String
+  courseOffering    CourseOffering         @relation(fields: [courseOfferingId], references: [id])
+  title             String
+  instructions      String
+  dueDate           DateTime
+  maxMarks          Decimal                @db.Decimal(5, 2)
+  fileAttachmentUrl String?
+  submissions       AssignmentSubmission[]
+}
+
+model AssignmentSubmission {
+  id           String     @id @default(uuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id])
+  submittedAt  DateTime   @default(now())
+  fileUrl      String
+  marksAwarded Decimal?   @db.Decimal(5, 2)
+  feedback     String?
+
+  @@unique([assignmentId, studentId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  targetId  String
+  metaJson  Json?
+  timestamp DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+}
+
