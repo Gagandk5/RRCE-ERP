@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IDepartment extends Document {
   code: string;
@@ -10,11 +10,12 @@ export interface IDepartment extends Document {
 
 const DepartmentSchema = new Schema<IDepartment>(
   {
-    code: { type: String, required: true, unique: true, uppercase: true }, // BCA, CSE, AIML...
+    code: { type: String, required: true, unique: true, uppercase: true },
     name: { type: String, required: true },
-    usnCode: { type: String, required: true, unique: true, uppercase: true }, // BC, CS, AI...
+    usnCode: { type: String, required: true, unique: true, uppercase: true },
   },
   { timestamps: true },
 );
 
-export default mongoose.models.Department || mongoose.model<IDepartment>('Department', DepartmentSchema);
+const Department: Model<IDepartment> = mongoose.models.Department || mongoose.model<IDepartment>('Department', DepartmentSchema);
+export default Department;

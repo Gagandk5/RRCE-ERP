@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IStudent extends Document {
   user: mongoose.Types.ObjectId;
@@ -45,4 +45,5 @@ const StudentSchema = new Schema<IStudent>(
 
 StudentSchema.index({ usnYear: 1, usnBranch: 1, usnSequence: 1 });
 
-export default mongoose.models.Student || mongoose.model<IStudent>('Student', StudentSchema);
+const Student: Model<IStudent> = mongoose.models.Student || mongoose.model<IStudent>('Student', StudentSchema);
+export default Student;
