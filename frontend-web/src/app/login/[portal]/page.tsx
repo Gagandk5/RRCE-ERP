@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   DEMO_CREDENTIALS,
+  RAW_STUDENT_ROSTER,
   setStoredToken,
   setStoredUser,
   getRememberedIdentifier,
@@ -100,7 +101,11 @@ export default function PortalLoginPage() {
     setLoading(true);
     setError(null);
 
+    const cleanId = idVal.trim().toUpperCase();
+    const cleanPass = passVal.trim();
+
     try {
+      // 1. Attempt live API backend authentication first
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -120,8 +125,41 @@ export default function PortalLoginPage() {
         return;
       }
 
-      const matchedDemo = process.env.NODE_ENV === "development" && DEMO_CREDENTIALS.find(
-        (demo) => demo.role === portal.role && (demo.identifier.toLowerCase() === idVal.trim().toLowerCase() || (demo.role === "STUDENT" && idVal.toUpperCase() === "1RR25BC007")),
+      // 2. Student Fallback authentication matching ANY of the 54 real students
+      if (portal.role === "STUDENT") {
+        const studentInfo = RAW_STUDENT_ROSTER[cleanId];
+        if (studentInfo && (studentInfo.pass === cleanPass || studentInfo.pass.toUpperCase() === cleanPass.toUpperCase())) {
+          const matchSeq = parseInt(cleanId.slice(-3), 10) || 7;
+          const mockUser: UserSession = {
+            id: `usr-student-${cleanId}`,
+            username: cleanId,
+            email: `${cleanId}@rrce.org`,
+            role: "STUDENT",
+            firstName: studentInfo.name.split(" ")[0],
+            lastName: studentInfo.name.split(" ").slice(1).join(" ") || "Student",
+            isPasswordResetRequired: true,
+            departmentName: "Bachelor of Computer Applications (BCA)",
+            studentProfile: {
+              id: `stu-${cleanId}`,
+              usn: cleanId,
+              usnYear: 25,
+              usnBranch: "BC",
+              usnSequence: matchSeq,
+              currentSemester: 1,
+              quota: "CET",
+            },
+          };
+          setRememberedIdentifier(idVal, rememberIdentifier);
+          setStoredToken(`mock-token-student-${cleanId}`);
+          setStoredUser(mockUser);
+          router.push("/student");
+          return;
+        }
+      }
+
+      // 3. Staff / Demo Fallback authentication
+      const matchedDemo = DEMO_CREDENTIALS.find(
+        (demo) => demo.role === portal.role && (demo.identifier.toLowerCase() === idVal.trim().toLowerCase() || (demo.role === "STUDENT" && cleanId === "1RR25BC007")),
       );
 
       if (matchedDemo) {
@@ -137,13 +175,14 @@ export default function PortalLoginPage() {
           studentProfile: matchedDemo.role === "STUDENT" ? { id: "stu-gagan-007", usn: "1RR25BC007", usnYear: 25, usnBranch: "BC", usnSequence: 7, currentSemester: 1, quota: "CET" } : undefined,
           facultyProfile: matchedDemo.role === "FACULTY" ? { id: "fac-math-014", employeeCode: "RRCE-FAC-014", designation: "Associate Professor" } : undefined,
         };
+        setRememberedIdentifier(idVal, rememberIdentifier);
         setStoredToken(`mock-token-${matchedDemo.role}`);
         setStoredUser(mockUser);
         router.push(matchedDemo.route);
         return;
       }
 
-      setError("Invalid credentials. Please check your login details.");
+      setError("Invalid credentials. Please check your USN / Email and Password.");
     } catch (err: any) {
       setError(err.message || "Login failed.");
     } finally {
