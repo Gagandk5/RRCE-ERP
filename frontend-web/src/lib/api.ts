@@ -1,4 +1,5 @@
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const REMEMBERED_IDENTIFIER_KEY = 'rrce_erp_remembered_identifier';
 
 export interface UserSession {
   id: string;
@@ -65,6 +66,20 @@ export const DEMO_CREDENTIALS = [
 export function getStoredToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('rrce_erp_token');
+}
+
+export function getRememberedIdentifier(): string {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(REMEMBERED_IDENTIFIER_KEY) || '';
+}
+
+export function setRememberedIdentifier(identifier: string, remember: boolean) {
+  if (typeof window === 'undefined') return;
+  if (remember) {
+    localStorage.setItem(REMEMBERED_IDENTIFIER_KEY, identifier.trim());
+  } else {
+    localStorage.removeItem(REMEMBERED_IDENTIFIER_KEY);
+  }
 }
 
 export function setStoredToken(token: string) {

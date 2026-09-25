@@ -1,120 +1,66 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import {
-  DEMO_CREDENTIALS,
-  setStoredToken,
-  setStoredUser,
-  API_BASE,
-  UserSession,
-} from "@/lib/api";
-import {
   GraduationCap,
-  Lock,
-  User,
-  ArrowRight,
-  Zap,
+  BookOpen,
+  BriefcaseBusiness,
+  Building2,
+  ClipboardCheck,
+  ShieldCheck,
 } from "lucide-react";
+
+const PORTALS = [
+  {
+    role: "STUDENT" as const,
+    label: "Student",
+    description: "USN and academic information",
+    identifier: "Use your USN",
+    route: "/student",
+    icon: BookOpen,
+    accent: "border-emerald-300 bg-emerald-50 text-emerald-800",
+  },
+  {
+    role: "FACULTY" as const,
+    label: "Faculty",
+    description: "Classes, attendance, and students",
+    identifier: "Use official email",
+    route: "/faculty",
+    icon: BriefcaseBusiness,
+    accent: "border-sky-300 bg-sky-50 text-sky-800",
+  },
+  {
+    role: "HOD" as const,
+    label: "HOD",
+    description: "Department academic operations",
+    identifier: "Use official email",
+    route: "/hod",
+    icon: ClipboardCheck,
+    accent: "border-cyan-300 bg-cyan-50 text-cyan-800",
+  },
+  {
+    role: "ADMISSION_OFFICE" as const,
+    label: "Admission Office",
+    description: "Admissions and student records",
+    identifier: "Use official email",
+    route: "/admissions",
+    icon: Building2,
+    accent: "border-amber-300 bg-amber-50 text-amber-800",
+  },
+  {
+    role: "PRINCIPAL" as const,
+    label: "Principal",
+    description: "Institution-level administration",
+    identifier: "Use official email",
+    route: "/principal",
+    icon: ShieldCheck,
+    accent: "border-violet-300 bg-violet-50 text-violet-800",
+  },
+] as const;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const executeLogin = async (idVal: string, passVal: string) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: idVal, password: passVal }),
-      }).catch(() => null);
-
-      if (res && res.ok) {
-        const data = await res.json();
-        setStoredToken(data.accessToken);
-        setStoredUser(data.user);
-
-        const role = data.user.role;
-        if (role === "PRINCIPAL") router.push("/principal");
-        else if (role === "ADMISSION_OFFICE") router.push("/admissions");
-        else if (role === "HOD") router.push("/hod");
-        else if (role === "FACULTY") router.push("/faculty");
-        else router.push("/student");
-        return;
-      }
-
-      const matchedDemo = DEMO_CREDENTIALS.find(
-        (d) =>
-          d.identifier.toLowerCase() === idVal.trim().toLowerCase() ||
-          (d.role === "STUDENT" && idVal.toUpperCase() === "1RR25BC007")
-      );
-
-      if (matchedDemo) {
-        const mockUser: UserSession = {
-          id: `usr-${matchedDemo.role.toLowerCase()}`,
-          username: matchedDemo.identifier.split("@")[0],
-          email: matchedDemo.identifier,
-          role: matchedDemo.role,
-          firstName: matchedDemo.name.split(" ")[0],
-          lastName: matchedDemo.name.split(" ").slice(1).join(" ") || "R",
-          isPasswordResetRequired: matchedDemo.role === "STUDENT" && passVal === "GAG141207",
-          departmentName: matchedDemo.dept,
-          studentProfile:
-            matchedDemo.role === "STUDENT"
-              ? {
-                  id: "stu-gagan-007",
-                  usn: "1RR25BC007",
-                  usnYear: 25,
-                  usnBranch: "BC",
-                  usnSequence: 7,
-                  currentSemester: 1,
-                  quota: "CET",
-                }
-              : undefined,
-          facultyProfile:
-            matchedDemo.role === "FACULTY"
-              ? {
-                  id: "fac-math-014",
-                  employeeCode: "RRCE-FAC-014",
-                  designation: "Associate Professor",
-                }
-              : undefined,
-        };
-
-        setStoredToken(`mock-token-${matchedDemo.role}`);
-        setStoredUser(mockUser);
-        router.push(matchedDemo.route);
-        return;
-      }
-
-      setError("Invalid credentials. Please check your USN / Email and password.");
-    } catch (err: any) {
-      setError(err.message || "Login failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!identifier || !password) {
-      setError("Please fill in both identifier and password.");
-      return;
-    }
-    executeLogin(identifier, password);
-  };
-
-  const handleDemoClick = (demo: (typeof DEMO_CREDENTIALS)[0]) => {
-    setIdentifier(demo.identifier);
-    setPassword(demo.password);
-    executeLogin(demo.identifier, demo.password);
-  };
 
   return (
     <div className="min-h-[85vh] flex flex-col items-center justify-center py-8 px-4 bg-slate-50">
@@ -133,90 +79,35 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Login Card */}
+        {/* Portal selection card */}
         <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-5">
-          {error && (
-            <div className="p-3 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                USN / Employee ID / Email
-              </label>
-              <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  required
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="e.g. 1RR25BC007 or principal@rrce.org"
-                  className="w-full bg-white border border-slate-300 rounded-md py-2 pl-9 pr-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password..."
-                  className="w-full bg-white border border-slate-300 rounded-md py-2 pl-9 pr-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 px-4 rounded-md font-medium text-sm bg-slate-900 hover:bg-slate-800 text-white shadow-sm flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
-            >
-              <span>{loading ? "Authenticating..." : "Sign In"}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
-
-          {/* Quick Demo Sign-In Box */}
-          <div className="pt-4 border-t border-slate-200 space-y-3">
+          <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center space-x-1">
-                <Zap className="w-3.5 h-3.5 text-amber-600" />
-                <span>Quick Demo Sign-In</span>
-              </span>
-              <span className="text-[10px] text-slate-400">One-click auto fill</span>
+              <div>
+                <h2 className="text-sm font-semibold text-slate-900">Who is logging in?</h2>
+                <p className="text-[11px] text-slate-500">Choose the portal that matches your account.</p>
+              </div>
+              <span className="text-[10px] text-slate-400">Secure role check</span>
             </div>
-
-            <div className="space-y-1.5">
-              {DEMO_CREDENTIALS.map((demo) => (
-                <button
-                  key={demo.role}
-                  type="button"
-                  onClick={() => handleDemoClick(demo)}
-                  className="w-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs py-2 px-3 rounded-md text-left flex items-center justify-between transition-colors group"
-                >
-                  <div>
-                    <span className="font-semibold text-slate-900 group-hover:text-slate-900 block">
-                      {demo.label}
-                    </span>
-                    <span className="text-[11px] text-slate-500 font-mono">
-                      {demo.identifier}
-                    </span>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all" />
-                </button>
-              ))}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {PORTALS.map((portal) => {
+                const Icon = portal.icon;
+                return (
+                  <button
+                    key={portal.role}
+                    type="button"
+                    onClick={() => router.push(`/login/${portal.role.toLowerCase()}`)}
+                    className={`min-h-[92px] rounded-md border p-3 text-left transition-colors hover:shadow-sm ${portal.accent}`}
+                  >
+                    <Icon className="h-4 w-4 mb-1" />
+                    <span className="block text-[11px] font-semibold leading-tight">{portal.label}</span>
+                    <span className="block mt-1 text-[9px] leading-tight opacity-75">{portal.identifier}</span>
+                  </button>
+                );
+              })}
             </div>
-          </div>
+            <p className="rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-[10px] text-slate-500">Select your role to open its separate secure login page.</p>
+          </section>
         </div>
 
         <div className="text-center text-xs text-slate-500">

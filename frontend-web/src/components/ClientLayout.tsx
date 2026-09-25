@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import PasswordResetDialog from "@/components/PasswordResetDialog";
-import { getStoredUser, clearSession, UserSession } from "@/lib/api";
+import { getStoredUser, getStoredToken, clearSession, UserSession } from "@/lib/api";
 import { GraduationCap, LogOut, KeyRound } from "lucide-react";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +15,22 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   useEffect(() => {
     const checkUser = () => {
       const u = getStoredUser();
+      const token = getStoredToken();
+      const isLoginRoute = pathname === "/login" || pathname.startsWith("/login/");
       setUser(u);
+      if ((!u || !token) && !isLoginRoute) {
+        clearSession();
+        setUser(null);
+        router.replace("/login");
+        return;
+      }
+      if (u && token && isLoginRoute) {
+        if (u.role === "PRINCIPAL") router.replace("/principal");
+        else if (u.role === "ADMISSION_OFFICE") router.replace("/admissions");
+        else if (u.role === "HOD") router.replace("/hod");
+        else if (u.role === "FACULTY") router.replace("/faculty");
+        else router.replace("/student");
+      }
       if (u?.isPasswordResetRequired && u.role === "STUDENT") {
         setShowResetDialog(true);
       }
@@ -24,7 +39,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
     window.addEventListener("storage", checkUser);
     return () => window.removeEventListener("storage", checkUser);
-  }, [pathname]);
+  }, [pathname, router]);
 
   const handleLogout = () => {
     clearSession();
@@ -32,7 +47,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     router.push("/login");
   };
 
-  const isLoginPage = pathname === "/login";
+  const isLoginPage = pathname === "/login" || pathname.startsWith("/login/");
 
   return (
     <>

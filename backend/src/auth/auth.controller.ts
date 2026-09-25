@@ -8,8 +8,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   @Post('login')
-  async login(@Body() body: { identifier: string; password: string }) {
-    return this.authService.login(body.identifier, body.password);
+  async login(@Body() body: { identifier: string; password: string; requestedRole?: Role }) {
+    return this.authService.login(body.identifier, body.password, body.requestedRole);
   }
 
   @UseGuards(JwtAuthGuard)

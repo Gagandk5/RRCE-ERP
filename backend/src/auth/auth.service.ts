@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -40,10 +40,13 @@ export class AuthService {
     return result;
   }
 
-  async login(identifier: string, pass: string) {
+  async login(identifier: string, pass: string, requestedRole?: Role) {
     const user = await this.validateUser(identifier, pass);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials or account inactive');
+    }
+    if (requestedRole && user.role !== requestedRole) {
+      throw new ForbiddenException('This account belongs to a different portal');
     }
 
     const payload = {
