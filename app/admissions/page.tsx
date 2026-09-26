@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Building,
   UserPlus,
@@ -10,10 +11,11 @@ import {
   CheckCircle2,
   AlertCircle,
   Hash,
+  LogOut,
 } from "lucide-react";
-import { formatINR } from "@/lib/utils";
 
 export default function AdmissionsPortal() {
+  const router = useRouter();
   const [students, setStudents] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,6 +70,16 @@ export default function AdmissionsPortal() {
     }
   }
 
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } catch (e) {
+      console.error("Logout failed:", e);
+    }
+  }
+
   async function handleEnroll(e: React.FormEvent) {
     e.preventDefault();
     setEnrolling(true);
@@ -84,7 +96,7 @@ export default function AdmissionsPortal() {
       if (res.ok && data.success) {
         setMessage({
           type: "success",
-          text: `Enrolled successfully! Assigned USN: ${data.generatedUsn} | Temporary Password: ${data.defaultPassword}`,
+          text: `Enrolled successfully! Assigned USN: ${data.generatedUsn}`,
         });
         setIsEnrollModalOpen(false);
         setEnrollForm({
@@ -153,7 +165,7 @@ export default function AdmissionsPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      {/* Title Header */}
+      {/* Title Header with Sign Out */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
@@ -173,10 +185,19 @@ export default function AdmissionsPortal() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsEnrollModalOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
           >
             <UserPlus className="w-4 h-4" />
             <span>New Student Admission</span>
+          </button>
+
+          <button
+            onClick={handleLogout}
+            title="Sign Out"
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
           </button>
         </div>
       </div>

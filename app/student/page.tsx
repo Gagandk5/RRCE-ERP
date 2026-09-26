@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   GraduationCap,
   CreditCard,
@@ -10,10 +11,12 @@ import {
   QrCode,
   ShieldCheck,
   User,
+  LogOut,
 } from "lucide-react";
 import { formatINR } from "@/lib/utils";
 
 export default function StudentPortal() {
+  const router = useRouter();
   const [student, setStudent] = useState<any>(null);
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -56,6 +59,16 @@ export default function StudentPortal() {
       console.error("Failed to load student portal:", e);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } catch (e) {
+      console.error("Logout failed:", e);
     }
   }
 
@@ -106,7 +119,7 @@ export default function StudentPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      {/* Clean Header */}
+      {/* Clean Header with Sign Out */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
@@ -125,12 +138,23 @@ export default function StudentPortal() {
           </div>
         </div>
 
-        <div className="text-right">
-          <span className="text-xs font-bold text-slate-400">Academic Standing:</span>
-          <div className="text-sm font-bold text-emerald-400 flex items-center gap-1.5 justify-end">
-            <ShieldCheck className="w-4 h-4" />
-            <span>Regular Enrolled</span>
+        <div className="flex items-center gap-4">
+          <div className="text-right hidden sm:block">
+            <span className="text-xs font-bold text-slate-400 block">Academic Standing:</span>
+            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1 justify-end">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Regular Enrolled
+            </span>
           </div>
+
+          <button
+            onClick={handleLogout}
+            title="Sign Out"
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
         </div>
       </div>
 

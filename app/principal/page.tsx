@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Shield,
   Building,
@@ -12,10 +13,12 @@ import {
   RefreshCw,
   Lock,
   Unlock,
+  LogOut,
 } from "lucide-react";
 import { formatINR } from "@/lib/utils";
 
 export default function PrincipalPortal() {
+  const router = useRouter();
   const [stats, setStats] = useState<any>({
     studentsCount: 54,
     departmentsCount: 7,
@@ -85,6 +88,16 @@ export default function PrincipalPortal() {
     }
   }
 
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } catch (e) {
+      console.error("Logout failed:", e);
+    }
+  }
+
   async function handleUnlockOverride(sessionId: string) {
     setOverrideLoading(sessionId);
     setMessage(null);
@@ -133,7 +146,7 @@ export default function PrincipalPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
-      {/* Clean Solid Principal Header */}
+      {/* Clean Solid Principal Header with Logout */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
@@ -167,6 +180,15 @@ export default function PrincipalPortal() {
           >
             <Database className={`w-3.5 h-3.5 ${seedLoading ? "animate-spin" : ""}`} />
             {seedLoading ? "Seeding..." : "Seed Postgres"}
+          </button>
+
+          <button
+            onClick={handleLogout}
+            title="Sign Out"
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
           </button>
         </div>
       </div>

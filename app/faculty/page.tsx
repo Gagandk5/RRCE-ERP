@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Calendar,
   Clock,
@@ -12,9 +13,11 @@ import {
   Layers,
   Users,
   ShieldAlert,
+  LogOut,
 } from "lucide-react";
 
 export default function FacultyPortal() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"rollcall" | "timetable">("rollcall");
   const [students, setStudents] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -90,6 +93,16 @@ export default function FacultyPortal() {
       console.error("Failed to load faculty portal data:", e);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } catch (e) {
+      console.error("Logout failed:", e);
     }
   }
 
@@ -208,7 +221,7 @@ export default function FacultyPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      {/* Clean Solid Header */}
+      {/* Clean Solid Header with Sign Out */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
@@ -232,6 +245,15 @@ export default function FacultyPortal() {
           >
             <Plus className="w-4 h-4" />
             <span>Schedule Class Slot</span>
+          </button>
+
+          <button
+            onClick={handleLogout}
+            title="Sign Out"
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-2.5 rounded-lg transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
           </button>
         </div>
       </div>

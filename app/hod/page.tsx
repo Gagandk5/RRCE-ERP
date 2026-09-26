@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Users,
@@ -11,9 +12,11 @@ import {
   Search,
   Clock,
   GraduationCap,
+  LogOut,
 } from "lucide-react";
 
 export default function HODPortal() {
+  const router = useRouter();
   const [students, setStudents] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +47,16 @@ export default function HODPortal() {
       console.error("Failed to load HOD data:", e);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } catch (e) {
+      console.error("Logout failed:", e);
     }
   }
 
@@ -82,7 +95,7 @@ export default function HODPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      {/* Clean Solid Header */}
+      {/* Clean Solid Header with Sign Out */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
@@ -99,14 +112,25 @@ export default function HODPortal() {
           </div>
         </div>
 
-        <button
-          onClick={loadHODData}
-          disabled={loading}
-          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-700 transition-colors"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-slate-400" : ""}`} />
-          Refresh Status
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={loadHODData}
+            disabled={loading}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-700 transition-colors"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-slate-400" : ""}`} />
+            Refresh Status
+          </button>
+
+          <button
+            onClick={handleLogout}
+            title="Sign Out"
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-2.5 rounded-lg transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
 
       {message && (
