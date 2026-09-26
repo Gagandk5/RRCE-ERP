@@ -1,0 +1,173 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  PRINCIPAL
+  ADMISSIONS
+  HOD
+  FACULTY
+  STUDENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+model Department {
+  id                 String              @id @default(uuid())
+  code               String              @unique // e.g. "BCA", "CSE", "AIML"
+  name               String              // e.g. "Bachelor of Computer Applications"
+  usnCode            String              @unique // e.g. "BC", "CS", "AI"
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  users              User[]
+  students           Student[]
+  attendanceSessions AttendanceSession[]
+  timetableSlots     TimetableSlot[]
+}
+
+model User {
+  id                     String             @id @default(uuid())
+  email                  String             @unique
+  username               String             @unique
+  passwordHash           String
+  role                   Role
+  firstName              String
+  lastName               String
+  phone                  String?
+  departmentId           String?
+  department             Department?        @relation(fields: [departmentId], references: [id])
+  isActive               Boolean            @default(true)
+  isPasswordResetRequired Boolean            @default(false)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  studentProfile         Student?
+  facultySessions        AttendanceSession[]
+  timetableSlots         TimetableSlot[]
+}
+
+model Student {
+  id              String             @id @default(uuid())
+  userId          String             @unique
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usn             String             @unique // e.g. "1RR25BC001"
+  usnCollegeCode  String             @default("1RR")
+  usnYear         String             @default("25")
+  usnBranch       String             // e.g. "BC"
+  usnSequence     Int                // e.g. 1
+  dateOfBirth     DateTime
+  currentSemester Int                @default(1)
+  quota           String             @default("KCET") // KCET, COMEDK, MANAGEMENT
+  departmentId    String?
+  department      Department?        @relation(fields: [departmentId], references: [id])
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  attendanceRecords AttendanceRecord[]
+  invoices          Invoice[]
+
+  @@index([usnSequence])
+  @@index([departmentId, currentSemester])
+}
+
+model AttendanceSession {
+  id               String             @id @default(uuid())
+  subject          String
+  facultyId        String
+  faculty          User               @relation(fields: [facultyId], references: [id])
+  departmentId     String
+  department       Department         @relation(fields: [departmentId], references: [id])
+  semester         Int
+  section          String             @default("A")
+  date             DateTime           @default(now())
+  lockedAt         DateTime?          // Set explicitly or evaluated dynamically (24 hours after creation)
+  isLockedOverride Boolean            @default(false)
+  unlockedBy       String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  records          AttendanceRecord[]
+
+  @@index([facultyId, date])
+  @@index([departmentId, semester, section])
+}
+
+model AttendanceRecord {
+  id        String            @id @default(uuid())
+  sessionId String
+  session   AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status    AttendanceStatus  @default(PRESENT)
+  remarks   String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  invoiceNumber String        @unique // e.g. "INV-2025-001"
+  studentId     String
+  student       Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  totalAmount   Float         @default(85000)
+  paidAmount    Float         @default(0)
+  status        InvoiceStatus @default(PENDING)
+  dueDate       DateTime?
+  title         String        @default("Annual Tuition Fee 2025-26")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([studentId])
+}
+
+model TimetableSlot {
+  id           String     @id @default(uuid())
+  dayOfWeek    String     // MON, TUE, WED, THU, FRI, SAT
+  startTime    String     // e.g. "09:00"
+  endTime      String     // e.g. "10:00"
+  subject      String
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  semester     Int
+  section      String     @default("A")
+  facultyId    String
+  faculty      User       @relation(fields: [facultyId], references: [id])
+  roomNumber   String     // e.g. "LH-101"
+  academicYear String     @default("2025-2026")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([facultyId, dayOfWeek, startTime])
+  @@index([roomNumber, dayOfWeek, startTime])
+  @@index([departmentId, semester, section, dayOfWeek, startTime])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String   // e.g. "BRANCH_REALLOCATION", "ATTENDANCE_OVERRIDE", "FEE_PAYMENT"
+  performedBy String   // Username or user ID
+  details     String   // JSON stringified details
+  timestamp   DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([performedBy])
+}
