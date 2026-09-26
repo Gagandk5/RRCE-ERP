@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { comparePassword, hashPassword, signToken, AUTH_COOKIE_CONFIG } from "@/lib/auth";
+import { comparePassword, signToken, AUTH_COOKIE_CONFIG } from "@/lib/auth";
 import { Role } from "@/lib/types";
 import { STAFF_ACCOUNTS, BCA_2025_STUDENTS } from "@/prisma/seed-data";
 import { generateDefaultPassword, generateUSN } from "@/lib/utils";
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
             departmentCode: "BCA",
             studentId: `mock-student-${studentMatch.sequence}`,
             usn: usn,
-            isPasswordResetRequired: true,
+            isPasswordResetRequired: false,
           };
 
           const token = signToken(payload);
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
       departmentCode: user.department?.code || user.studentProfile?.department?.code,
       studentId: user.studentProfile?.id,
       usn: user.studentProfile?.usn,
-      isPasswordResetRequired: user.isPasswordResetRequired,
+      isPasswordResetRequired: false,
     };
 
     const token = signToken(payload);
