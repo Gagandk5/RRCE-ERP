@@ -8,11 +8,8 @@ import {
   IndianRupee,
   CheckCircle2,
   Clock,
-  AlertTriangle,
   Database,
-  ArrowRight,
   RefreshCw,
-  Search,
   Lock,
   Unlock,
 } from "lucide-react";
@@ -136,17 +133,18 @@ export default function PrincipalPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 md:p-8 shadow-xl border border-purple-900/40">
+      {/* Clean Solid Principal Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-purple-600/30 border border-purple-500/40 flex items-center justify-center text-purple-300 shrink-0">
-            <Shield className="w-8 h-8" />
+          <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
+            <Shield className="w-6 h-6" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-2 bg-purple-500/20 text-purple-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider mb-1 border border-purple-400/30">
+            <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider mb-1 border border-slate-700">
               Executive Institutional Oversight
             </div>
-            <h1 className="text-2xl font-black text-white">Office of the Principal</h1>
-            <p className="text-xs text-purple-200/80">
+            <h1 className="text-xl font-bold text-white">Office of the Principal</h1>
+            <p className="text-xs text-slate-400">
               Dr. Ramesh Kumar • Rajarajeswari College of Engineering (RRCE)
             </p>
           </div>
@@ -156,25 +154,25 @@ export default function PrincipalPortal() {
           <button
             onClick={loadDashboardData}
             disabled={loading}
-            className="flex items-center gap-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-700 transition-all"
+            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-700 transition-colors"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-purple-400" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-slate-400" : ""}`} />
             Refresh
           </button>
 
           <button
             onClick={handleSeedTrigger}
             disabled={seedLoading}
-            className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-purple-600/30 transition-all"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
           >
             <Database className={`w-3.5 h-3.5 ${seedLoading ? "animate-spin" : ""}`} />
-            {seedLoading ? "Seeding..." : "Seed Postgres (/api/seed)"}
+            {seedLoading ? "Seeding..." : "Seed Postgres"}
           </button>
         </div>
       </div>
 
       {message && (
-        <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold flex items-center justify-between">
+        <div className="p-4 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium flex items-center justify-between">
           <span className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             {message}
@@ -183,17 +181,18 @@ export default function PrincipalPortal() {
         </div>
       )}
 
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Enrolled Students
             </span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-slate-900 mt-2">
+          <div className="text-2xl font-bold text-slate-900 mt-2">
             {stats.studentsCount} <span className="text-xs font-normal text-slate-400">active</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
@@ -201,16 +200,16 @@ export default function PrincipalPortal() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Academic Departments
             </span>
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
               <Building className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-slate-900 mt-2">
+          <div className="text-2xl font-bold text-slate-900 mt-2">
             {stats.departmentsCount} <span className="text-xs font-normal text-slate-400">divisions</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
@@ -218,16 +217,16 @@ export default function PrincipalPortal() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Fee Collections
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
               <IndianRupee className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-emerald-600 mt-2">
+          <div className="text-2xl font-bold text-emerald-700 mt-2">
             {formatINR(stats.totalPaid)}
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
@@ -235,16 +234,16 @@ export default function PrincipalPortal() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Outstanding Dues
             </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200">
               <Clock className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-amber-600 mt-2">
+          <div className="text-2xl font-bold text-amber-700 mt-2">
             {formatINR(stats.totalPending)}
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
@@ -253,14 +252,15 @@ export default function PrincipalPortal() {
         </div>
       </div>
 
+      {/* Main Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+        <div className="lg:col-span-7 bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-base font-bold text-slate-900">Academic Departments Status</h2>
               <p className="text-xs text-slate-500">Autonomous curriculum allocation & student counts</p>
             </div>
-            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
+            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">
               7 Active Depts
             </span>
           </div>
@@ -277,8 +277,8 @@ export default function PrincipalPortal() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {departments.map((dept) => (
-                  <tr key={dept.id || dept.code} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-3 font-extrabold text-blue-700">
+                  <tr key={dept.id || dept.code} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-3 font-bold text-slate-900">
                       {dept.code}
                     </td>
                     <td className="py-3 px-3 text-slate-800 font-medium">
@@ -297,9 +297,9 @@ export default function PrincipalPortal() {
           </div>
         </div>
 
-        <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+        <div className="lg:col-span-5 bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
           <div className="flex items-center gap-2 mb-2 text-slate-900 font-bold text-base">
-            <Lock className="w-4 h-4 text-purple-600" />
+            <Lock className="w-4 h-4 text-slate-700" />
             24-Hour Attendance Lockout Review
           </div>
           <p className="text-xs text-slate-500 mb-4 leading-relaxed">
@@ -315,22 +315,22 @@ export default function PrincipalPortal() {
                 return (
                   <div
                     key={session.id}
-                    className={`p-3.5 rounded-xl border text-xs ${
+                    className={`p-3.5 rounded-lg border text-xs ${
                       session.isLockedOverride
                         ? "bg-emerald-50 border-emerald-200 text-emerald-900"
                         : isLocked
-                        ? "bg-amber-50/80 border-amber-200 text-amber-900"
+                        ? "bg-amber-50 border-amber-200 text-amber-900"
                         : "bg-slate-50 border-slate-200 text-slate-700"
                     }`}
                   >
                     <div className="flex items-center justify-between font-bold">
                       <span>{session.subject}</span>
                       <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                        className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
                           session.isLockedOverride
-                            ? "bg-emerald-200 text-emerald-800"
+                            ? "bg-emerald-100 text-emerald-800"
                             : isLocked
-                            ? "bg-amber-200 text-amber-800"
+                            ? "bg-amber-100 text-amber-800"
                             : "bg-blue-100 text-blue-800"
                         }`}
                       >
@@ -351,7 +351,7 @@ export default function PrincipalPortal() {
                         <button
                           onClick={() => handleUnlockOverride(session.id)}
                           disabled={overrideLoading === session.id}
-                          className="flex items-center gap-1 bg-purple-700 hover:bg-purple-800 text-white font-bold text-[11px] px-2.5 py-1 rounded-lg shadow transition-all disabled:opacity-50"
+                          className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-[11px] px-2.5 py-1 rounded transition-colors disabled:opacity-50"
                         >
                           <Unlock className="w-3 h-3" />
                           {overrideLoading === session.id ? "Unlocking..." : "Principal Override"}
@@ -366,7 +366,7 @@ export default function PrincipalPortal() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+      <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-base font-bold text-slate-900">Institutional Audit Trail</h2>
@@ -376,18 +376,18 @@ export default function PrincipalPortal() {
         </div>
 
         {auditLogs.length === 0 ? (
-          <div className="text-center py-8 text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-            No audit events recorded yet. Branch reallocations and overrides will appear here.
+          <div className="text-center py-8 text-xs text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+            No audit events recorded yet.
           </div>
         ) : (
           <div className="divide-y divide-slate-100 text-xs">
             {auditLogs.map((log) => (
               <div key={log.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold px-2 py-0.5 rounded bg-purple-100 text-purple-800 text-[10px] uppercase">
+                  <span className="font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px] uppercase border border-slate-200">
                     {log.action}
                   </span>
-                  <span className="font-bold text-slate-800">By: {log.performedBy}</span>
+                  <span className="font-semibold text-slate-800">By: {log.performedBy}</span>
                   <span className="text-slate-500 text-[11px] truncate max-w-md">
                     {log.details}
                   </span>

@@ -7,12 +7,9 @@ import {
   Lock,
   Unlock,
   CheckCircle2,
-  AlertTriangle,
   RefreshCw,
   Search,
-  Calendar,
   Clock,
-  Sparkles,
   GraduationCap,
 } from "lucide-react";
 
@@ -85,18 +82,19 @@ export default function HODPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-amber-950 via-slate-900 to-stone-900 text-white rounded-3xl p-6 md:p-8 shadow-xl border border-amber-900/40">
+      {/* Clean Solid Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-amber-600/30 border border-amber-500/40 flex items-center justify-center text-amber-300 shrink-0">
-            <BookOpen className="w-8 h-8" />
+          <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
+            <BookOpen className="w-6 h-6" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider mb-1 border border-amber-400/30">
+            <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider mb-1 border border-slate-700">
               Department Directorate
             </div>
-            <h1 className="text-2xl font-black text-white">Department of Computer Applications (BCA)</h1>
-            <p className="text-xs text-amber-200/80">
-              Dr. Praveen Gowda, HOD • Autonomous Academic Oversight • Invariant Compliance
+            <h1 className="text-xl font-bold text-white">Department of Computer Applications (BCA)</h1>
+            <p className="text-xs text-slate-400">
+              Dr. Praveen Gowda, HOD • Autonomous Academic Oversight
             </p>
           </div>
         </div>
@@ -104,15 +102,15 @@ export default function HODPortal() {
         <button
           onClick={loadHODData}
           disabled={loading}
-          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700 transition-all"
+          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-700 transition-colors"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-amber-400" : ""}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-slate-400" : ""}`} />
           Refresh Status
         </button>
       </div>
 
       {message && (
-        <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold flex items-center justify-between">
+        <div className="p-4 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium flex items-center justify-between">
           <span className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             {message}
@@ -121,15 +119,16 @@ export default function HODPortal() {
         </div>
       )}
 
+      {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               BCA Class Strength (2025)
             </span>
-            <Users className="w-4 h-4 text-amber-600" />
+            <Users className="w-4 h-4 text-slate-700" />
           </div>
-          <div className="text-2xl font-black text-slate-900 mt-2">
+          <div className="text-2xl font-bold text-slate-900 mt-2">
             {students.length} <span className="text-xs font-normal text-slate-400">Students</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1 font-mono">
@@ -137,14 +136,14 @@ export default function HODPortal() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               24-Hour Lockout Status
             </span>
-            <Lock className="w-4 h-4 text-amber-600" />
+            <Lock className="w-4 h-4 text-slate-700" />
           </div>
-          <div className="text-2xl font-black text-amber-600 mt-2">
+          <div className="text-2xl font-bold text-amber-700 mt-2">
             {sessions.filter((s) => s.lockoutStatus?.isLocked && !s.isLockedOverride).length} Locked
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
@@ -152,14 +151,14 @@ export default function HODPortal() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Current Semester
             </span>
-            <GraduationCap className="w-4 h-4 text-emerald-600" />
+            <GraduationCap className="w-4 h-4 text-slate-700" />
           </div>
-          <div className="text-2xl font-black text-slate-900 mt-2">
+          <div className="text-2xl font-bold text-slate-900 mt-2">
             Semester 1 <span className="text-xs font-normal text-slate-400">Section A</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
@@ -168,12 +167,13 @@ export default function HODPortal() {
         </div>
       </div>
 
+      {/* Tabs */}
       <div className="flex border-b border-slate-200 gap-6 text-xs font-bold">
         <button
           onClick={() => setActiveTab("attendance")}
           className={`pb-3 transition-colors flex items-center gap-2 ${
             activeTab === "attendance"
-              ? "text-amber-600 border-b-2 border-amber-600"
+              ? "text-slate-900 border-b-2 border-slate-900"
               : "text-slate-500 hover:text-slate-800"
           }`}
         >
@@ -185,7 +185,7 @@ export default function HODPortal() {
           onClick={() => setActiveTab("students")}
           className={`pb-3 transition-colors flex items-center gap-2 ${
             activeTab === "students"
-              ? "text-amber-600 border-b-2 border-amber-600"
+              ? "text-slate-900 border-b-2 border-slate-900"
               : "text-slate-500 hover:text-slate-800"
           }`}
         >
@@ -197,7 +197,7 @@ export default function HODPortal() {
           onClick={() => setActiveTab("faculty")}
           className={`pb-3 transition-colors flex items-center gap-2 ${
             activeTab === "faculty"
-              ? "text-amber-600 border-b-2 border-amber-600"
+              ? "text-slate-900 border-b-2 border-slate-900"
               : "text-slate-500 hover:text-slate-800"
           }`}
         >
@@ -207,7 +207,7 @@ export default function HODPortal() {
       </div>
 
       {activeTab === "attendance" && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h2 className="text-base font-bold text-slate-900">
@@ -217,7 +217,7 @@ export default function HODPortal() {
                 Invariant 4: Sessions lock 24 hours after creation. Requires HOD or Principal override to unlock.
               </p>
             </div>
-            <span className="text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-xl">
+            <span className="text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200 px-3 py-1 rounded">
               HOD Authority: Override Allowed
             </span>
           </div>
@@ -233,11 +233,11 @@ export default function HODPortal() {
                 return (
                   <div
                     key={session.id}
-                    className={`p-4 rounded-2xl border transition-all ${
+                    className={`p-4 rounded-lg border transition-colors ${
                       session.isLockedOverride
-                        ? "bg-emerald-50/70 border-emerald-200"
+                        ? "bg-emerald-50 border-emerald-200"
                         : isLocked
-                        ? "bg-amber-50/70 border-amber-200"
+                        ? "bg-amber-50 border-amber-200"
                         : "bg-slate-50 border-slate-200"
                     }`}
                   >
@@ -246,18 +246,18 @@ export default function HODPortal() {
                         <div className="flex items-center gap-2">
                           <h3 className="text-sm font-bold text-slate-900">{session.subject}</h3>
                           <span
-                            className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
                               session.isLockedOverride
-                                ? "bg-emerald-200 text-emerald-800"
+                                ? "bg-emerald-100 text-emerald-800"
                                 : isLocked
-                                ? "bg-amber-200 text-amber-900"
+                                ? "bg-amber-100 text-amber-900"
                                 : "bg-blue-100 text-blue-800"
                             }`}
                           >
                             {session.isLockedOverride
                               ? "Unlocked (HOD Override Active)"
                               : isLocked
-                              ? "Locked (24-Hour Lockout Exceeded)"
+                              ? "Locked (24-Hour Exceeded)"
                               : "Active (Within 24h Window)"}
                           </span>
                         </div>
@@ -271,7 +271,7 @@ export default function HODPortal() {
                           <button
                             onClick={() => handleHODUnlock(session.id)}
                             disabled={unlockingId === session.id}
-                            className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-md transition-all disabled:opacity-50"
+                            className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition-colors disabled:opacity-50"
                           >
                             <Unlock className="w-3.5 h-3.5" />
                             <span>{unlockingId === session.id ? "Unlocking..." : "HOD Unlock Override"}</span>
@@ -282,7 +282,7 @@ export default function HODPortal() {
                             Unlocked for Faculty Edit
                           </span>
                         ) : (
-                          <span className="text-xs text-blue-700 font-medium">
+                          <span className="text-xs text-slate-700 font-medium">
                             {session.lockoutStatus?.formattedRemaining || "Within edit window"}
                           </span>
                         )}
@@ -297,7 +297,7 @@ export default function HODPortal() {
       )}
 
       {activeTab === "students" && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-bold text-slate-900">
@@ -315,7 +315,7 @@ export default function HODPortal() {
                 placeholder="Search USN or Name..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-slate-900 focus:outline-none"
               />
             </div>
           </div>
@@ -335,18 +335,18 @@ export default function HODPortal() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredStudents.map((st) => (
-                  <tr key={st.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-2.5 px-4 font-mono font-bold text-amber-700">
+                  <tr key={st.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 px-4 font-mono font-bold text-slate-400">
                       #{String(st.usnSequence).padStart(3, "0")}
                     </td>
-                    <td className="py-2.5 px-4 font-mono font-extrabold text-blue-700">
+                    <td className="py-2.5 px-4 font-mono font-bold text-slate-900">
                       {st.usn}
                     </td>
                     <td className="py-2.5 px-4 font-semibold text-slate-900">
                       {st.user?.firstName} {st.user?.lastName}
                     </td>
                     <td className="py-2.5 px-4">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
                         {st.quota}
                       </span>
                     </td>
@@ -368,25 +368,25 @@ export default function HODPortal() {
       )}
 
       {activeTab === "faculty" && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
           <h2 className="text-base font-bold text-slate-900">Department Faculty & Subject Allocation</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div className="p-4 rounded-lg border border-slate-200 bg-slate-50">
               <h3 className="font-bold text-slate-900 text-sm">Dr. Praveen Gowda (HOD)</h3>
               <p className="text-slate-500">Professor & Head, BCA Department</p>
               <div className="mt-3 pt-3 border-t border-slate-200 space-y-1">
                 <p><strong>Subjects Assigned:</strong></p>
-                <p className="text-blue-700">• Problem Solving with C (25BC102)</p>
-                <p className="text-blue-700">• C Programming Laboratory (25BCL16)</p>
+                <p className="text-slate-800 font-medium">• Problem Solving with C (25BC102)</p>
+                <p className="text-slate-800 font-medium">• C Programming Laboratory (25BCL16)</p>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div className="p-4 rounded-lg border border-slate-200 bg-slate-50">
               <h3 className="font-bold text-slate-900 text-sm">Prof. Sunitha Sharma</h3>
               <p className="text-slate-500">Associate Professor, Department of Basic Sciences</p>
               <div className="mt-3 pt-3 border-t border-slate-200 space-y-1">
                 <p><strong>Subjects Assigned:</strong></p>
-                <p className="text-blue-700">• Discrete Mathematics (25BC101)</p>
+                <p className="text-slate-800 font-medium">• Discrete Mathematics (25BC101)</p>
               </div>
             </div>
           </div>

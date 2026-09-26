@@ -63,32 +63,32 @@ export default function PasswordResetModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 p-6 md:p-8">
-        <div className="flex items-center gap-3 text-amber-600 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-200">
-            <KeyRound className="w-6 h-6 text-amber-600" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="bg-white rounded-xl max-w-md w-full shadow-lg border border-slate-200 p-6 md:p-8">
+        <div className="flex items-center gap-3 text-amber-700 mb-4">
+          <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center border border-amber-200">
+            <KeyRound className="w-5 h-5 text-amber-700" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Mandatory First Login Reset</h2>
+            <h2 className="text-base font-bold text-slate-900">Mandatory First Login Reset</h2>
             <p className="text-xs text-slate-500">Security Invariant: Account Protection</p>
           </div>
         </div>
 
-        <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 mb-5 text-xs text-amber-900 leading-relaxed">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3.5 mb-5 text-xs text-amber-900 leading-relaxed">
           <div className="font-semibold flex items-center gap-1.5 mb-1 text-amber-800">
             <ShieldAlert className="w-4 h-4 shrink-0" />
             Default Password Formula Expired
           </div>
           Your account was provisioned with the standard formula:
-          <span className="font-mono font-bold bg-amber-200/60 px-1 py-0.5 rounded mx-1">
+          <span className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded mx-1">
             [NAME_3_UPPER][DD][MM][YY]
           </span>
-          (e.g., <code className="font-mono font-bold">AMI080707</code>). You must set a permanent confidential password to proceed.
+          (e.g. <code className="font-mono font-bold">AMI080707</code>). You must set a permanent confidential password to proceed.
         </div>
 
         {error && (
-          <div className="mb-4 text-xs bg-red-50 text-red-700 border border-red-200 p-3 rounded-xl flex items-center gap-2">
+          <div className="mb-4 text-xs bg-red-50 text-red-700 border border-red-200 p-3 rounded-lg flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 shrink-0" />
             {error}
           </div>
@@ -96,7 +96,7 @@ export default function PasswordResetModal({
 
         {success ? (
           <div className="text-center py-6">
-            <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-2 animate-bounce" />
+            <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto mb-2 animate-bounce" />
             <h3 className="text-base font-bold text-slate-900">Password Updated Successfully!</h3>
             <p className="text-xs text-slate-500 mt-1">Directing you to your portal...</p>
           </div>
@@ -114,7 +114,7 @@ export default function PasswordResetModal({
                   placeholder="Enter at least 6 characters"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:outline-none"
                 />
               </div>
             </div>
@@ -131,7 +131,7 @@ export default function PasswordResetModal({
                   placeholder="Repeat new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:outline-none"
                 />
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function PasswordResetModal({
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? (
                 "Encrypting & Saving..."

@@ -5,17 +5,13 @@ import {
   Calendar,
   Clock,
   CheckCircle2,
-  XCircle,
   AlertTriangle,
   Lock,
   Unlock,
   Plus,
-  RefreshCw,
   Layers,
-  Sparkles,
   Users,
   ShieldAlert,
-  ChevronRight,
 } from "lucide-react";
 
 export default function FacultyPortal() {
@@ -212,17 +208,18 @@ export default function FacultyPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 text-white rounded-3xl p-6 md:p-8 shadow-xl border border-emerald-900/40">
+      {/* Clean Solid Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-emerald-300 shrink-0">
-            <Calendar className="w-8 h-8" />
+          <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
+            <Calendar className="w-6 h-6" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider mb-1 border border-emerald-400/30">
+            <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider mb-1 border border-slate-700">
               Teaching Faculty Portal
             </div>
-            <h1 className="text-2xl font-black text-white">Faculty Class & Attendance Desk</h1>
-            <p className="text-xs text-emerald-200/80">
+            <h1 className="text-xl font-bold text-white">Faculty Class & Attendance Desk</h1>
+            <p className="text-xs text-slate-400">
               Prof. Sunitha Sharma (Mathematics) • 3-Layer Clash Engine • VTU Roll-Call
             </p>
           </div>
@@ -231,7 +228,7 @@ export default function FacultyPortal() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsScheduleModalOpen(true)}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/30 transition-all"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Schedule Class Slot</span>
@@ -241,7 +238,7 @@ export default function FacultyPortal() {
 
       {message && (
         <div
-          className={`p-4 rounded-2xl border text-xs font-semibold flex items-center justify-between ${
+          className={`p-4 rounded-lg border text-xs font-medium flex items-center justify-between ${
             message.type === "success"
               ? "bg-emerald-50 text-emerald-800 border-emerald-200"
               : message.type === "warning"
@@ -261,12 +258,13 @@ export default function FacultyPortal() {
         </div>
       )}
 
+      {/* Tabs */}
       <div className="flex border-b border-slate-200 gap-6 text-xs font-bold">
         <button
           onClick={() => setActiveTab("rollcall")}
           className={`pb-3 transition-colors flex items-center gap-2 ${
             activeTab === "rollcall"
-              ? "text-emerald-600 border-b-2 border-emerald-600"
+              ? "text-slate-900 border-b-2 border-slate-900"
               : "text-slate-500 hover:text-slate-800"
           }`}
         >
@@ -278,7 +276,7 @@ export default function FacultyPortal() {
           onClick={() => setActiveTab("timetable")}
           className={`pb-3 transition-colors flex items-center gap-2 ${
             activeTab === "timetable"
-              ? "text-emerald-600 border-b-2 border-emerald-600"
+              ? "text-slate-900 border-b-2 border-slate-900"
               : "text-slate-500 hover:text-slate-800"
           }`}
         >
@@ -289,7 +287,7 @@ export default function FacultyPortal() {
 
       {activeTab === "rollcall" && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <label className="text-xs font-bold text-slate-700 shrink-0">
                 Select Session:
@@ -297,7 +295,7 @@ export default function FacultyPortal() {
               <select
                 value={selectedSessionId}
                 onChange={(e) => setSelectedSessionId(e.target.value)}
-                className="text-xs font-semibold py-2 px-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="text-xs font-semibold py-2 px-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:outline-none"
               >
                 {sessions.map((sess) => (
                   <option key={sess.id} value={sess.id}>
@@ -310,7 +308,7 @@ export default function FacultyPortal() {
             <div className="flex items-center gap-3">
               {currentSession && (
                 <div
-                  className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2 ${
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-2 ${
                     currentSession.isLockedOverride
                       ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                       : isSessionLocked
@@ -340,7 +338,7 @@ export default function FacultyPortal() {
               <button
                 onClick={handleSaveAttendance}
                 disabled={saving || isSessionLocked}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2 rounded-xl shadow-md shadow-emerald-500/20 disabled:opacity-50 transition-all flex items-center gap-1.5"
+                className="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4 py-2 rounded-lg disabled:opacity-50 transition-colors flex items-center gap-1.5"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{saving ? "Saving..." : "Submit Attendance"}</span>
@@ -348,7 +346,7 @@ export default function FacultyPortal() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
             <div className="flex items-center gap-4">
               <span className="text-slate-500 font-medium">Total: <strong>{students.length}</strong></span>
               <span className="text-emerald-700 font-bold">Present: {presentCount}</span>
@@ -360,22 +358,22 @@ export default function FacultyPortal() {
               <button
                 onClick={() => markAll("PRESENT")}
                 disabled={isSessionLocked}
-                className="px-3 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-lg font-bold text-[11px] disabled:opacity-50"
+                className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded font-bold text-[11px] disabled:opacity-50"
               >
                 Mark All Present
               </button>
               <button
                 onClick={() => markAll("ABSENT")}
                 disabled={isSessionLocked}
-                className="px-3 py-1 bg-white hover:bg-red-50 text-red-700 border border-red-300 rounded-lg font-bold text-[11px] disabled:opacity-50"
+                className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded font-bold text-[11px] disabled:opacity-50"
               >
                 Clear All
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-            <div className="p-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between text-xs">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs">
               <span className="font-bold text-slate-700">
                 Official BCA 2025 Roll-Call (Guaranteed usnSequence ASC)
               </span>
@@ -403,16 +401,16 @@ export default function FacultyPortal() {
                         key={st.id}
                         className={`transition-colors ${
                           currentStatus === "ABSENT"
-                            ? "bg-red-50/40"
+                            ? "bg-red-50/60"
                             : currentStatus === "LATE"
-                            ? "bg-amber-50/40"
-                            : "hover:bg-slate-50/60"
+                            ? "bg-amber-50/60"
+                            : "hover:bg-slate-50"
                         }`}
                       >
                         <td className="py-2.5 px-4 font-mono font-bold text-slate-400">
                           #{String(st.usnSequence).padStart(3, "0")}
                         </td>
-                        <td className="py-2.5 px-4 font-mono font-extrabold text-blue-700">
+                        <td className="py-2.5 px-4 font-mono font-bold text-slate-900">
                           {st.usn}
                         </td>
                         <td className="py-2.5 px-4 font-semibold text-slate-900">
@@ -420,12 +418,12 @@ export default function FacultyPortal() {
                         </td>
                         <td className="py-2.5 px-4 text-center">
                           <span
-                            className={`text-[10px] font-black px-2.5 py-1 rounded-md uppercase ${
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
                               currentStatus === "PRESENT"
-                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                ? "bg-emerald-100 text-emerald-800"
                                 : currentStatus === "ABSENT"
-                                ? "bg-red-100 text-red-800 border border-red-300"
-                                : "bg-amber-100 text-amber-800 border border-amber-300"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-amber-100 text-amber-800"
                             }`}
                           >
                             {currentStatus}
@@ -436,10 +434,10 @@ export default function FacultyPortal() {
                             <button
                               disabled={isSessionLocked}
                               onClick={() => toggleStatus(st.id, "PRESENT")}
-                              className={`w-7 h-7 rounded-lg text-xs font-bold transition-all disabled:opacity-40 ${
+                              className={`w-7 h-7 rounded text-xs font-bold transition-colors disabled:opacity-40 ${
                                 currentStatus === "PRESENT"
-                                  ? "bg-emerald-600 text-white shadow-sm"
-                                  : "bg-slate-100 hover:bg-emerald-100 text-emerald-800 border border-slate-200"
+                                  ? "bg-slate-900 text-white"
+                                  : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
                               }`}
                             >
                               P
@@ -447,10 +445,10 @@ export default function FacultyPortal() {
                             <button
                               disabled={isSessionLocked}
                               onClick={() => toggleStatus(st.id, "ABSENT")}
-                              className={`w-7 h-7 rounded-lg text-xs font-bold transition-all disabled:opacity-40 ${
+                              className={`w-7 h-7 rounded text-xs font-bold transition-colors disabled:opacity-40 ${
                                 currentStatus === "ABSENT"
-                                  ? "bg-red-600 text-white shadow-sm"
-                                  : "bg-slate-100 hover:bg-red-100 text-red-800 border border-slate-200"
+                                  ? "bg-red-600 text-white"
+                                  : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
                               }`}
                             >
                               A
@@ -458,10 +456,10 @@ export default function FacultyPortal() {
                             <button
                               disabled={isSessionLocked}
                               onClick={() => toggleStatus(st.id, "LATE")}
-                              className={`w-7 h-7 rounded-lg text-xs font-bold transition-all disabled:opacity-40 ${
+                              className={`w-7 h-7 rounded text-xs font-bold transition-colors disabled:opacity-40 ${
                                 currentStatus === "LATE"
-                                  ? "bg-amber-500 text-white shadow-sm"
-                                  : "bg-slate-100 hover:bg-amber-100 text-amber-800 border border-slate-200"
+                                  ? "bg-amber-600 text-white"
+                                  : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
                               }`}
                             >
                               L
@@ -480,7 +478,7 @@ export default function FacultyPortal() {
 
       {activeTab === "timetable" && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-base font-bold text-slate-900">
@@ -493,10 +491,10 @@ export default function FacultyPortal() {
 
               <button
                 onClick={() => setIsScheduleModalOpen(true)}
-                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow transition-all"
+                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Class Slot (Clash Tested)</span>
+                <span>Add Class Slot</span>
               </button>
             </div>
 
@@ -504,20 +502,20 @@ export default function FacultyPortal() {
               {timetableSlots.map((slot) => (
                 <div
                   key={slot.id}
-                  className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs space-y-2 hover:border-emerald-300 transition-colors"
+                  className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs space-y-2 hover:border-slate-300 transition-colors"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-extrabold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px]">
+                    <span className="font-bold bg-slate-200 text-slate-800 px-2 py-0.5 rounded text-[10px]">
                       {slot.dayOfWeek} • {slot.startTime} - {slot.endTime}
                     </span>
-                    <span className="font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md text-[10px]">
+                    <span className="font-bold text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded text-[10px]">
                       {slot.roomNumber}
                     </span>
                   </div>
 
                   <h3 className="font-bold text-slate-900 text-sm">{slot.subject}</h3>
 
-                  <div className="pt-2 border-t border-slate-200/60 text-[11px] text-slate-600 space-y-0.5">
+                  <div className="pt-2 border-t border-slate-200 text-[11px] text-slate-600 space-y-0.5">
                     <p>Faculty: Prof. {slot.faculty?.firstName} {slot.faculty?.lastName}</p>
                     <p>Batch: {slot.department?.code} Sem {slot.semester} (Sec {slot.section})</p>
                   </div>
@@ -529,12 +527,12 @@ export default function FacultyPortal() {
       )}
 
       {isScheduleModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-100 p-6 md:p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-xl max-w-xl w-full shadow-lg border border-slate-200 p-6">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
-                  <Layers className="w-5 h-5" />
+                <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
+                  <Layers className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900">
@@ -554,7 +552,7 @@ export default function FacultyPortal() {
             </div>
 
             {clashResult && clashResult.hasClash && (
-              <div className="mb-4 p-3.5 bg-red-50 text-red-900 border border-red-200 rounded-2xl text-xs space-y-2">
+              <div className="mb-4 p-3.5 bg-red-50 text-red-900 border border-red-200 rounded-lg text-xs space-y-2">
                 <div className="font-bold flex items-center gap-2 text-red-700">
                   <ShieldAlert className="w-4 h-4 shrink-0" />
                   <span>3-Layer Clash Detected!</span>
@@ -568,7 +566,7 @@ export default function FacultyPortal() {
             )}
 
             {clashResult && !clashResult.hasClash && (
-              <div className="mb-4 p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-2xl text-xs flex items-center gap-2 font-semibold">
+              <div className="mb-4 p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs flex items-center gap-2 font-semibold">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Zero clashes detected! Slot is free across Faculty, Room, and Batch.</span>
               </div>
@@ -585,7 +583,7 @@ export default function FacultyPortal() {
                       setScheduleForm(updated);
                       checkLiveClash(updated);
                     }}
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold"
+                    className="w-full p-2 bg-white border border-slate-300 rounded-lg font-bold"
                   >
                     <option value="MON">Monday</option>
                     <option value="TUE">Tuesday</option>
@@ -607,7 +605,7 @@ export default function FacultyPortal() {
                       setScheduleForm(updated);
                       checkLiveClash(updated);
                     }}
-                    className="w-full p-2.5 border border-slate-300 rounded-xl"
+                    className="w-full p-2 border border-slate-300 rounded-lg"
                   />
                 </div>
 
@@ -622,7 +620,7 @@ export default function FacultyPortal() {
                       setScheduleForm(updated);
                       checkLiveClash(updated);
                     }}
-                    className="w-full p-2.5 border border-slate-300 rounded-xl"
+                    className="w-full p-2 border border-slate-300 rounded-lg"
                   />
                 </div>
               </div>
@@ -635,7 +633,7 @@ export default function FacultyPortal() {
                   value={scheduleForm.subject}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, subject: e.target.value })}
                   placeholder="e.g. Discrete Mathematics (25BC101)"
-                  className="w-full p-2.5 border border-slate-300 rounded-xl"
+                  className="w-full p-2 border border-slate-300 rounded-lg"
                 />
               </div>
 
@@ -652,7 +650,7 @@ export default function FacultyPortal() {
                       checkLiveClash(updated);
                     }}
                     placeholder="LH-201 or LAB-3"
-                    className="w-full p-2.5 border border-slate-300 rounded-xl font-bold"
+                    className="w-full p-2 border border-slate-300 rounded-lg font-bold"
                   />
                 </div>
 
@@ -665,7 +663,7 @@ export default function FacultyPortal() {
                       setScheduleForm(updated);
                       checkLiveClash(updated);
                     }}
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                    className="w-full p-2 bg-white border border-slate-300 rounded-lg"
                   >
                     {departments.map((d) => (
                       <option key={d.id} value={d.id}>
@@ -680,14 +678,14 @@ export default function FacultyPortal() {
                 <button
                   type="button"
                   onClick={() => setIsScheduleModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-semibold"
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={schedulingSlot || clashResult?.hasClash}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-500/20 disabled:opacity-50 transition-all flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold disabled:opacity-50 transition-colors flex items-center gap-2"
                 >
                   {schedulingSlot ? "Validating & Saving..." : "Confirm & Save Slot"}
                 </button>

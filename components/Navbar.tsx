@@ -11,10 +11,8 @@ import {
   BookOpen,
   Calendar,
   Building,
-  KeyRound,
   Database,
   CheckCircle2,
-  AlertCircle,
   Menu,
   X,
 } from "lucide-react";
@@ -95,17 +93,17 @@ export default function Navbar() {
   const roleBadgeColor = (role?: string) => {
     switch (role) {
       case "PRINCIPAL":
-        return "bg-purple-100 text-purple-800 border-purple-300";
+        return "bg-purple-100 text-purple-800 border-purple-200";
       case "ADMISSIONS":
-        return "bg-blue-100 text-blue-800 border-blue-300";
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "HOD":
-        return "bg-amber-100 text-amber-800 border-amber-300";
+        return "bg-amber-100 text-amber-800 border-amber-200";
       case "FACULTY":
-        return "bg-emerald-100 text-emerald-800 border-emerald-300";
+        return "bg-emerald-100 text-emerald-800 border-emerald-200";
       case "STUDENT":
-        return "bg-indigo-100 text-indigo-800 border-indigo-300";
+        return "bg-indigo-100 text-indigo-800 border-indigo-200";
       default:
-        return "bg-slate-100 text-slate-800 border-slate-300";
+        return "bg-slate-100 text-slate-800 border-slate-200";
     }
   };
 
@@ -118,9 +116,9 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
       {seedMessage && (
-        <div className="bg-emerald-600 text-white text-xs px-4 py-2 font-medium flex items-center justify-between transition-all">
+        <div className="bg-emerald-600 text-white text-xs px-4 py-2 font-medium flex items-center justify-between">
           <span className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4" />
             {seedMessage}
@@ -133,25 +131,27 @@ export default function Navbar() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-900 to-indigo-700 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
-              <GraduationCap className="w-6 h-6" />
+          {/* Clean Logo */}
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-slate-900 flex items-center justify-center text-white font-bold">
+              <GraduationCap className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-slate-900 tracking-tight text-lg">
-                  RRCE<span className="text-blue-600">.ERP</span>
+                <span className="font-bold text-slate-900 tracking-tight text-base">
+                  RRCE <span className="text-blue-600 font-extrabold">ERP</span>
                 </span>
-                <span className="text-[10px] bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded-full border border-blue-200">
+                <span className="text-[10px] bg-slate-100 text-slate-700 font-semibold px-2 py-0.5 rounded border border-slate-200">
                   AUTONOMOUS
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
+              <p className="text-[11px] text-slate-500 hidden sm:block">
                 Rajarajeswari College of Engineering • Bengaluru
               </p>
             </div>
           </Link>
 
+          {/* Nav Links */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((item) => {
               const Icon = item.icon;
@@ -162,11 +162,11 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                     isActive
-                      ? "bg-blue-600 text-white shadow-sm"
+                      ? "bg-slate-900 text-white"
                       : isUserRole
-                      ? "text-blue-700 bg-blue-50 hover:bg-blue-100"
+                      ? "text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                   }`}
                 >
@@ -177,12 +177,13 @@ export default function Navbar() {
             })}
           </nav>
 
+          {/* Right Action Icons & User Info */}
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={handleQuickSeed}
               disabled={seedLoading}
               title="Trigger Database Seeding (/api/seed)"
-              className="hidden lg:flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-blue-700 bg-slate-100 hover:bg-blue-50 px-2.5 py-1.5 rounded-lg border border-slate-200 transition-colors"
+              className="hidden lg:flex items-center gap-1 text-[11px] font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-200 transition-colors"
             >
               <Database className={`w-3.5 h-3.5 ${seedLoading ? "animate-spin text-blue-600" : ""}`} />
               <span>{seedLoading ? "Seeding..." : "Seed DB"}</span>
@@ -190,13 +191,13 @@ export default function Navbar() {
 
             {currentUser ? (
               <div className="flex items-center gap-2">
-                <div className="flex flex-col items-end">
+                <div className="flex flex-col items-end text-right">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-slate-800 hidden sm:inline-block">
+                    <span className="text-xs font-bold text-slate-900 hidden sm:inline-block">
                       {currentUser.firstName} {currentUser.lastName}
                     </span>
                     <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border uppercase ${roleBadgeColor(
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${roleBadgeColor(
                         currentUser.role
                       )}`}
                     >
@@ -204,7 +205,7 @@ export default function Navbar() {
                     </span>
                   </div>
                   {currentUser.departmentCode && (
-                    <span className="text-[10px] text-slate-400 font-medium">
+                    <span className="text-[10px] text-slate-500 font-medium">
                       Dept: {currentUser.departmentCode}
                     </span>
                   )}
@@ -213,7 +214,7 @@ export default function Navbar() {
                 <button
                   onClick={handleLogout}
                   title="Sign Out"
-                  className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-slate-200"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -221,7 +222,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition-all"
+                className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
               >
                 <User className="w-3.5 h-3.5" />
                 Login
@@ -230,7 +231,7 @@ export default function Navbar() {
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg"
+              className="md:hidden p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -251,7 +252,7 @@ export default function Navbar() {
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
-                    isActive ? "bg-blue-600 text-white" : "text-slate-700 hover:bg-slate-100"
+                    isActive ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
