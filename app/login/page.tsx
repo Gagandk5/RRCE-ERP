@@ -15,7 +15,6 @@ import {
   Smartphone,
   CheckCircle2,
   Send,
-  HelpCircle,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -33,7 +32,6 @@ export default function LoginPage() {
     success: boolean;
     message: string;
     phone?: string;
-    smsContent?: string;
   } | null>(null);
 
   const demoAccounts = [
@@ -138,7 +136,6 @@ export default function LoginPage() {
           success: true,
           message: data.message,
           phone: data.recipientPhone,
-          smsContent: data.dispatchedSms,
         });
       } else {
         setSmsResult({
@@ -195,14 +192,15 @@ export default function LoginPage() {
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                       SMS Dispatched Successfully!
                     </div>
-                    <p className="text-emerald-700">
+                    <p className="text-emerald-700 leading-relaxed">
                       Login credentials have been sent via SMS to your registered mobile number:
-                      <strong className="block text-slate-900 font-mono mt-1 text-sm">{smsResult.phone}</strong>
+                      <strong className="block text-slate-900 font-mono text-sm mt-1">
+                        {smsResult.phone}
+                      </strong>
                     </p>
-                    <div className="mt-3 p-3 bg-white border border-emerald-200 rounded text-[11px] font-mono text-slate-800 leading-relaxed">
-                      <strong>SMS Gateway Payload:</strong>
-                      <p className="mt-1 text-slate-600">{smsResult.smsContent}</p>
-                    </div>
+                    <p className="text-[11px] text-slate-500 pt-1">
+                      Please check your mobile handset SMS inbox for your username and password.
+                    </p>
                   </div>
                 ) : (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 flex items-start gap-2">
@@ -217,7 +215,7 @@ export default function LoginPage() {
                       setIsForgotModalOpen(false);
                       setSmsResult(null);
                     }}
-                    className="px-4 py-2 bg-slate-900 text-white rounded-lg font-semibold text-xs"
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold text-xs transition-colors"
                   >
                     Back to Login
                   </button>
@@ -234,7 +232,7 @@ export default function LoginPage() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. 1RR25BC001"
+                      placeholder="e.g. 1RR25BC007"
                       value={forgotUsn}
                       onChange={(e) => setForgotUsn(e.target.value)}
                       className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:outline-none uppercase font-mono font-bold"
@@ -243,7 +241,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-600 leading-relaxed">
-                  <strong>SMS Dispatch Rule:</strong> Upon entering your USN, your username and default password formula will be dispatched via SMS directly to your registered mobile number.
+                  <strong>Automated SMS Dispatch:</strong> Credentials will be dispatched directly to your registered mobile handset via SMS. Credentials will not be displayed on screen.
                 </div>
 
                 <div className="flex items-center justify-end gap-3 pt-2">

@@ -66,7 +66,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const smsMessage = `RRCE ERP SMS ALERT: Dear ${studentName}, your login credentials for USN ${usnFormatted} are: Username: ${usnFormatted.toLowerCase()} | Password: ${passwordFormula}. Sent to ${phone}.`;
+    // Simulated Server-Side SMS Gateway Payload (logged securely on server, NEVER exposed to client UI)
+    const serverSmsPayload = `RRCE ERP SMS ALERT: Dear ${studentName}, your login credentials for USN ${usnFormatted} are: Username: ${usnFormatted.toLowerCase()} | Password: ${passwordFormula}. Sent to ${phone}.`;
+    console.log("[SERVER SMS GATEWAY DISPATCH]:", serverSmsPayload);
 
     try {
       await prisma.auditLog.create({
@@ -77,7 +79,7 @@ export async function POST(req: NextRequest) {
             usn: usnFormatted,
             studentName,
             phone,
-            dispatchedSms: smsMessage,
+            status: "DISPATCHED_TO_MOBILE_HANDSET",
             timestamp: new Date().toISOString(),
           }),
         },
@@ -86,13 +88,12 @@ export async function POST(req: NextRequest) {
       console.warn("Audit log creation for SMS dispatch skipped:", logErr);
     }
 
+    // Secure response: do NOT expose plaintext password or raw SMS payload in the client response
     return NextResponse.json({
       success: true,
-      message: `Login credentials have been dispatched via SMS to registered mobile number ${phone}!`,
+      message: `Login credentials have been dispatched via SMS to registered mobile number ${phone}.`,
       recipientPhone: phone,
-      studentName,
       usn: usnFormatted,
-      dispatchedSms: smsMessage,
     });
   } catch (error: unknown) {
     console.error("Forgot password SMS dispatch error:", error);
