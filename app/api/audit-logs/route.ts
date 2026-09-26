@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const action = searchParams.get("action");
     const limit = parseInt(searchParams.get("limit") || "50");
 
-    let logs = [];
+    let logs: any[] = [];
     try {
       logs = await prisma.auditLog.findMany({
         where: action ? { action } : undefined,

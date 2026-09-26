@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const semester = searchParams.get("sem") ? parseInt(searchParams.get("sem")!) : undefined;
     const search = searchParams.get("q")?.toLowerCase();
 
-    let students = [];
+    let students: any[] = [];
     try {
       students = await prisma.student.findMany({
         where: {

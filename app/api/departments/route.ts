@@ -4,7 +4,7 @@ import { DEPARTMENTS } from "@/prisma/seed-data";
 
 export async function GET() {
   try {
-    let departments = [];
+    let departments: any[] = [];
     try {
       departments = await prisma.department.findMany({
         include: {

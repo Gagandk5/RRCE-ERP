@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get("status") as any;
 
   try {
-    let invoices = [];
+    let invoices: any[] = [];
     try {
       invoices = await prisma.invoice.findMany({
         where: {

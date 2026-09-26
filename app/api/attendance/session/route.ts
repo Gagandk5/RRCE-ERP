@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const semester = searchParams.get("sem") ? parseInt(searchParams.get("sem")!) : undefined;
 
   try {
-    let sessions = [];
+    let sessions: any[] = [];
     try {
       sessions = await prisma.attendanceSession.findMany({
         where: {

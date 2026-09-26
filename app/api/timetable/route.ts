@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const semester = searchParams.get("sem") ? parseInt(searchParams.get("sem")!) : undefined;
 
   try {
-    let slots = [];
+    let slots: any[] = [];
     try {
       slots = await prisma.timetableSlot.findMany({
         where: {
