@@ -4,8 +4,22 @@ import { generateDefaultPassword, generateUSN } from "./utils";
 import { DEPARTMENTS, STAFF_ACCOUNTS, BCA_2025_STUDENTS } from "../prisma/seed-data";
 
 export async function runDatabaseSeed() {
-  console.log("Starting RRCE ERP Database Seed...");
+  console.log("Starting RRCE ERP Database Seed with Real BCA 3rd Sem Class Roster...");
 
+  // 1. Wipe old attendance, invoices, and student profiles to ensure clean real roster insertion
+  try {
+    await prisma.attendanceRecord.deleteMany({});
+    await prisma.attendanceSession.deleteMany({});
+    await prisma.invoice.deleteMany({});
+    await prisma.student.deleteMany({});
+    await prisma.user.deleteMany({
+      where: { role: "STUDENT" },
+    });
+  } catch (cleanErr) {
+    console.warn("Pre-seed cleanup warning:", cleanErr);
+  }
+
+  // 2. Department setup
   const deptMap = new Map<string, string>();
 
   for (const dept of DEPARTMENTS) {
@@ -21,6 +35,7 @@ export async function runDatabaseSeed() {
     deptMap.set(dept.code, record.id);
   }
 
+  // 3. Staff Accounts setup
   const staffMap = new Map<string, string>();
 
   for (const staff of STAFF_ACCOUNTS) {
@@ -53,6 +68,7 @@ export async function runDatabaseSeed() {
     staffMap.set(staff.username, user.id);
   }
 
+  // 4. Ingest 54 Real BCA 3rd Sem 2nd Year Students
   const bcaDeptId = deptMap.get("BCA")!;
   const seededStudentIds: string[] = [];
 
@@ -64,17 +80,8 @@ export async function runDatabaseSeed() {
     const defaultPassword = generateDefaultPassword(s.firstName, s.dob);
     const passwordHash = await hashPassword(defaultPassword);
 
-    const studentUser = await prisma.user.upsert({
-      where: { username },
-      update: {
-        email,
-        firstName: s.firstName,
-        lastName: s.lastName,
-        phone: s.phone,
-        role: "STUDENT",
-        departmentId: bcaDeptId,
-      },
-      create: {
+    const studentUser = await prisma.user.create({
+      data: {
         username,
         email,
         passwordHash,
@@ -84,18 +91,12 @@ export async function runDatabaseSeed() {
         phone: s.phone,
         departmentId: bcaDeptId,
         isActive: true,
-        isPasswordResetRequired: true,
+        isPasswordResetRequired: false,
       },
     });
 
-    const studentProfile = await prisma.student.upsert({
-      where: { usn },
-      update: {
-        currentSemester: 1,
-        quota: s.quota,
-        departmentId: bcaDeptId,
-      },
-      create: {
+    const studentProfile = await prisma.student.create({
+      data: {
         userId: studentUser.id,
         usn,
         usnCollegeCode: "1RR",
@@ -103,7 +104,7 @@ export async function runDatabaseSeed() {
         usnBranch: "BC",
         usnSequence: s.sequence,
         dateOfBirth: new Date(s.dob),
-        currentSemester: 1,
+        currentSemester: 3, // Real BCA 3rd Sem 2nd Year
         quota: s.quota,
         departmentId: bcaDeptId,
       },
@@ -117,20 +118,14 @@ export async function runDatabaseSeed() {
     const paidAmount = isPaidInFull ? 85000 : isPartiallyPaid ? 50000 : 0;
     const status = isPaidInFull ? "PAID" : isPartiallyPaid ? "PENDING" : "OVERDUE";
 
-    await prisma.invoice.upsert({
-      where: { invoiceNumber },
-      update: {
-        totalAmount: 85000,
-        paidAmount,
-        status,
-      },
-      create: {
+    await prisma.invoice.create({
+      data: {
         invoiceNumber,
         studentId: studentProfile.id,
         totalAmount: 85000,
         paidAmount,
         status,
-        title: "Annual Tuition Fee 2025-26",
+        title: "Annual Tuition Fee 2025-26 (BCA 3rd Sem)",
         dueDate: new Date("2025-10-31"),
       },
     });
@@ -144,9 +139,9 @@ export async function runDatabaseSeed() {
       dayOfWeek: "MON",
       startTime: "09:00",
       endTime: "10:00",
-      subject: "Discrete Mathematics (25BC101)",
+      subject: "Discrete Mathematics (25BC301)",
       departmentId: bcaDeptId,
-      semester: 1,
+      semester: 3,
       section: "A",
       facultyId: facultyMathId,
       roomNumber: "LH-201",
@@ -155,9 +150,9 @@ export async function runDatabaseSeed() {
       dayOfWeek: "MON",
       startTime: "10:00",
       endTime: "11:00",
-      subject: "Problem Solving with C (25BC102)",
+      subject: "Data Structures & Algorithms (25BC302)",
       departmentId: bcaDeptId,
-      semester: 1,
+      semester: 3,
       section: "A",
       facultyId: hodBcaId,
       roomNumber: "LH-201",
@@ -182,15 +177,16 @@ export async function runDatabaseSeed() {
     }
   }
 
+  // Attendance sessions setup for real roster
   const lockedDate = new Date(Date.now() - 72 * 60 * 60 * 1000);
   const activeDate = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
   const lockedSession = await prisma.attendanceSession.create({
     data: {
-      subject: "Discrete Mathematics (25BC101)",
+      subject: "Discrete Mathematics (25BC301)",
       facultyId: facultyMathId,
       departmentId: bcaDeptId,
-      semester: 1,
+      semester: 3,
       section: "A",
       date: lockedDate,
       createdAt: lockedDate,
@@ -199,7 +195,7 @@ export async function runDatabaseSeed() {
     },
   });
 
-  for (let i = 0; i < Math.min(15, seededStudentIds.length); i++) {
+  for (let i = 0; i < Math.min(20, seededStudentIds.length); i++) {
     const studentId = seededStudentIds[i];
     const isAbsent = i === 4 || i === 9;
     const isLate = i === 12;
@@ -214,10 +210,10 @@ export async function runDatabaseSeed() {
 
   const activeSession = await prisma.attendanceSession.create({
     data: {
-      subject: "Problem Solving with C (25BC102)",
+      subject: "Data Structures & Algorithms (25BC302)",
       facultyId: hodBcaId,
       departmentId: bcaDeptId,
-      semester: 1,
+      semester: 3,
       section: "A",
       date: activeDate,
       createdAt: activeDate,
@@ -226,7 +222,7 @@ export async function runDatabaseSeed() {
     },
   });
 
-  for (let i = 0; i < Math.min(20, seededStudentIds.length); i++) {
+  for (let i = 0; i < Math.min(25, seededStudentIds.length); i++) {
     const studentId = seededStudentIds[i];
     const isAbsent = i === 7;
     await prisma.attendanceRecord.create({
@@ -240,18 +236,18 @@ export async function runDatabaseSeed() {
 
   await prisma.auditLog.create({
     data: {
-      action: "SYSTEM_INITIALIZATION",
+      action: "REAL_CLASS_ROSTER_INGESTION",
       performedBy: "SYSTEM_SEED",
       details: JSON.stringify({
         departmentsSeeded: DEPARTMENTS.length,
         staffSeeded: STAFF_ACCOUNTS.length,
-        studentsSeeded: BCA_2025_STUDENTS.length,
+        realBca3rdSemStudentsSeeded: BCA_2025_STUDENTS.length,
         timestamp: new Date().toISOString(),
       }),
     },
   });
 
-  console.log("RRCE ERP Seeding completed successfully!");
+  console.log("RRCE ERP Real BCA 3rd Sem Seeding completed successfully!");
   return {
     success: true,
     departmentsCount: DEPARTMENTS.length,

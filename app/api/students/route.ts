@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
           usnBranch: "BC",
           usnSequence: s.sequence,
           dateOfBirth: s.dob,
-          currentSemester: 1,
+          currentSemester: 3, // Real BCA 3rd Sem 2nd Year
           quota: s.quota,
           defaultPassword: defaultPwd,
           departmentId: "mock-dept-bca",
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
             email: `${usn.toLowerCase()}@student.rrce.org`,
             phone: s.phone,
             isActive: true,
-            isPasswordResetRequired: true,
+            isPasswordResetRequired: false,
           },
           department: {
             id: "mock-dept-bca",
@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
               totalAmount: 85000,
               paidAmount: isPaid ? 85000 : isPartial ? 50000 : 0,
               status: isPaid ? "PAID" : isPartial ? "PENDING" : "OVERDUE",
-              title: "Annual Tuition Fee 2025-26",
+              title: "Annual Tuition Fee 2025-26 (BCA 3rd Sem)",
             },
           ],
           attendanceRecords: [],
@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
           phone,
           departmentId: dept.id,
           isActive: true,
-          isPasswordResetRequired: true,
+          isPasswordResetRequired: false,
         },
       });
 
@@ -210,7 +210,7 @@ export async function POST(req: NextRequest) {
           usnBranch: dept.usnCode,
           usnSequence: nextSeq,
           dateOfBirth: new Date(dob),
-          currentSemester: semester || 1,
+          currentSemester: semester || 3,
           quota: quota || "KCET",
           departmentId: dept.id,
         },
