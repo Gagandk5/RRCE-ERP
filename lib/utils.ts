@@ -14,11 +14,30 @@ export function generateDefaultPassword(name: string, dob: Date | string): strin
   const cleanName = name.trim().split(" ")[0].replace(/[^a-zA-Z]/g, "").toUpperCase();
   const namePart = (cleanName + "RRCE").slice(0, 3);
 
-  const dateObj = typeof dob === "string" ? new Date(dob) : dob;
-  
-  const day = String(dateObj.getUTCDate()).padStart(2, "0");
-  const month = String(dateObj.getUTCMonth() + 1).padStart(2, "0");
-  const year = String(dateObj.getUTCFullYear()).slice(-2);
+  let day = "01";
+  let month = "01";
+  let year = "07";
+
+  if (typeof dob === "string" && dob.includes("-")) {
+    const parts = dob.split("-");
+    if (parts.length === 3) {
+      year = parts[0].slice(-2);
+      month = parts[1].padStart(2, "0");
+      day = parts[2].padStart(2, "0");
+    }
+  } else if (typeof dob === "string" && dob.includes("/")) {
+    const parts = dob.split("/");
+    if (parts.length === 3) {
+      day = parts[0].padStart(2, "0");
+      month = parts[1].padStart(2, "0");
+      year = parts[2].slice(-2);
+    }
+  } else {
+    const dateObj = typeof dob === "string" ? new Date(dob) : dob;
+    day = String(dateObj.getUTCDate()).padStart(2, "0");
+    month = String(dateObj.getUTCMonth() + 1).padStart(2, "0");
+    year = String(dateObj.getUTCFullYear()).slice(-2);
+  }
 
   return `${namePart}${day}${month}${year}`;
 }
@@ -40,7 +59,6 @@ export function generateUSN(
 
 /**
  * Checks if an attendance session is locked by the 24-hour lockout rule.
- * An attendance session locks 24 hours after creation unless overridden by HOD/Principal.
  */
 export function checkAttendanceLockout(session: {
   createdAt: Date | string;
