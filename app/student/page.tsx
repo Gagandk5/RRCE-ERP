@@ -2,20 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Calendar,
-  Clock,
-  CreditCard,
-  AlertTriangle,
-  CheckCircle2,
-  Download,
-  QrCode,
-  User,
-  LogOut,
-  Bell,
-  MapPin,
-  ShieldCheck,
-} from "lucide-react";
+import { CreditCard, Download, CheckCircle2, AlertCircle } from "lucide-react";
 import { formatINR } from "@/lib/utils";
 
 export default function StudentPortal() {
@@ -101,16 +88,6 @@ export default function StudentPortal() {
     }
   }
 
-  async function handleLogout() {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-      router.refresh();
-    } catch (e) {
-      console.error("Logout failed:", e);
-    }
-  }
-
   async function handleSimulatePayment(e: React.FormEvent) {
     e.preventDefault();
     if (!invoice) return;
@@ -151,109 +128,144 @@ export default function StudentPortal() {
     }
   }
 
-  const attendancePercentage = 84;
+  function formatDateOfBirth(rawDob: any): string {
+    if (!rawDob) return "14 Dec 2007";
+    try {
+      const date = typeof rawDob === "string" ? new Date(rawDob) : rawDob;
+      if (isNaN(date.getTime())) return "14 Dec 2007";
+      return new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }).format(date);
+    } catch {
+      return "14 Dec 2007";
+    }
+  }
+
+  const attendancePercentage = 83.3;
   const totalClasses = 48;
   const attendedClasses = 40;
-  const isBelowVTUThreshold = attendancePercentage < 75;
+  const isEligibleForExams = attendancePercentage >= 75;
 
-  const todayClasses = [
+  const pendingFee = invoice ? Math.max(0, invoice.totalAmount - invoice.paidAmount) : 35000;
+  const totalBilledFee = invoice?.totalAmount || 85000;
+  const totalPaidFee = invoice?.paidAmount || 50000;
+
+  const todaySchedule = [
     {
-      time: "09:00 AM - 10:00 AM",
-      subject: "Discrete Mathematics",
+      time: "09:00 - 10:00",
       code: "25BC301",
+      subject: "Discrete Mathematics",
       faculty: "Prof. Sunitha Sharma",
       room: "LH-201",
-      status: "COMPLETED",
+      status: "Completed",
+      statusType: "completed",
     },
     {
-      time: "10:00 AM - 11:00 AM",
-      subject: "Data Structures & Algorithms",
+      time: "10:00 - 11:00",
       code: "25BC302",
+      subject: "Data Structures & Algorithms",
       faculty: "Dr. Praveen Gowda",
       room: "LH-201",
-      status: "UPCOMING",
+      status: "In Progress",
+      statusType: "active",
     },
     {
-      time: "11:15 AM - 12:15 PM",
-      subject: "Database Management Systems",
+      time: "11:15 - 12:15",
       code: "25BC303",
+      subject: "Database Management Systems",
       faculty: "Prof. Kavitha N",
       room: "Lab-3",
-      status: "SCHEDULED",
+      status: "Upcoming",
+      statusType: "upcoming",
     },
     {
-      time: "02:00 PM - 04:00 PM",
-      subject: "Data Structures Practical Lab",
+      time: "14:00 - 16:00",
       code: "25BCL31",
+      subject: "Data Structures Practical Lab",
       faculty: "Dr. Praveen Gowda",
       room: "Computer Lab 2",
-      status: "SCHEDULED",
+      status: "Scheduled",
+      statusType: "upcoming",
     },
   ];
 
-  const announcements = [
+  const subjectAttendance = [
     {
-      id: "1",
-      title: "IA-2 Test Timetable Published",
-      date: "26 Sep 2025",
-      category: "Exams",
-      content: "The Second Internal Assessment for BCA 3rd Semester will commence on October 12th.",
+      code: "25BC301",
+      name: "Discrete Mathematics",
+      conducted: 20,
+      attended: 18,
+      percentage: 90.0,
+      isShortage: false,
     },
     {
-      id: "2",
-      title: "Tuition Fee Installment Reminder",
-      date: "24 Sep 2025",
-      category: "Accounts",
-      content: "Students with pending fee balance are advised to pay online before Oct 31.",
+      code: "25BC302",
+      name: "Data Structures & Algorithms",
+      conducted: 16,
+      attended: 14,
+      percentage: 87.5,
+      isShortage: false,
     },
     {
-      id: "3",
-      title: "Inter-College Hackathon Registration",
-      date: "22 Sep 2025",
-      category: "Events",
-      content: "Register 4-member teams at Department of Computer Applications by Friday.",
+      code: "25BC303",
+      name: "Database Management Systems",
+      conducted: 12,
+      attended: 8,
+      percentage: 66.7,
+      isShortage: true,
     },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6 text-xs">
-      {/* GROUNDED HEADER BAR */}
-      <div className="bg-slate-900 text-white rounded-lg p-5 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded bg-white p-1 flex items-center justify-center shrink-0 border border-slate-700">
-            <img src="/images.svg" alt="RRCE Logo" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-white tracking-tight">
-              Student Portal • {student?.user?.firstName || "Student"} {student?.user?.lastName || ""}
-            </h1>
-            <p className="text-xs text-slate-400 font-mono">
-              USN: {student?.usn || "1RR25BC007"} • BCA Semester 3 (Section A) • RRCE
-            </p>
+    <div className="max-w-6xl mx-auto px-6 py-6 space-y-6 text-xs text-zinc-900 font-sans">
+      {/* 2. PAGE HEADER & METADATA STRIP */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-semibold text-zinc-900 tracking-tight">
+            Academic Dashboard
+          </h1>
+          <div className="flex items-center gap-2">
+            {receipt && (
+              <button
+                onClick={() => window.print()}
+                className="text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1 rounded transition-colors flex items-center gap-1.5 font-medium"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Print Payment Receipt</span>
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-md border border-slate-700 transition-colors"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>ID Card</span>
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 bg-slate-800 hover:bg-rose-600 text-slate-200 hover:text-white text-xs font-semibold px-3 py-2 rounded-md border border-slate-700 transition-colors"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
-          </button>
+        {/* METADATA STRIP */}
+        <div className="bg-zinc-50 border border-zinc-200 rounded p-3 flex flex-wrap gap-x-6 gap-y-2 text-xs text-zinc-600">
+          <div>
+            <span className="text-zinc-400">Branch & Term: </span>
+            <strong className="text-zinc-900 font-medium">BCA — 3rd Sem (Sec A)</strong>
+          </div>
+          <div>
+            <span className="text-zinc-400">USN: </span>
+            <strong className="font-mono text-zinc-900">{student?.usn || "1RR25BC007"}</strong>
+          </div>
+          <div>
+            <span className="text-zinc-400">Quota: </span>
+            <strong className="text-zinc-900 font-medium">{student?.quota || "KCET"}</strong>
+          </div>
+          <div>
+            <span className="text-zinc-400">Roll Sequence: </span>
+            <strong className="font-mono text-zinc-900">#{String(student?.usnSequence || 7).padStart(3, "0")}</strong>
+          </div>
+          <div>
+            <span className="text-zinc-400">Date of Birth: </span>
+            <strong className="font-mono text-zinc-900">{formatDateOfBirth(student?.dateOfBirth)}</strong>
+          </div>
         </div>
       </div>
 
       {message && (
-        <div className="p-3.5 rounded-md bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-medium flex items-center justify-between">
+        <div className="p-3 rounded border bg-emerald-50 text-emerald-900 border-emerald-200 text-xs flex items-center justify-between font-medium">
           <span className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             {message}
@@ -262,380 +274,239 @@ export default function StudentPortal() {
         </div>
       )}
 
-      {/* METRIC SUMMARY CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Attendance Rate</span>
-            <span className={`px-2 py-0.5 rounded font-bold text-[10px] border ${isBelowVTUThreshold ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
-              {attendancePercentage}%
+      {/* 3. RESTRAINED SEGMENTED SUMMARY BAR */}
+      <div className="grid grid-cols-1 md:grid-cols-4 border border-zinc-200 rounded-lg divide-y md:divide-y-0 md:divide-x divide-zinc-200 bg-white shadow-sm">
+        {/* Metric 1: Attendance */}
+        <div className="p-4 space-y-1">
+          <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">
+            Overall Attendance
+          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-bold font-mono text-zinc-900">{attendedClasses} / {totalClasses}</span>
+            <span className="text-xs font-mono font-bold text-zinc-600">({attendancePercentage}%)</span>
+          </div>
+          <div className="pt-0.5">
+            <span
+              className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium border ${
+                isEligibleForExams
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-rose-50 text-rose-700 border-rose-200"
+              }`}
+            >
+              {isEligibleForExams ? "Eligible for Exams" : "Shortage Alert"}
             </span>
           </div>
-          <div className="text-xl font-bold text-slate-900 mt-1 font-mono">
-            {attendedClasses} <span className="text-xs font-normal text-slate-400">/ {totalClasses} Sessions</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            VTU Criteria: Minimum 75% Required
-          </p>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Fee Status</span>
-            <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-bold text-[10px]">
-              {invoice?.status || "PENDING"}
+        {/* Metric 2: Fee Dues */}
+        <div className="p-4 space-y-1">
+          <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">
+            Tuition Fee Balance
+          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-bold font-mono text-amber-700">{formatINR(pendingFee)}</span>
+            <span className="text-[10px] text-zinc-400 font-mono">Pending</span>
+          </div>
+          <div className="flex items-center justify-between pt-0.5">
+            <span className="text-[10px] text-zinc-500 font-mono">
+              Paid {formatINR(totalPaidFee)} of {formatINR(totalBilledFee)}
             </span>
+            {pendingFee > 0 && (
+              <button
+                onClick={() => setPayModalOpen(true)}
+                className="text-[11px] font-semibold bg-zinc-900 hover:bg-zinc-800 text-white px-2.5 py-0.5 rounded transition-colors"
+              >
+                Pay Balance
+              </button>
+            )}
           </div>
-          <div className="text-xl font-bold text-slate-900 mt-1 font-mono">
-            {formatINR(invoice ? Math.max(0, invoice.totalAmount - invoice.paidAmount) : 35000)}
-          </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Paid {formatINR(invoice?.paidAmount || 50000)} of {formatINR(invoice?.totalAmount || 85000)}
-          </p>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Academic Term</span>
-            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[10px]">
-              Active
-            </span>
+        {/* Metric 3: Current Semester */}
+        <div className="p-4 space-y-1">
+          <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">
+            Current Scheme
+          </span>
+          <div className="text-lg font-bold text-zinc-900">
+            Semester 3 (ODD)
           </div>
-          <div className="text-xl font-bold text-slate-900 mt-1">
-            BCA Sem 3
-          </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Academic Year 2025-2026
-          </p>
+          <span className="text-[10px] text-zinc-500 block">
+            VTU Autonomous Scheme 2025–26
+          </span>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Next Exam</span>
-            <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px]">
-              Oct 12
-            </span>
-          </div>
-          <div className="text-xl font-bold text-slate-900 mt-1">
+        {/* Metric 4: Next Exam */}
+        <div className="p-4 space-y-1">
+          <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">
+            Next Examination
+          </span>
+          <div className="text-lg font-bold text-zinc-900">
             IA-2 Series
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Internal Assessment Examination
-          </p>
+          <span className="text-[10px] text-zinc-500 block font-mono">
+            Starts Oct 12, 2026
+          </span>
         </div>
       </div>
 
-      {/* TWO COLUMN GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT COLUMN: TIMETABLE & SUBJECT ATTENDANCE */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">Today's Class Schedule</h2>
-                <p className="text-xs text-slate-500">Monday Timetable</p>
-              </div>
-              <span className="font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded border border-slate-200 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                4 Sessions
-              </span>
-            </div>
+      {/* 4. PRIMARY CONTENT: STRUCTURED DATA TABLES */}
+      <div className="space-y-6">
+        {/* SECTION A: TODAY'S SCHEDULE */}
+        <div className="border border-zinc-200 rounded-lg overflow-hidden bg-white shadow-sm space-y-0">
+          <div className="p-3 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
+            <span className="font-semibold text-zinc-900 text-xs">
+              Today's Class Schedule (Monday)
+            </span>
+            <span className="text-[11px] font-mono text-zinc-500">
+              4 Sessions Scheduled
+            </span>
+          </div>
 
-            <div className="space-y-2.5">
-              {todayClasses.map((c, idx) => (
-                <div
-                  key={idx}
-                  className={`p-3.5 rounded-lg border ${
-                    c.status === "UPCOMING"
-                      ? "bg-blue-50/80 border-blue-200"
-                      : c.status === "COMPLETED"
-                      ? "bg-slate-50 border-slate-200 opacity-80"
-                      : "bg-white border-slate-200"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900">{c.subject}</span>
-                      <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">
-                        {c.code}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-zinc-50 text-zinc-500 uppercase tracking-wider text-[11px] font-semibold border-b border-zinc-200">
+                <tr>
+                  <th className="py-2.5 px-3">Time</th>
+                  <th className="py-2.5 px-3">Course Code & Subject</th>
+                  <th className="py-2.5 px-3">Faculty</th>
+                  <th className="py-2.5 px-3">Room</th>
+                  <th className="py-2.5 px-3 text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {todaySchedule.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-zinc-50/80 transition-colors">
+                    <td className="py-2.5 px-3 font-mono font-medium text-zinc-700">
+                      {item.time}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span className="font-medium text-zinc-900">{item.subject}</span>
+                      <span className="font-mono text-zinc-500 ml-2 text-[11px]">({item.code})</span>
+                    </td>
+                    <td className="py-2.5 px-3 text-zinc-600">
+                      {item.faculty}
+                    </td>
+                    <td className="py-2.5 px-3 font-mono text-zinc-700">
+                      {item.room}
+                    </td>
+                    <td className="py-2.5 px-3 text-right">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded text-[11px] font-medium border ${
+                          item.statusType === "completed"
+                            ? "bg-zinc-100 text-zinc-700 border-zinc-200"
+                            : item.statusType === "active"
+                            ? "bg-blue-50 text-blue-700 border-blue-200 font-semibold"
+                            : "bg-zinc-50 text-zinc-600 border-zinc-200"
+                        }`}
+                      >
+                        {item.status}
                       </span>
-                    </div>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                        c.status === "UPCOMING"
-                          ? "bg-blue-600 text-white"
-                          : c.status === "COMPLETED"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-slate-100 text-slate-700"
-                      }`}
-                    >
-                      {c.status === "UPCOMING" ? "Next Class" : c.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-slate-500 mt-2">
-                    <span className="flex items-center gap-1 font-medium font-mono">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      {c.time}
-                    </span>
-                    <span className="flex items-center gap-1 font-medium">
-                      <User className="w-3.5 h-3.5 text-slate-400" />
-                      {c.faculty}
-                    </span>
-                    <span className="flex items-center gap-1 font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                      <MapPin className="w-3 h-3 text-slate-400" />
-                      {c.room}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">Attendance Breakdown by Subject</h2>
-                <p className="text-xs text-slate-500">VTU Exam Eligibility Requirement: 75%</p>
-              </div>
-              <span className="font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded border border-slate-200 font-mono">
-                Overall: {attendancePercentage}%
-              </span>
-            </div>
-
-            <div className="p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-md">
-              <strong className="block font-bold mb-0.5">VTU Eligibility Status: Compliant</strong>
-              Current attendance rate is 84%. Allowable absence quota remaining: 2 sessions.
-            </div>
-
-            <div className="space-y-3 pt-1">
-              <div>
-                <div className="flex justify-between font-bold text-slate-800 mb-1">
-                  <span>Discrete Mathematics (25BC301)</span>
-                  <span className="text-emerald-700 font-mono">18/20 (90%)</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div className="bg-emerald-600 h-2 rounded-full" style={{ width: "90%" }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between font-bold text-slate-800 mb-1">
-                  <span>Data Structures & Algorithms (25BC302)</span>
-                  <span className="text-emerald-700 font-mono">14/16 (87.5%)</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div className="bg-emerald-600 h-2 rounded-full" style={{ width: "87.5%" }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between font-bold text-slate-800 mb-1">
-                  <span>Database Management Systems (25BC303)</span>
-                  <span className="text-amber-700 font-mono">8/12 (66.7%)</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div className="bg-amber-500 h-2 rounded-full" style={{ width: "66.7%" }}></div>
-                </div>
-                <p className="text-[11px] text-amber-700 mt-1">
-                  Requires 2 additional attended sessions to reach 75%.
-                </p>
-              </div>
-            </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: IDENTITY CARD + NOTICES + FEE BILLING */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="bg-slate-900 text-white rounded-lg p-5 shadow-sm border border-slate-800 space-y-3.5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <img src="/images.svg" alt="RRCE Emblem" className="w-7 h-7 object-contain bg-white p-1 rounded shrink-0" />
-                <div>
-                  <h3 className="font-bold text-xs text-white uppercase tracking-wider">
-                    Rajarajeswari College of Engg.
-                  </h3>
-                  <p className="text-[10px] text-slate-400 font-mono">Autonomous Institution • VTU</p>
-                </div>
-              </div>
-              <span className="text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded font-mono">
-                2025-26
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
-                <User className="w-6 h-6 text-slate-300" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-white">
-                  {student?.user?.firstName} {student?.user?.lastName}
-                </h2>
-                <div className="inline-block font-mono text-xs font-bold text-slate-200 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 mt-0.5">
-                  {student?.usn}
-                </div>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  BCA Semester {student?.currentSemester || 3} (Sec A)
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-800/60 p-2.5 rounded border border-slate-800">
-              <div>
-                <span className="text-slate-400 block text-[10px]">Date of Birth:</span>
-                <span className="font-semibold text-white font-mono">
-                  {student?.dateOfBirth ? (typeof student.dateOfBirth === "string" && student.dateOfBirth.includes("-") ? student.dateOfBirth.split("-").reverse().join("/") : new Date(student.dateOfBirth).toLocaleDateString("en-GB")) : "14/12/2007"}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[10px]">Quota:</span>
-                <span className="font-semibold text-white">{student?.quota || "KCET"}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[10px]">Roll Sequence:</span>
-                <span className="font-mono font-bold text-slate-200">
-                  #{String(student?.usnSequence || 7).padStart(3, "0")}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[10px]">Contact:</span>
-                <span className="font-mono text-white">{student?.user?.phone || "+91 8971115212"}</span>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-              <span>Valid through 2028-2029</span>
-              <div className="flex items-center gap-1 font-mono text-white">
-                <QrCode className="w-3.5 h-3.5 text-slate-400" />
-                <span>VTU-VERIFIED</span>
-              </div>
-            </div>
+        {/* SECTION B: SUBJECT-WISE ATTENDANCE BREAKDOWN */}
+        <div className="border border-zinc-200 rounded-lg overflow-hidden bg-white shadow-sm space-y-0">
+          <div className="p-3 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
+            <span className="font-semibold text-zinc-900 text-xs">
+              Subject-wise Attendance Ledger
+            </span>
+            <span className="text-[11px] font-mono text-zinc-500">
+              Minimum Required: 75%
+            </span>
           </div>
 
-          <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div className="flex items-center gap-2">
-                <Bell className="w-4 h-4 text-slate-700" />
-                <h2 className="text-sm font-bold text-slate-900">Campus Notices</h2>
-              </div>
-              <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
-                Official
-              </span>
-            </div>
-
-            <div className="space-y-2.5">
-              {announcements.map((a) => (
-                <div key={a.id} className="p-3 bg-slate-50 border border-slate-200 rounded-md text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900">{a.title}</span>
-                    <span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">
-                      {a.category}
-                    </span>
-                  </div>
-                  <p className="text-slate-600 text-[11px] leading-relaxed">{a.content}</p>
-                  <span className="text-[10px] text-slate-400 block pt-0.5 font-mono">{a.date}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-3.5">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div className="flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-slate-700" />
-                <h2 className="text-sm font-bold text-slate-900">Tuition Fee Statement</h2>
-              </div>
-              <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-mono">
-                2025-26
-              </span>
-            </div>
-
-            {invoice && (
-              <div className="p-3 bg-slate-50 rounded-md border border-slate-200 space-y-1.5 text-xs font-mono">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Invoice:</span>
-                  <span className="font-bold text-slate-900">{invoice.invoiceNumber}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Total Billed:</span>
-                  <span className="font-bold text-slate-900">{formatINR(invoice.totalAmount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Paid:</span>
-                  <span className="font-bold text-emerald-700">{formatINR(invoice.paidAmount)}</span>
-                </div>
-                <div className="flex justify-between pt-1.5 border-t border-slate-200 font-bold">
-                  <span className="text-slate-700">Remaining Balance:</span>
-                  <span className="text-amber-700">
-                    {formatINR(Math.max(0, invoice.totalAmount - invoice.paidAmount))}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={() => setPayModalOpen(true)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2.5 px-4 rounded-md shadow-sm transition-colors flex items-center justify-center gap-2"
-            >
-              <CreditCard className="w-4 h-4" />
-              <span>Pay Tuition Fee Online</span>
-            </button>
-
-            {receipt && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-900 flex items-center justify-between">
-                <div>
-                  <strong className="block font-bold">Receipt #{receipt.receiptNumber}</strong>
-                  <span className="text-[11px] text-emerald-700 font-mono">Paid: {formatINR(receipt.paidAmount)}</span>
-                </div>
-                <button
-                  onClick={() => window.print()}
-                  className="px-2.5 py-1 bg-emerald-700 text-white rounded text-[11px] font-bold"
-                >
-                  Print
-                </button>
-              </div>
-            )}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-zinc-50 text-zinc-500 uppercase tracking-wider text-[11px] font-semibold border-b border-zinc-200">
+                <tr>
+                  <th className="py-2.5 px-3">Course Code</th>
+                  <th className="py-2.5 px-3">Course Name</th>
+                  <th className="py-2.5 px-3 text-center">Conducted</th>
+                  <th className="py-2.5 px-3 text-center">Attended</th>
+                  <th className="py-2.5 px-3 text-center">Percentage</th>
+                  <th className="py-2.5 px-3 text-right">Eligibility</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {subjectAttendance.map((sub, idx) => (
+                  <tr
+                    key={idx}
+                    className={`transition-colors ${
+                      sub.isShortage ? "bg-rose-50/50 hover:bg-rose-50/80" : "hover:bg-zinc-50/80"
+                    }`}
+                  >
+                    <td className="py-2.5 px-3 font-mono font-bold text-zinc-900">
+                      {sub.code}
+                    </td>
+                    <td className="py-2.5 px-3 font-medium text-zinc-900">
+                      {sub.name}
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-mono text-zinc-700">
+                      {sub.conducted}
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-mono text-zinc-700">
+                      {sub.attended}
+                    </td>
+                    <td className={`py-2.5 px-3 text-center font-mono font-bold ${sub.isShortage ? "text-rose-700" : "text-zinc-900"}`}>
+                      {sub.percentage.toFixed(1)}%
+                    </td>
+                    <td className="py-2.5 px-3 text-right">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded text-[11px] font-medium border ${
+                          sub.isShortage
+                            ? "bg-rose-50 text-rose-700 border-rose-200 font-semibold"
+                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        }`}
+                      >
+                        {sub.isShortage ? "Shortage Warning" : "Eligible"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
+      {/* ONLINE PAYMENT MODAL */}
       {payModalOpen && invoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-lg max-w-md w-full shadow-lg border border-slate-200 p-6">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
-                  <CreditCard className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Tuition Fee Online Payment Gateway
-                  </h3>
-                  <p className="text-[11px] text-slate-500 font-mono">
-                    RRCE Autonomous Cashier
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-lg max-w-md w-full shadow-md border border-zinc-200 p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-900">
+                  Tuition Fee Online Payment Gateway
+                </h3>
+                <p className="text-[11px] text-zinc-500 font-mono">
+                  RRCE Autonomous Cashier
+                </p>
               </div>
               <button
                 onClick={() => setPayModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 font-bold"
+                className="text-zinc-400 hover:text-zinc-600 font-bold text-sm"
               >
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleSimulatePayment} className="space-y-4">
-              <div className="p-3 bg-slate-50 rounded-md border border-slate-200 space-y-1 font-mono text-xs">
+              <div className="p-3 bg-zinc-50 rounded border border-zinc-200 space-y-1 font-mono text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Invoice:</span>
-                  <span className="font-bold text-slate-800">{invoice.invoiceNumber}</span>
+                  <span className="text-zinc-500">Invoice:</span>
+                  <span className="font-bold text-zinc-800">{invoice.invoiceNumber}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Total Billed:</span>
-                  <span className="font-bold text-slate-800">{formatINR(invoice.totalAmount)}</span>
+                  <span className="text-zinc-500">Total Billed:</span>
+                  <span className="font-bold text-zinc-800">{formatINR(invoice.totalAmount)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Remaining Due:</span>
+                  <span className="text-zinc-500">Remaining Due:</span>
                   <span className="font-bold text-amber-700">
                     {formatINR(Math.max(0, invoice.totalAmount - invoice.paidAmount))}
                   </span>
@@ -643,7 +514,7 @@ export default function StudentPortal() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
+                <label className="block font-semibold text-zinc-700 mb-1">
                   Payment Amount (₹)
                 </label>
                 <input
@@ -653,7 +524,7 @@ export default function StudentPortal() {
                   max={Math.max(1000, invoice.totalAmount - invoice.paidAmount)}
                   value={payAmount}
                   onChange={(e) => setPayAmount(Number(e.target.value))}
-                  className="w-full p-2 border border-slate-300 rounded-md text-sm font-mono font-bold focus:ring-1 focus:ring-slate-900 focus:outline-none"
+                  className="w-full p-2 border border-zinc-300 rounded text-sm font-mono font-bold focus:ring-1 focus:ring-zinc-900 focus:outline-none"
                 />
               </div>
 
@@ -661,14 +532,14 @@ export default function StudentPortal() {
                 <button
                   type="button"
                   onClick={() => setPayModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-md font-semibold"
+                  className="px-4 py-2 text-zinc-600 hover:bg-zinc-100 rounded font-semibold text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={paying || payAmount <= 0}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold disabled:opacity-50 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded font-semibold text-xs disabled:opacity-50 transition-colors flex items-center gap-2"
                 >
                   {paying ? "Processing..." : `Pay ₹${payAmount.toLocaleString("en-IN")}`}
                 </button>

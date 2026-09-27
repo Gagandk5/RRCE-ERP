@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, User, Shield, BookOpen, UserPlus, GraduationCap, LayoutDashboard } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -43,120 +43,65 @@ export default function Navbar() {
   }
 
   if (pathname === "/login") {
-    return null; // Keep login screen focused without top nav duplicate
+    return null;
   }
 
+  const roleTitleMap: Record<string, string> = {
+    STUDENT: "Student Portal",
+    FACULTY: "Faculty Portal",
+    HOD: "HOD Directorate",
+    ADMISSIONS: "Admissions Registry",
+    PRINCIPAL: "Principal Desk",
+  };
+
+  const portalTitle = currentUser?.role
+    ? roleTitleMap[currentUser.role] || "Portal"
+    : "Portal";
+
   return (
-    <header className="bg-slate-900 text-white border-b border-slate-800 text-xs sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-        {/* BRAND & EMBLEM */}
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
-            <div className="w-8 h-8 rounded bg-white p-0.5 flex items-center justify-center shrink-0 border border-slate-700">
+    <header className="bg-white border-b border-zinc-200 sticky top-0 z-40 text-xs">
+      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
+        {/* LEFT: EMBLEM + BRAND + VERTICAL DIVIDER + PORTAL NAME */}
+        <div className="flex items-center">
+          <Link href="/login" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <div className="w-6 h-6 rounded bg-white flex items-center justify-center shrink-0 border border-zinc-200">
               <img src="/images.svg" alt="RRCE Emblem" className="w-full h-full object-contain" />
             </div>
-            <div>
-              <span className="font-bold text-white tracking-tight text-sm block">
-                RRCE ERP
-              </span>
-              <span className="text-[10px] text-slate-400 block -mt-0.5 font-mono">
-                VTU Autonomous Institution
-              </span>
-            </div>
+            <span className="font-bold text-zinc-900 text-sm tracking-tight">
+              RRCE ERP
+            </span>
           </Link>
+          <div className="h-4 w-px bg-zinc-200 mx-3 shrink-0" />
+          <span className="text-zinc-500 text-sm font-medium">
+            {portalTitle}
+          </span>
         </div>
 
-        {/* ROLE NAVIGATION LINKS */}
-        {currentUser && (
-          <nav className="hidden md:flex items-center gap-1 font-medium">
-            {currentUser.role === "PRINCIPAL" && (
-              <Link
-                href="/principal"
-                className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
-                  pathname === "/principal" ? "bg-slate-800 text-white font-semibold" : "text-slate-300 hover:bg-slate-800/60"
-                }`}
-              >
-                <Shield className="w-3.5 h-3.5 text-slate-400" />
-                <span>Principal Desk</span>
-              </Link>
-            )}
-
-            {["ADMISSIONS", "PRINCIPAL"].includes(currentUser.role) && (
-              <Link
-                href="/admissions"
-                className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
-                  pathname === "/admissions" ? "bg-slate-800 text-white font-semibold" : "text-slate-300 hover:bg-slate-800/60"
-                }`}
-              >
-                <UserPlus className="w-3.5 h-3.5 text-slate-400" />
-                <span>Admissions Registry</span>
-              </Link>
-            )}
-
-            {["HOD", "PRINCIPAL"].includes(currentUser.role) && (
-              <Link
-                href="/hod"
-                className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
-                  pathname === "/hod" ? "bg-slate-800 text-white font-semibold" : "text-slate-300 hover:bg-slate-800/60"
-                }`}
-              >
-                <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                <span>HOD Directorate</span>
-              </Link>
-            )}
-
-            {["FACULTY", "HOD", "PRINCIPAL"].includes(currentUser.role) && (
-              <Link
-                href="/faculty"
-                className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
-                  pathname === "/faculty" ? "bg-slate-800 text-white font-semibold" : "text-slate-300 hover:bg-slate-800/60"
-                }`}
-              >
-                <LayoutDashboard className="w-3.5 h-3.5 text-slate-400" />
-                <span>Faculty Attendance</span>
-              </Link>
-            )}
-
-            {currentUser.role === "STUDENT" && (
-              <Link
-                href="/student"
-                className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
-                  pathname === "/student" ? "bg-slate-800 text-white font-semibold" : "text-slate-300 hover:bg-slate-800/60"
-                }`}
-              >
-                <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
-                <span>Student Portal</span>
-              </Link>
-            )}
-          </nav>
-        )}
-
-        {/* USER PROFILE & LOGOUT TRIGGER */}
-        <div className="flex items-center gap-3">
+        {/* RIGHT: PROFILE INDICATOR & SIGN OUT BUTTON */}
+        <div className="flex items-center gap-4">
           {currentUser ? (
             <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <span className="font-bold text-white block">
+              <div className="text-right">
+                <span className="text-sm font-medium text-zinc-900 block leading-none">
                   {currentUser.firstName} {currentUser.lastName}
                 </span>
-                <span className="text-[10px] font-mono font-semibold text-slate-400 block uppercase">
-                  {currentUser.role} {currentUser.studentProfile?.usn ? `• ${currentUser.studentProfile.usn}` : ""}
+                <span className="font-mono text-xs text-zinc-500 block mt-1 leading-none">
+                  {currentUser.studentProfile?.usn || currentUser.usn || currentUser.username}
                 </span>
               </div>
 
               <button
                 onClick={handleLogout}
-                title="Sign Out"
-                className="flex items-center gap-1.5 bg-slate-800 hover:bg-red-600/90 text-slate-200 hover:text-white text-xs font-semibold px-2.5 py-1.5 rounded-md border border-slate-700 transition-colors"
+                className="text-xs text-zinc-600 hover:text-zinc-900 border border-zinc-200 px-2.5 py-1 rounded transition-colors flex items-center gap-1.5"
               >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Sign Out</span>
+                <LogOut className="w-3 h-3 text-zinc-400" />
+                <span>Sign Out</span>
               </button>
             </div>
           ) : (
             <Link
               href="/login"
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold px-3 py-1.5 rounded-md border border-slate-700 transition-colors"
+              className="text-xs text-zinc-600 hover:text-zinc-900 border border-zinc-200 px-3 py-1 rounded transition-colors font-medium"
             >
               Sign In
             </Link>
