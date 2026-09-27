@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { runDatabaseSeed } from "../lib/seed-service";
 import prisma from "../lib/prisma";
 

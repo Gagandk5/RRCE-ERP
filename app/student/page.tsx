@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
+  GraduationCap,
   CreditCard,
   AlertTriangle,
   CheckCircle2,
@@ -13,7 +14,6 @@ import {
   LogOut,
 } from "lucide-react";
 import { formatINR } from "@/lib/utils";
-import RRCELogo from "@/components/RRCELogo";
 
 export default function StudentPortal() {
   const router = useRouter();
@@ -40,6 +40,7 @@ export default function StudentPortal() {
         currentUser = d.user;
       }
 
+      // 1. If currentUser has direct DB studentProfile attached from /api/auth/me
       if (currentUser?.studentProfile) {
         const profile = {
           ...currentUser.studentProfile,
@@ -60,6 +61,7 @@ export default function StudentPortal() {
         return;
       }
 
+      // 2. Otherwise fetch BCA roster and match logged-in student robustly
       const stRes = await fetch("/api/students?dept=BCA");
       if (stRes.ok) {
         const sData = await stRes.json();
@@ -155,25 +157,38 @@ export default function StudentPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      {/* Official RRCE Header with Crest & Sign Out */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-2xl p-6 md:p-8 border border-slate-800 shadow-md">
+      {/* Clean Header with Sign Out */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
-          <RRCELogo size="lg" lightText={true} />
+          <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
+            <GraduationCap className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider mb-1 border border-slate-700">
+              VTU Autonomous Student Portal
+            </div>
+            <h1 className="text-xl font-bold text-white">
+              Welcome, {student?.user?.firstName || "Student"} {student?.user?.lastName || ""}
+            </h1>
+            <p className="text-xs text-slate-400 font-mono">
+              USN: {student?.usn || "1RR25BC007"} • Bachelor of Computer Applications (BCA)
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
-            <span className="text-xs font-bold text-slate-400 block">Logged Student:</span>
-            <span className="text-xs font-bold text-amber-400 flex items-center gap-1 justify-end">
+            <span className="text-xs font-bold text-slate-400 block">Academic Standing:</span>
+            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1 justify-end">
               <ShieldCheck className="w-3.5 h-3.5" />
-              {student?.user?.firstName} {student?.user?.lastName} ({student?.usn})
+              Regular Enrolled
             </span>
           </div>
 
           <button
             onClick={handleLogout}
             title="Sign Out"
-            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out</span>
@@ -182,48 +197,50 @@ export default function StudentPortal() {
       </div>
 
       {message && (
-        <div className="p-4 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium flex items-center justify-between">
+        <div className="p-4 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium flex items-center justify-between">
           <span className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             {message}
           </span>
-          <button onClick={() => setMessage(null)} className="text-emerald-700 font-bold">✕</button>
+          <button onClick={() => setMessage(null)} className="text-emerald-700">✕</button>
         </div>
       )}
 
       {/* Main Grid: Digital ID Card + Attendance */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT: Official RRCE Blue & Gold Student Identity Card */}
-        <div className="lg:col-span-5 bg-slate-900 text-white rounded-2xl p-6 shadow-lg border border-amber-500/30 flex flex-col justify-between relative overflow-hidden">
-          {/* Top Gold Accent Trim */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500" />
-
+        {/* LEFT: Clean Solid Student Identity Card */}
+        <div className="lg:col-span-5 bg-slate-900 text-white rounded-xl p-6 shadow-sm border border-slate-800 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
-              <RRCELogo size="sm" lightText={true} />
-              <span className="text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded">
-                AY 2025-26
+              <div>
+                <h3 className="font-bold text-sm text-white tracking-wide">
+                  RAJARAJESWARI COLLEGE OF ENGG.
+                </h3>
+                <p className="text-[10px] text-slate-400">Autonomous Institution • VTU Belagavi</p>
+              </div>
+              <span className="text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded">
+                2025-26
               </span>
             </div>
 
             <div className="flex items-center gap-4 my-4">
-              <div className="w-16 h-16 rounded-xl bg-slate-800 border-2 border-amber-500/40 flex items-center justify-center text-white shrink-0 shadow-inner">
-                <User className="w-8 h-8 text-amber-400" />
+              <div className="w-14 h-14 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
+                <User className="w-7 h-7 text-slate-300" />
               </div>
               <div>
-                <h2 className="text-lg font-extrabold text-white">
+                <h2 className="text-base font-bold text-white">
                   {student?.user?.firstName} {student?.user?.lastName}
                 </h2>
-                <div className="inline-block mt-0.5 font-mono text-xs font-bold text-amber-400 bg-slate-800 px-2.5 py-0.5 rounded border border-amber-500/30">
+                <div className="inline-block mt-0.5 font-mono text-xs font-bold text-slate-200 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
                   {student?.usn}
                 </div>
-                <p className="text-[11px] text-slate-300 mt-1 font-medium">
+                <p className="text-[11px] text-slate-400 mt-1">
                   BCA • Semester {student?.currentSemester || 3} (Sec A)
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/80 mt-3">
+            <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-800/60 p-3 rounded-lg border border-slate-800 mt-3">
               <div>
                 <span className="text-slate-400 block text-[10px]">Date of Birth:</span>
                 <span className="font-semibold text-white">
@@ -236,12 +253,12 @@ export default function StudentPortal() {
               </div>
               <div>
                 <span className="text-slate-400 block text-[10px]">Roll Sequence:</span>
-                <span className="font-mono font-bold text-amber-400">
+                <span className="font-mono font-bold text-slate-200">
                   #{String(student?.usnSequence || 7).padStart(3, "0")}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">Student Contact:</span>
+                <span className="text-slate-400 block text-[10px]">Emergency Contact:</span>
                 <span className="font-mono text-white">{student?.user?.phone || "+91 8971115212"}</span>
               </div>
             </div>
@@ -249,23 +266,23 @@ export default function StudentPortal() {
 
           <div className="pt-4 mt-4 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
             <span>Valid through 2028-2029</span>
-            <div className="flex items-center gap-1 font-mono text-amber-400 font-bold">
-              <QrCode className="w-4 h-4 text-amber-400" />
-              <span>RRCE-VERIFIED</span>
+            <div className="flex items-center gap-1 font-mono text-white">
+              <QrCode className="w-4 h-4 text-slate-400" />
+              <span>VTU-VERIFIED</span>
             </div>
           </div>
         </div>
 
         {/* RIGHT: ATTENDANCE ANALYTICS */}
-        <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-white rounded-xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-base font-extrabold text-slate-900">Attendance Compliance</h3>
+                <h3 className="text-base font-bold text-slate-900">Attendance Compliance</h3>
                 <p className="text-xs text-slate-500">Autonomous VTU requirement: Minimum 75% attendance</p>
               </div>
               <span
-                className={`text-xs font-bold px-3 py-1 rounded-full border ${
+                className={`text-xs font-bold px-3 py-1 rounded border ${
                   isBelowVTUThreshold
                     ? "bg-red-50 text-red-700 border-red-200"
                     : "bg-emerald-50 text-emerald-700 border-emerald-200"
@@ -276,7 +293,7 @@ export default function StudentPortal() {
             </div>
 
             {isBelowVTUThreshold ? (
-              <div className="p-3.5 bg-red-50 text-red-800 border border-red-200 rounded-xl text-xs flex items-start gap-2.5 mb-4">
+              <div className="p-3.5 bg-red-50 text-red-800 border border-red-200 rounded-lg text-xs flex items-start gap-2.5 mb-4">
                 <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                 <div>
                   <strong className="block font-bold">NSAR / Exam Hall Ticket Warning!</strong>
@@ -284,22 +301,22 @@ export default function StudentPortal() {
                 </div>
               </div>
             ) : (
-              <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs flex items-center gap-2 mb-4 font-semibold">
+              <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs flex items-center gap-2 mb-4 font-semibold">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Eligibility Good: Above VTU 75% Exam Criterion.</span>
               </div>
             )}
 
             <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between font-semibold text-slate-700 pb-1.5 border-b border-slate-100">
+              <div className="flex items-center justify-between font-semibold text-slate-700 pb-1 border-b border-slate-100">
                 <span>Discrete Mathematics (25BC301)</span>
                 <span className="font-bold text-slate-900">18 / 20 (90%)</span>
               </div>
-              <div className="flex items-center justify-between font-semibold text-slate-700 pb-1.5 border-b border-slate-100">
+              <div className="flex items-center justify-between font-semibold text-slate-700 pb-1 border-b border-slate-100">
                 <span>Data Structures & Algorithms (25BC302)</span>
                 <span className="font-bold text-slate-900">14 / 16 (87.5%)</span>
               </div>
-              <div className="flex items-center justify-between font-semibold text-slate-700 pb-1.5 border-b border-slate-100">
+              <div className="flex items-center justify-between font-semibold text-slate-700 pb-1 border-b border-slate-100">
                 <span>Database Management Systems (25BC303)</span>
                 <span className="font-bold text-slate-900">8 / 12 (66.7% - Warning)</span>
               </div>
@@ -314,10 +331,10 @@ export default function StudentPortal() {
       </div>
 
       {/* FEE INVOICE SECTION */}
-      <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-sm space-y-6">
+      <div className="bg-white rounded-xl p-6 md:p-8 border border-slate-200 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full mb-1 border border-amber-500/30 uppercase">
+            <div className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded mb-1 border border-slate-200">
               <CreditCard className="w-3.5 h-3.5" />
               Annual Tuition Fee Billing
             </div>
@@ -329,15 +346,15 @@ export default function StudentPortal() {
 
           <button
             onClick={() => setPayModalOpen(true)}
-            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-sm transition-colors"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-5 py-2.5 rounded-lg shadow-sm transition-colors"
           >
-            <CreditCard className="w-4 h-4 text-amber-400" />
+            <CreditCard className="w-4 h-4" />
             <span>Pay Tuition Fee Online</span>
           </button>
         </div>
 
         {invoice && (
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-slate-50 p-5 rounded-xl border border-slate-200 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-slate-50 p-5 rounded-lg border border-slate-200 text-xs">
             <div>
               <span className="text-slate-400 block text-[10px]">Invoice Number</span>
               <span className="font-mono font-bold text-slate-900 text-sm">{invoice.invoiceNumber}</span>
@@ -360,7 +377,7 @@ export default function StudentPortal() {
         )}
 
         {receipt && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 text-xs text-emerald-900 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-5 text-xs text-emerald-900 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 font-bold text-sm text-emerald-800 mb-1">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -373,7 +390,7 @@ export default function StudentPortal() {
 
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2 rounded-xl transition-colors shrink-0"
+              className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2 rounded-lg transition-colors shrink-0"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Print Fee Receipt</span>
@@ -383,11 +400,11 @@ export default function StudentPortal() {
       </div>
 
       {payModalOpen && invoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-xl max-w-md w-full shadow-lg border border-slate-200 p-6">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200">
+                <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
                   <CreditCard className="w-4 h-4" />
                 </div>
                 <div>
@@ -408,7 +425,7 @@ export default function StudentPortal() {
             </div>
 
             <form onSubmit={handleSimulatePayment} className="space-y-4 text-xs">
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Invoice:</span>
                   <span className="font-mono font-bold text-slate-800">{invoice.invoiceNumber}</span>
@@ -436,7 +453,7 @@ export default function StudentPortal() {
                   max={Math.max(1000, invoice.totalAmount - invoice.paidAmount)}
                   value={payAmount}
                   onChange={(e) => setPayAmount(Number(e.target.value))}
-                  className="w-full p-2.5 border border-slate-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-900 focus:outline-none"
+                  className="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-bold focus:ring-2 focus:ring-slate-900 focus:outline-none"
                 />
               </div>
 
@@ -444,14 +461,14 @@ export default function StudentPortal() {
                 <button
                   type="button"
                   onClick={() => setPayModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-semibold"
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={paying || payAmount <= 0}
-                  className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold disabled:opacity-50 transition-colors flex items-center gap-2"
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold disabled:opacity-50 transition-colors flex items-center gap-2"
                 >
                   {paying ? "Processing UPI..." : `Pay ₹${payAmount.toLocaleString("en-IN")}`}
                 </button>
