@@ -95,11 +95,11 @@ export default function HODPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      {/* Clean Solid Header with Sign Out */}
+      {/* Clean Solid Header with Official RRCE Logo & Sign Out */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
-            <BookOpen className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-xl bg-white p-1.5 flex items-center justify-center shrink-0 border border-slate-700 shadow-sm">
+            <img src="/images.svg" alt="RRCE Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider mb-1 border border-slate-700">
@@ -183,7 +183,7 @@ export default function HODPortal() {
             <GraduationCap className="w-4 h-4 text-slate-700" />
           </div>
           <div className="text-2xl font-bold text-slate-900 mt-2">
-            Semester 1 <span className="text-xs font-normal text-slate-400">Section A</span>
+            Semester 3 <span className="text-xs font-normal text-slate-400">Section A</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
             Academic Year: 2025-2026
@@ -375,13 +375,13 @@ export default function HODPortal() {
                       </span>
                     </td>
                     <td className="py-2.5 px-4 text-slate-500 font-mono">
-                      {new Date(st.dateOfBirth).toLocaleDateString("en-GB")}
+                      {st.dateOfBirth ? (typeof st.dateOfBirth === "string" && st.dateOfBirth.includes("-") ? st.dateOfBirth.split("-").reverse().join("/") : new Date(st.dateOfBirth).toLocaleDateString("en-GB")) : "-"}
                     </td>
                     <td className="py-2.5 px-4 text-slate-600 font-mono">
                       {st.user?.phone || "-"}
                     </td>
                     <td className="py-2.5 px-4 font-medium text-slate-800">
-                      Sem {st.currentSemester} (Sec A)
+                      Sem 3 (Sec A)
                     </td>
                   </tr>
                 ))}
@@ -400,8 +400,7 @@ export default function HODPortal() {
               <p className="text-slate-500">Professor & Head, BCA Department</p>
               <div className="mt-3 pt-3 border-t border-slate-200 space-y-1">
                 <p><strong>Subjects Assigned:</strong></p>
-                <p className="text-slate-800 font-medium">• Problem Solving with C (25BC102)</p>
-                <p className="text-slate-800 font-medium">• C Programming Laboratory (25BCL16)</p>
+                <p className="text-slate-800 font-medium">• Data Structures & Algorithms (25BC302)</p>
               </div>
             </div>
 
@@ -410,7 +409,7 @@ export default function HODPortal() {
               <p className="text-slate-500">Associate Professor, Department of Basic Sciences</p>
               <div className="mt-3 pt-3 border-t border-slate-200 space-y-1">
                 <p><strong>Subjects Assigned:</strong></p>
-                <p className="text-slate-800 font-medium">• Discrete Mathematics (25BC101)</p>
+                <p className="text-slate-800 font-medium">• Discrete Mathematics (25BC301)</p>
               </div>
             </div>
           </div>

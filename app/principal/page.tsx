@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Shield,
   Building,
   Users,
   IndianRupee,
@@ -146,11 +145,11 @@ export default function PrincipalPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
-      {/* Clean Solid Principal Header with Logout */}
+      {/* Clean Solid Principal Header with Official RRCE Logo */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
-            <Shield className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-xl bg-white p-1.5 flex items-center justify-center shrink-0 border border-slate-700 shadow-sm">
+            <img src="/images.svg" alt="RRCE Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider mb-1 border border-slate-700">

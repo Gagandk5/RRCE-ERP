@@ -157,11 +157,11 @@ export default function StudentPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      {/* Clean Header with Sign Out */}
+      {/* Clean Header with Official RRCE Logo & Sign Out */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
-            <GraduationCap className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-xl bg-white p-1.5 flex items-center justify-center shrink-0 border border-slate-700 shadow-sm">
+            <img src="/images.svg" alt="RRCE Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider mb-1 border border-slate-700">
@@ -208,17 +208,20 @@ export default function StudentPortal() {
 
       {/* Main Grid: Digital ID Card + Attendance */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT: Clean Solid Student Identity Card */}
+        {/* LEFT: Clean Solid Student Identity Card with RRCE Emblem */}
         <div className="lg:col-span-5 bg-slate-900 text-white rounded-xl p-6 shadow-sm border border-slate-800 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
-              <div>
-                <h3 className="font-bold text-sm text-white tracking-wide">
-                  RAJARAJESWARI COLLEGE OF ENGG.
-                </h3>
-                <p className="text-[10px] text-slate-400">Autonomous Institution • VTU Belagavi</p>
+              <div className="flex items-center gap-2.5">
+                <img src="/images.svg" alt="RRCE Emblem" className="w-9 h-9 object-contain bg-white p-1 rounded-md shrink-0" />
+                <div>
+                  <h3 className="font-bold text-xs text-white tracking-wide uppercase">
+                    Rajarajeswari College of Engg.
+                  </h3>
+                  <p className="text-[10px] text-slate-400">Autonomous Institution • VTU Belagavi</p>
+                </div>
               </div>
-              <span className="text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded">
+              <span className="text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded shrink-0">
                 2025-26
               </span>
             </div>
@@ -244,7 +247,7 @@ export default function StudentPortal() {
               <div>
                 <span className="text-slate-400 block text-[10px]">Date of Birth:</span>
                 <span className="font-semibold text-white">
-                  {student?.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString("en-GB") : "14/12/2007"}
+                  {student?.dateOfBirth ? (typeof student.dateOfBirth === "string" && student.dateOfBirth.includes("-") ? student.dateOfBirth.split("-").reverse().join("/") : new Date(student.dateOfBirth).toLocaleDateString("en-GB")) : "14/12/2007"}
                 </span>
               </div>
               <div>

@@ -19,13 +19,16 @@ export default function RootLayout({
         <main className="flex-1 w-full">{children}</main>
         <footer className="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <p className="font-semibold text-slate-300">
-                Rajarajeswari College of Engineering (RRCE)
-              </p>
-              <p className="text-[11px] text-slate-500">
-                Mysore Road, Bengaluru, Karnataka 560074 • Autonomous Institution
-              </p>
+            <div className="flex items-center gap-3">
+              <img src="/images.svg" alt="RRCE Logo" className="w-8 h-8 object-contain shrink-0" />
+              <div>
+                <p className="font-semibold text-slate-300">
+                  Rajarajeswari College of Engineering (RRCE)
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  Mysore Road, Bengaluru, Karnataka 560074 • Autonomous Institution under VTU
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-4 text-[11px]">
               <span>Next.js 15 App Router</span>

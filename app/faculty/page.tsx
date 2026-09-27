@@ -34,9 +34,9 @@ export default function FacultyPortal() {
     dayOfWeek: "MON",
     startTime: "09:00",
     endTime: "10:00",
-    subject: "Discrete Mathematics (25BC101)",
+    subject: "Discrete Mathematics (25BC301)",
     departmentId: "",
-    semester: 1,
+    semester: 3,
     section: "A",
     facultyId: "mock-staff-faculty_math",
     roomNumber: "LH-201",
@@ -221,11 +221,11 @@ export default function FacultyPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      {/* Clean Solid Header with Sign Out */}
+      {/* Clean Solid Header with Official RRCE Logo & Sign Out */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
-            <Calendar className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-xl bg-white p-1.5 flex items-center justify-center shrink-0 border border-slate-700 shadow-sm">
+            <img src="/images.svg" alt="RRCE Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider mb-1 border border-slate-700">
@@ -504,7 +504,7 @@ export default function FacultyPortal() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-base font-bold text-slate-900">
-                  Weekly Class Timetable (BCA Semester 1)
+                  Weekly Class Timetable (BCA Semester 3)
                 </h2>
                 <p className="text-xs text-slate-500">
                   Protected by the 3-Layer Clash Engine: Faculty Clash • Room Clash • Batch Clash
@@ -654,7 +654,7 @@ export default function FacultyPortal() {
                   required
                   value={scheduleForm.subject}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, subject: e.target.value })}
-                  placeholder="e.g. Discrete Mathematics (25BC101)"
+                  placeholder="e.g. Discrete Mathematics (25BC301)"
                   className="w-full p-2 border border-slate-300 rounded-lg"
                 />
               </div>
