@@ -34,19 +34,57 @@ export default function StudentPortal() {
     setLoading(true);
     try {
       const meRes = await fetch("/api/auth/me");
-      let currentUser = null;
+      let currentUser: any = null;
       if (meRes.ok) {
         const d = await meRes.json();
         currentUser = d.user;
       }
 
+      // 1. If currentUser has direct DB studentProfile attached from /api/auth/me
+      if (currentUser?.studentProfile) {
+        const profile = {
+          ...currentUser.studentProfile,
+          user: {
+            firstName: currentUser.firstName,
+            lastName: currentUser.lastName,
+            phone: currentUser.phone,
+            email: currentUser.email,
+          },
+        };
+        setStudent(profile);
+        if (profile.invoices?.length > 0) {
+          setInvoice(profile.invoices[0]);
+          const pending = Math.max(0, profile.invoices[0].totalAmount - profile.invoices[0].paidAmount);
+          setPayAmount(pending > 0 ? pending : 0);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // 2. Otherwise fetch BCA roster and match logged-in student robustly
       const stRes = await fetch("/api/students?dept=BCA");
       if (stRes.ok) {
         const sData = await stRes.json();
         const roster = sData.students || [];
+
+        const targetUsn = (currentUser?.usn || currentUser?.username || "").toLowerCase().trim();
+        const targetId = (currentUser?.studentId || currentUser?.userId || "").toLowerCase().trim();
+        const targetName = (currentUser?.firstName || "").toLowerCase().trim();
+
         const match =
-          roster.find((s: any) => s.usn === currentUser?.usn || s.id === currentUser?.studentId) ||
-          roster[0];
+          roster.find((s: any) => {
+            const sUsn = (s.usn || "").toLowerCase().trim();
+            const sUsername = (s.user?.username || "").toLowerCase().trim();
+            const sId = (s.id || "").toLowerCase().trim();
+            const sUserId = (s.userId || "").toLowerCase().trim();
+            const sName = (s.user?.firstName || "").toLowerCase().trim();
+
+            return (
+              (targetUsn && (sUsn === targetUsn || sUsername === targetUsn)) ||
+              (targetId && (sId === targetId || sUserId === targetId)) ||
+              (targetName && sName === targetName)
+            );
+          }) || roster[0];
 
         setStudent(match);
         if (match?.invoices?.length > 0) {
@@ -130,10 +168,10 @@ export default function StudentPortal() {
               VTU Autonomous Student Portal
             </div>
             <h1 className="text-xl font-bold text-white">
-              Welcome, {student?.user?.firstName || "Amith"} {student?.user?.lastName || "T"}
+              Welcome, {student?.user?.firstName || "Student"} {student?.user?.lastName || ""}
             </h1>
             <p className="text-xs text-slate-400 font-mono">
-              USN: {student?.usn || "1RR25BC001"} • Bachelor of Computer Applications (BCA)
+              USN: {student?.usn || "1RR25BC007"} • Bachelor of Computer Applications (BCA)
             </p>
           </div>
         </div>
@@ -197,7 +235,7 @@ export default function StudentPortal() {
                   {student?.usn}
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1">
-                  BCA • Semester {student?.currentSemester || 1} (Sec A)
+                  BCA • Semester {student?.currentSemester || 3} (Sec A)
                 </p>
               </div>
             </div>
@@ -206,7 +244,7 @@ export default function StudentPortal() {
               <div>
                 <span className="text-slate-400 block text-[10px]">Date of Birth:</span>
                 <span className="font-semibold text-white">
-                  {student?.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString("en-GB") : "08/07/2007"}
+                  {student?.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString("en-GB") : "14/12/2007"}
                 </span>
               </div>
               <div>
@@ -216,12 +254,12 @@ export default function StudentPortal() {
               <div>
                 <span className="text-slate-400 block text-[10px]">Roll Sequence:</span>
                 <span className="font-mono font-bold text-slate-200">
-                  #{String(student?.usnSequence || 1).padStart(3, "0")}
+                  #{String(student?.usnSequence || 7).padStart(3, "0")}
                 </span>
               </div>
               <div>
                 <span className="text-slate-400 block text-[10px]">Emergency Contact:</span>
-                <span className="font-mono text-white">{student?.user?.phone || "+91 9108110001"}</span>
+                <span className="font-mono text-white">{student?.user?.phone || "+91 8971115212"}</span>
               </div>
             </div>
           </div>
@@ -271,15 +309,15 @@ export default function StudentPortal() {
 
             <div className="space-y-3 text-xs">
               <div className="flex items-center justify-between font-semibold text-slate-700 pb-1 border-b border-slate-100">
-                <span>Discrete Mathematics (25BC101)</span>
+                <span>Discrete Mathematics (25BC301)</span>
                 <span className="font-bold text-slate-900">18 / 20 (90%)</span>
               </div>
               <div className="flex items-center justify-between font-semibold text-slate-700 pb-1 border-b border-slate-100">
-                <span>Problem Solving with C (25BC102)</span>
+                <span>Data Structures & Algorithms (25BC302)</span>
                 <span className="font-bold text-slate-900">14 / 16 (87.5%)</span>
               </div>
               <div className="flex items-center justify-between font-semibold text-slate-700 pb-1 border-b border-slate-100">
-                <span>Digital Logic & Computer Design (25BC103)</span>
+                <span>Database Management Systems (25BC303)</span>
                 <span className="font-bold text-slate-900">8 / 12 (66.7% - Warning)</span>
               </div>
             </div>
