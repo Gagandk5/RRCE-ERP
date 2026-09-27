@@ -5,6 +5,14 @@ import Navbar from "@/components/Navbar";
 export const metadata: Metadata = {
   title: "RRCE ERP - Rajarajeswari College of Engineering",
   description: "Production-Grade College ERP System for Rajarajeswari College of Engineering (RRCE), Bangalore. Autonomous Institution under VTU.",
+  icons: {
+    icon: [
+      { url: "/images.svg", type: "image/svg+xml" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/images.svg",
+    apple: "/images.svg",
+  },
 };
 
 export default function RootLayout({
