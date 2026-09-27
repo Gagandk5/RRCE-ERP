@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Shield,
   Building,
   Users,
   IndianRupee,
@@ -16,6 +15,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { formatINR } from "@/lib/utils";
+import RRCELogo from "@/components/RRCELogo";
 
 export default function PrincipalPortal() {
   const router = useRouter();
@@ -146,18 +146,16 @@ export default function PrincipalPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
-      {/* Clean Solid Principal Header with Logout */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
+      {/* Official RRCE Principal Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-2xl p-6 md:p-8 border border-slate-800 shadow-md">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
-            <Shield className="w-6 h-6" />
-          </div>
+          <RRCELogo size="lg" lightText={true} />
           <div>
-            <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider mb-1 border border-slate-700">
-              Executive Institutional Oversight
+            <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider mb-1 border border-amber-500/30">
+              Executive Principal Portal
             </div>
-            <h1 className="text-xl font-bold text-white">Office of the Principal</h1>
-            <p className="text-xs text-slate-400">
+            <h1 className="text-xl font-extrabold text-white">Office of the Principal</h1>
+            <p className="text-xs text-slate-300">
               Dr. Ramesh Kumar • Rajarajeswari College of Engineering (RRCE)
             </p>
           </div>
@@ -167,7 +165,7 @@ export default function PrincipalPortal() {
           <button
             onClick={loadDashboardData}
             disabled={loading}
-            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-700 transition-colors"
+            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-700 transition-colors"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-slate-400" : ""}`} />
             Refresh
@@ -176,7 +174,7 @@ export default function PrincipalPortal() {
           <button
             onClick={handleSeedTrigger}
             disabled={seedLoading}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
           >
             <Database className={`w-3.5 h-3.5 ${seedLoading ? "animate-spin" : ""}`} />
             {seedLoading ? "Seeding..." : "Seed Postgres"}
@@ -185,7 +183,7 @@ export default function PrincipalPortal() {
           <button
             onClick={handleLogout}
             title="Sign Out"
-            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition-colors shadow-sm"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out</span>
@@ -194,12 +192,12 @@ export default function PrincipalPortal() {
       </div>
 
       {message && (
-        <div className="p-4 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium flex items-center justify-between">
           <span className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             {message}
           </span>
-          <button onClick={() => setMessage(null)} className="text-emerald-700">✕</button>
+          <button onClick={() => setMessage(null)} className="text-emerald-700 font-bold">✕</button>
         </div>
       )}
 
@@ -210,7 +208,7 @@ export default function PrincipalPortal() {
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Enrolled Students
             </span>
-            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
               <Users className="w-4 h-4" />
             </div>
           </div>
