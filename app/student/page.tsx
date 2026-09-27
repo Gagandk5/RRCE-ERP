@@ -75,7 +75,7 @@ export default function StudentOverviewPage() {
     }
   }
 
-  const attendancePercentage = 83.3;
+  const attendanceRate = 83.33333333333333;
   const totalClasses = 48;
   const attendedClasses = 40;
 
@@ -84,95 +84,93 @@ export default function StudentOverviewPage() {
   const totalPaidFee = invoice?.paidAmount || 50000;
 
   const todayClasses = [
-    { time: "09:00 - 10:00 AM", code: "25BC301", title: "Discrete Mathematics", instructor: "Prof. Sunitha Sharma", room: "LH-201", status: "Completed" },
-    { time: "10:00 - 11:00 AM", code: "25BC302", title: "Data Structures & Algorithms", instructor: "Dr. Praveen Gowda", room: "LH-201", status: "In Progress" },
-    { time: "11:15 - 12:15 PM", code: "25BC303", title: "Database Management Systems", instructor: "Prof. Kavitha N", room: "Lab-3", status: "Upcoming" },
-    { time: "02:00 - 04:00 PM", code: "25BCL31", title: "Data Structures Practical Lab", instructor: "Dr. Praveen Gowda", room: "Computer Lab 2", status: "Scheduled" },
+    { time: "09:00 - 10:00 AM", code: "25BC301", title: "Discrete Mathematics", instructor: "Prof. Sunitha Sharma", room: "LH-201" },
+    { time: "10:00 - 11:00 AM", code: "25BC302", title: "Data Structures & Algorithms", instructor: "Dr. Praveen Gowda", room: "LH-201" },
+    { time: "11:15 - 12:15 PM", code: "25BC303", title: "Database Management Systems", instructor: "Prof. Kavitha N", room: "Lab-3" },
+    { time: "02:00 - 04:00 PM", code: "25BCL31", title: "Data Structures Practical Lab", instructor: "Dr. Praveen Gowda", room: "Computer Lab 2" },
   ];
 
   return (
-    <div className="space-y-8 text-zinc-900 font-sans">
-      {/* STUDENT SUMMARY STRIP */}
-      <div className="bg-white rounded-2xl border border-zinc-200/70 p-6 flex flex-wrap items-center justify-between gap-4 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-base font-semibold text-zinc-900">
-              {student?.user?.firstName || "Gagan"} {student?.user?.lastName || "D K"}
-            </h1>
-            <span className="font-mono text-xs font-medium text-zinc-600 bg-zinc-100 px-2.5 py-0.5 rounded-md border border-zinc-200/80">
-              {student?.usn || "1RR25BC007"}
-            </span>
-          </div>
-          <p className="text-xs text-zinc-400">
-            Bachelor of Computer Applications • 3rd Semester
+    <div className="space-y-6 text-zinc-900 font-sans">
+      {/* 2. UNIFIED HEADER CARD */}
+      <div className="bg-white rounded-2xl border border-zinc-200/70 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <div>
+          <h1 className="text-xl font-semibold text-zinc-900 tracking-tight">
+            Good morning, {student?.user?.firstName || "Gagan"}
+          </h1>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            BCA • 3rd Semester (Sec A) · Batch of 2025–26
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-100 rounded-full px-3.5 py-1 font-medium">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-xs bg-zinc-100 text-zinc-700 px-3 py-1 rounded-full">
+            {student?.usn || "1RR25BC007"}
+          </span>
+          <span className="text-xs bg-zinc-100 text-zinc-700 px-3 py-1 rounded-full">
             Quota: {student?.quota || "KCET"}
           </span>
-          <span className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-100 rounded-full px-3.5 py-1 font-medium font-mono">
-            Roll #{String(student?.usnSequence || 7).padStart(3, "0")}
+          <span className="font-mono text-xs bg-zinc-100 text-zinc-700 px-3 py-1 rounded-full">
+            Roll: #{String(student?.usnSequence || 7).padStart(3, "0")}
           </span>
-          <span className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-100 rounded-full px-3.5 py-1 font-medium">
+          <span className="text-xs bg-zinc-100 text-zinc-700 px-3 py-1 rounded-full">
             DOB: {formatDateOfBirth(student?.dateOfBirth)}
           </span>
         </div>
       </div>
 
-      {/* QUICK STATS - 3 CARD ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Stat 1: Attendance */}
-        <div className="bg-white rounded-2xl border border-zinc-200/70 p-6 space-y-3 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+      {/* 3. STATUS CARDS (UNIFORM GRID) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Card 1: Attendance Health */}
+        <div className="bg-white rounded-2xl border border-zinc-200/70 p-6 space-y-3 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
-              Attendance Health
+            <span className="text-[11px] font-semibold tracking-wider text-zinc-400 uppercase">
+              ATTENDANCE HEALTH
             </span>
-            <span className="bg-emerald-50 text-emerald-700 rounded-full px-3 py-1 text-xs font-medium border border-emerald-100">
+            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 rounded-full px-2.5 py-0.5 text-xs font-medium">
               On Track (≥ 75%)
             </span>
           </div>
           <div>
             <div className="text-2xl font-bold font-mono text-zinc-900 tracking-tight">
-              {attendancePercentage}%
+              {attendanceRate.toFixed(1)}%
             </div>
-            <p className="text-xs text-zinc-400 mt-1">
-              {attendedClasses} of {totalClasses} sessions attended
+            <p className="text-xs text-zinc-500 mt-1">
+              40 of 48 sessions attended
             </p>
           </div>
         </div>
 
-        {/* Stat 2: Fee Balance */}
-        <div className="bg-white rounded-2xl border border-zinc-200/70 p-6 space-y-3 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+        {/* Card 2: Fee Status */}
+        <div className="bg-white rounded-2xl border border-zinc-200/70 p-6 space-y-3 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
-              Fee Balance
+            <span className="text-[11px] font-semibold tracking-wider text-zinc-400 uppercase">
+              FEE BALANCE
             </span>
             <Link
               href="/student/fees"
-              className="text-xs font-medium text-zinc-600 hover:text-zinc-900"
+              className="text-xs text-zinc-500 hover:text-zinc-900 font-medium"
             >
-              Details →
+              Statement →
             </Link>
           </div>
           <div>
-            <div className="text-2xl font-bold font-mono text-amber-700 tracking-tight">
+            <div className="text-2xl font-bold text-zinc-900 tracking-tight font-mono">
               {formatINR(pendingFee)}
             </div>
-            <p className="text-xs text-zinc-400 mt-1 font-mono">
-              {formatINR(totalPaidFee)} paid of {formatINR(totalBilledFee)} total
+            <p className="text-xs text-zinc-500 mt-1 font-mono">
+              {formatINR(totalPaidFee)} paid of {formatINR(totalBilledFee)} annual tuition
             </p>
           </div>
         </div>
 
-        {/* Stat 3: Next Exam */}
-        <div className="bg-white rounded-2xl border border-zinc-200/70 p-6 space-y-3 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+        {/* Card 3: Next Assessment */}
+        <div className="bg-white rounded-2xl border border-zinc-200/70 p-6 space-y-3 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
-              Next Assessment
+            <span className="text-[11px] font-semibold tracking-wider text-zinc-400 uppercase">
+              NEXT ASSESSMENT
             </span>
-            <span className="bg-zinc-100 text-zinc-600 rounded-full px-3 py-1 text-xs font-medium border border-zinc-200/60">
+            <span className="bg-zinc-100 text-zinc-600 rounded-full px-2.5 py-0.5 text-xs font-medium">
               Internal Exam
             </span>
           </div>
@@ -180,39 +178,34 @@ export default function StudentOverviewPage() {
             <div className="text-2xl font-bold text-zinc-900 tracking-tight">
               IA-2 Series
             </div>
-            <p className="text-xs text-zinc-400 mt-1">
-              Starts Monday, Oct 12
+            <p className="text-xs text-zinc-500 mt-1">
+              Starts Monday, Oct 12 · Autonomous Scheme
             </p>
           </div>
         </div>
       </div>
 
-      {/* TODAY'S CLASSES MODULE */}
-      <div className="bg-white rounded-2xl border border-zinc-200/70 p-7 space-y-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
-          <div>
-            <h2 className="text-sm font-semibold text-zinc-900">
-              Today's Teaching Schedule
-            </h2>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Monday Class Lectures & Practical Labs
-            </p>
-          </div>
-          <Link href="/student/timetable" className="text-xs font-medium text-zinc-600 hover:text-zinc-900">
-            View Weekly Schedule →
-          </Link>
+      {/* 4. TODAY'S CLASSES SECTION */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-base font-semibold text-zinc-900">
+            Today's Classes
+          </h2>
+          <p className="text-xs text-zinc-400 mt-0.5">
+            Monday Class Schedule & Lecture Halls
+          </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {todayClasses.map((item, idx) => (
             <div
               key={idx}
-              className="p-5 rounded-2xl bg-zinc-50/60 border border-zinc-100 flex items-center justify-between hover:bg-zinc-50 transition-colors"
+              className="bg-white rounded-xl border border-zinc-200/70 p-4 hover:border-zinc-300 transition-colors flex items-center justify-between"
             >
               <div className="space-y-1">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <span className="font-semibold text-zinc-900 text-sm">{item.title}</span>
-                  <span className="font-mono text-xs text-zinc-400 bg-white px-2 py-0.5 rounded-md border border-zinc-200/60">
+                  <span className="font-mono text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-md font-medium">
                     {item.code}
                   </span>
                 </div>
@@ -222,10 +215,10 @@ export default function StudentOverviewPage() {
               </div>
 
               <div className="flex items-center gap-4">
-                <span className="font-mono text-xs font-medium text-zinc-600">
+                <span className="font-mono text-xs text-zinc-600">
                   {item.time}
                 </span>
-                <span className="font-mono text-xs font-bold text-zinc-700 bg-white px-2.5 py-1 rounded-lg border border-zinc-200/80 shadow-xs">
+                <span className="font-mono bg-zinc-100 px-2 py-1 rounded-md text-xs font-medium text-zinc-800">
                   {item.room}
                 </span>
               </div>

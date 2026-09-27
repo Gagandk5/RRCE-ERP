@@ -20,7 +20,6 @@ export default function StudentLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [student, setStudent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadSession();
@@ -45,7 +44,6 @@ export default function StudentLayout({
             email: currentUser.email,
           },
         });
-        setLoading(false);
         return;
       }
 
@@ -60,8 +58,6 @@ export default function StudentLayout({
       }
     } catch (e) {
       console.error("Failed to load layout student session:", e);
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -83,30 +79,28 @@ export default function StudentLayout({
     { name: "Fees & Invoices", href: "/student/fees", icon: Receipt },
   ];
 
-  const studentFirstName = student?.user?.firstName || "Gagan";
-
   return (
-    <div className="h-screen flex bg-[#F9FAFB] overflow-hidden font-sans text-zinc-900 antialiased">
-      {/* LEFT SIDEBAR */}
-      <aside className="w-64 bg-white border-r border-zinc-200/80 flex flex-col justify-between shrink-0 p-5 h-screen select-none">
+    <div className="min-h-screen bg-[#F9FAFB] font-sans text-zinc-900 antialiased">
+      {/* FULL-HEIGHT FIXED LEFT SIDEBAR */}
+      <aside className="h-screen w-64 fixed left-0 top-0 bottom-0 bg-white border-r border-zinc-200/80 flex flex-col justify-between z-30 select-none">
         <div>
-          {/* TOP BRAND MARK */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shrink-0 border border-zinc-200 p-0.5 shadow-sm">
+          {/* BRAND HEADER */}
+          <div className="p-5 border-b border-zinc-100 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shrink-0 border border-zinc-200 p-0.5 shadow-xs">
               <img src="/images.svg" alt="RRCE Emblem" className="w-full h-full object-contain" />
             </div>
             <div>
-              <span className="text-sm font-semibold tracking-tight text-zinc-900 block leading-tight">
+              <span className="font-semibold text-sm tracking-tight text-zinc-900 block leading-tight">
                 RRCE ERP
               </span>
-              <span className="text-xs text-zinc-400 block leading-tight">
-                Student Portal
+              <span className="text-xs text-zinc-400 block leading-tight mt-0.5">
+                Student Workspace
               </span>
             </div>
           </div>
 
-          {/* NAV LINKS */}
-          <nav className="space-y-1.5 mt-6">
+          {/* NAVIGATION LINKS */}
+          <nav className="p-3 space-y-1 mt-2">
             {navItems.map((item) => {
               const isActive = item.exact
                 ? pathname === item.href
@@ -117,10 +111,10 @@ export default function StudentLayout({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 text-sm rounded-xl transition-all ${
+                  className={`flex items-center gap-3 px-3.5 py-2.5 text-xs rounded-xl transition-all ${
                     isActive
-                      ? "bg-zinc-100 text-zinc-900 font-medium"
-                      : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 font-normal"
+                      ? "bg-zinc-100 text-zinc-900 font-semibold"
+                      : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 font-medium"
                   }`}
                 >
                   <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-zinc-900" : "text-zinc-400"}`} />
@@ -131,40 +125,27 @@ export default function StudentLayout({
           </nav>
         </div>
 
-        {/* BOTTOM IDENTITY BLOCK */}
-        <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100 mt-auto space-y-1">
-          <span className="text-xs font-semibold text-zinc-900 block truncate">
+        {/* DOCKED PROFILE FOOTER */}
+        <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto">
+          <span className="text-xs font-semibold text-zinc-900 truncate block">
             {student?.user?.firstName || "Gagan"} {student?.user?.lastName || "D K"}
           </span>
-          <span className="font-mono text-[11px] text-zinc-400 block">
+          <span className="font-mono text-[11px] text-zinc-400 block mt-0.5">
             {student?.usn || "1RR25BC007"}
           </span>
           <button
             onClick={handleLogout}
-            className="text-xs text-zinc-500 hover:text-rose-600 flex items-center gap-1.5 mt-3 pt-2 border-t border-zinc-200/50 w-full transition-colors font-medium"
+            className="text-xs text-zinc-500 hover:text-rose-600 flex items-center gap-1.5 mt-2 transition-colors font-medium"
           >
             <LogOut className="w-3.5 h-3.5 text-zinc-400" />
-            <span>Sign Out</span>
+            <span>Sign out</span>
           </button>
         </div>
       </aside>
 
-      {/* MAIN WORKSPACE */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* TOP CONTEXT STRIP */}
-        <header className="h-16 px-8 flex items-center justify-between shrink-0 border-b border-zinc-200/60 bg-white/50 backdrop-blur-sm">
-          <span className="text-base font-medium text-zinc-900 tracking-tight">
-            Good morning, {studentFirstName}
-          </span>
-          <span className="text-xs text-zinc-500 bg-white border border-zinc-200/80 rounded-full px-4 py-1.5 shadow-sm font-medium">
-            BCA • Semester 3 (Section A)
-          </span>
-        </header>
-
-        {/* CONTENT CANVAS */}
-        <main className="flex-1 overflow-y-auto max-w-5xl w-full mx-auto px-8 py-8 pb-12 space-y-8">
-          {children}
-        </main>
+      {/* MAIN VIEWPORT WITH LEFT MARGIN FOR SIDEBAR */}
+      <div className="ml-64 min-h-screen bg-[#F9FAFB] p-8 max-w-6xl">
+        {children}
       </div>
     </div>
   );
