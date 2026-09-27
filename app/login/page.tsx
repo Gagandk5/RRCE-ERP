@@ -112,7 +112,7 @@ export default function LoginPage() {
 
         <div className="mt-6 pt-4 border-t border-slate-100 text-center flex items-center justify-between text-[11px] text-slate-500">
           <span>Autonomous College under VTU</span>
-          <span>RRCE ERP 2025</span>
+          <span>RRCE ERP</span>
         </div>
       </div>
     </div>
