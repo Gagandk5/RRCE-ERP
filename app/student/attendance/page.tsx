@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { ShieldCheck, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function StudentAttendancePage() {
   const overallPercentage = 83.3;
@@ -16,7 +15,7 @@ export default function StudentAttendancePage() {
       attended: 18,
       absent: 2,
       percentage: 90.0,
-      margin: "+3 classes safe to miss",
+      margin: "3 classes safe to miss",
       isEligible: true,
     },
     {
@@ -26,7 +25,7 @@ export default function StudentAttendancePage() {
       attended: 14,
       absent: 2,
       percentage: 87.5,
-      margin: "+2 classes safe to miss",
+      margin: "2 classes safe to miss",
       isEligible: true,
     },
     {
@@ -36,109 +35,77 @@ export default function StudentAttendancePage() {
       attended: 8,
       absent: 4,
       percentage: 66.7,
-      margin: "Need 4 consecutive classes to reach 75%",
+      margin: "Need 4 classes to reach 75%",
       isEligible: false,
     },
   ];
 
   return (
-    <div className="space-y-6 text-xs text-zinc-900 font-sans">
-      <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+    <div className="space-y-8 text-zinc-900 font-sans">
+      <div className="flex items-center justify-between border-b border-zinc-200/60 pb-4">
         <div>
-          <h1 className="text-base font-bold text-zinc-900 tracking-tight">
-            Attendance & VTU Eligibility Engine
+          <h1 className="text-base font-semibold text-zinc-900 tracking-tight">
+            Attendance Ledger & Eligibility
           </h1>
-          <p className="text-xs text-zinc-500 font-mono">
-            Autonomous Minimum Criteria Compliance Ledger
+          <p className="text-xs text-zinc-400 mt-0.5">
+            VTU Autonomous Minimum 75% Requirement Criteria
           </p>
         </div>
-        <div className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded">
-          Overall Aggregate: {overallPercentage}%
-        </div>
+        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-4 py-1.5 font-mono">
+          Aggregate: {overallPercentage}%
+        </span>
       </div>
 
-      {/* OVERALL VTU METRIC BANNER */}
-      <div className="bg-white border border-zinc-200 rounded-lg p-4 space-y-2 shadow-xs">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-zinc-900 text-xs">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>VTU Belagavi Autonomous Invariant</span>
+      {/* RELAXED AIRY TABLE VIEW */}
+      <div className="bg-white rounded-2xl border border-zinc-200/70 p-7 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-6">
+        <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-900">
+              Subject-Wise Attendance
+            </h2>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              40 of 48 total sessions attended across all subjects
+            </p>
           </div>
-          <span className="font-mono text-xs font-bold text-zinc-700">
-            {totalAttended} / {totalHeld} Total Sessions
-          </span>
-        </div>
-        <p className="text-zinc-600 text-xs leading-relaxed">
-          Minimum <strong>75% aggregate and subject-wise attendance</strong> is strictly mandated by VTU regulations to qualify for the Semester End Examination (SEE) hall ticket issuance.
-        </p>
-      </div>
-
-      {/* SUBJECT-WISE ATTENDANCE LEDGER TABLE */}
-      <div className="border border-zinc-200 rounded-lg overflow-hidden bg-white shadow-xs">
-        <div className="p-3 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
-          <span className="font-semibold text-zinc-900 text-xs">
-            Subject-Wise Attendance & Margin Calculator
-          </span>
-          <span className="text-[11px] font-mono text-zinc-500">
-            Real-time VTU Eligibility Engine
-          </span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-zinc-50 text-zinc-500 uppercase tracking-wider text-[11px] font-semibold border-b border-zinc-200">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead className="text-xs font-medium text-zinc-400 uppercase tracking-wider border-b border-zinc-100">
               <tr>
-                <th className="py-2.5 px-3">Course Code</th>
-                <th className="py-2.5 px-3">Course Title</th>
-                <th className="py-2.5 px-3 text-center">Held</th>
-                <th className="py-2.5 px-3 text-center">Attended</th>
-                <th className="py-2.5 px-3 text-center">Absent</th>
-                <th className="py-2.5 px-3 text-center">Percentage</th>
-                <th className="py-2.5 px-3">Safety Margin / Bunk Calculator</th>
-                <th className="py-2.5 px-3 text-right">Eligibility</th>
+                <th className="pb-4 px-4">Subject & Code</th>
+                <th className="pb-4 px-4 text-center">Sessions Attended</th>
+                <th className="pb-4 px-4 text-center">Percentage</th>
+                <th className="pb-4 px-4 text-center">VTU Status</th>
+                <th className="pb-4 px-4 text-right">Margin / Requirement</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-zinc-50">
               {subjectLedger.map((sub, idx) => (
-                <tr
-                  key={idx}
-                  className={`transition-colors ${
-                    !sub.isEligible ? "bg-rose-50/50 hover:bg-rose-50/80" : "hover:bg-zinc-50/80"
-                  }`}
-                >
-                  <td className="py-2.5 px-3 font-mono font-bold text-zinc-900">
-                    {sub.code}
+                <tr key={idx} className="hover:bg-zinc-50/60 transition-colors">
+                  <td className="py-4 px-4">
+                    <div className="font-semibold text-zinc-900 text-sm">{sub.title}</div>
+                    <div className="font-mono text-xs text-zinc-400 mt-0.5">{sub.code}</div>
                   </td>
-                  <td className="py-2.5 px-3 font-semibold text-zinc-900">
-                    {sub.title}
+                  <td className="py-4 px-4 text-center font-mono text-xs font-semibold text-zinc-800">
+                    {sub.attended} / {sub.held}
                   </td>
-                  <td className="py-2.5 px-3 text-center font-mono text-zinc-700">
-                    {sub.held}
-                  </td>
-                  <td className="py-2.5 px-3 text-center font-mono text-zinc-700">
-                    {sub.attended}
-                  </td>
-                  <td className="py-2.5 px-3 text-center font-mono text-zinc-500">
-                    {sub.absent}
-                  </td>
-                  <td className={`py-2.5 px-3 text-center font-mono font-bold ${!sub.isEligible ? "text-rose-700" : "text-zinc-900"}`}>
+                  <td className={`py-4 px-4 text-center font-mono text-sm font-bold ${sub.isEligible ? "text-zinc-900" : "text-rose-600"}`}>
                     {sub.percentage.toFixed(1)}%
                   </td>
-                  <td className="py-2.5 px-3">
-                    <span className={`font-mono text-xs font-semibold ${!sub.isEligible ? "text-rose-700" : "text-emerald-700"}`}>
-                      {sub.margin}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3 text-right">
+                  <td className="py-4 px-4 text-center">
                     <span
-                      className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${
+                      className={`inline-block rounded-full px-3 py-1 text-xs font-medium border ${
                         sub.isEligible
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                          : "bg-rose-50 text-rose-800 border-rose-200"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                          : "bg-rose-50 text-rose-700 border-rose-100"
                       }`}
                     >
-                      {sub.isEligible ? "Eligible" : "Shortage Warning"}
+                      {sub.isEligible ? "On Track" : "Shortage Warning"}
                     </span>
+                  </td>
+                  <td className="py-4 px-4 text-right font-mono text-xs text-zinc-500">
+                    {sub.margin}
                   </td>
                 </tr>
               ))}
