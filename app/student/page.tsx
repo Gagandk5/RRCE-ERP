@@ -187,7 +187,7 @@ export default function StudentPortal() {
             </div>
 
             <div className="p-5 bg-rose-50/50 rounded-xl border border-rose-100 text-slate-800 text-xs font-medium leading-relaxed shadow-sm text-left whitespace-pre-line">
-              "Prakruthi, I am truly sorry for how I acted and the hurt I caused you 😔. Looking back, I hate knowing that my actions drove you away. You mean the world to me, and losing your presence in my life has left an undeniable void 💔. If there’s any part of you open to it, I just want the chance to listen, make things right, and have you back in my life 🤍."
+              "Prakruthi, I know naan tumba hurt maaddini, genuinely sorry for everything 😔. Nanna behaviour inda neenu door hogodu nodi tumba bad feel aagatte. Honestly, life-alli nin absence thumba ಕಾಡ್ತಿದೆ 💔. Situation na sari maadoke nange ond chance kodi. Let’s talk once please, I really want you back 🤍"
             </div>
 
             <button
