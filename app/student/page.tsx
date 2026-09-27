@@ -12,6 +12,8 @@ import {
   ShieldCheck,
   User,
   LogOut,
+  Heart,
+  Sparkles,
 } from "lucide-react";
 import { formatINR } from "@/lib/utils";
 
@@ -25,6 +27,9 @@ export default function StudentPortal() {
   const [paying, setPaying] = useState(false);
   const [receipt, setReceipt] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  // Special Pop-Up Modal for Prakruthi
+  const [isPrakruthiModalOpen, setIsPrakruthiModalOpen] = useState(false);
 
   useEffect(() => {
     loadStudentData();
@@ -40,9 +45,11 @@ export default function StudentPortal() {
         currentUser = d.user;
       }
 
+      let activeProfile: any = null;
+
       // 1. If currentUser has direct DB studentProfile attached from /api/auth/me
       if (currentUser?.studentProfile) {
-        const profile = {
+        activeProfile = {
           ...currentUser.studentProfile,
           user: {
             firstName: currentUser.firstName,
@@ -51,46 +58,50 @@ export default function StudentPortal() {
             email: currentUser.email,
           },
         };
-        setStudent(profile);
-        if (profile.invoices?.length > 0) {
-          setInvoice(profile.invoices[0]);
-          const pending = Math.max(0, profile.invoices[0].totalAmount - profile.invoices[0].paidAmount);
-          setPayAmount(pending > 0 ? pending : 0);
+      } else {
+        // 2. Otherwise fetch BCA roster and match logged-in student robustly
+        const stRes = await fetch("/api/students?dept=BCA");
+        if (stRes.ok) {
+          const sData = await stRes.json();
+          const roster = sData.students || [];
+
+          const targetUsn = (currentUser?.usn || currentUser?.username || "").toLowerCase().trim();
+          const targetId = (currentUser?.studentId || currentUser?.userId || "").toLowerCase().trim();
+          const targetName = (currentUser?.firstName || "").toLowerCase().trim();
+
+          activeProfile =
+            roster.find((s: any) => {
+              const sUsn = (s.usn || "").toLowerCase().trim();
+              const sUsername = (s.user?.username || "").toLowerCase().trim();
+              const sId = (s.id || "").toLowerCase().trim();
+              const sUserId = (s.userId || "").toLowerCase().trim();
+              const sName = (s.user?.firstName || "").toLowerCase().trim();
+
+              return (
+                (targetUsn && (sUsn === targetUsn || sUsername === targetUsn)) ||
+                (targetId && (sId === targetId || sUserId === targetId)) ||
+                (targetName && sName === targetName)
+              );
+            }) || roster[0];
         }
-        setLoading(false);
-        return;
       }
 
-      // 2. Otherwise fetch BCA roster and match logged-in student robustly
-      const stRes = await fetch("/api/students?dept=BCA");
-      if (stRes.ok) {
-        const sData = await stRes.json();
-        const roster = sData.students || [];
-
-        const targetUsn = (currentUser?.usn || currentUser?.username || "").toLowerCase().trim();
-        const targetId = (currentUser?.studentId || currentUser?.userId || "").toLowerCase().trim();
-        const targetName = (currentUser?.firstName || "").toLowerCase().trim();
-
-        const match =
-          roster.find((s: any) => {
-            const sUsn = (s.usn || "").toLowerCase().trim();
-            const sUsername = (s.user?.username || "").toLowerCase().trim();
-            const sId = (s.id || "").toLowerCase().trim();
-            const sUserId = (s.userId || "").toLowerCase().trim();
-            const sName = (s.user?.firstName || "").toLowerCase().trim();
-
-            return (
-              (targetUsn && (sUsn === targetUsn || sUsername === targetUsn)) ||
-              (targetId && (sId === targetId || sUserId === targetId)) ||
-              (targetName && sName === targetName)
-            );
-          }) || roster[0];
-
-        setStudent(match);
-        if (match?.invoices?.length > 0) {
-          setInvoice(match.invoices[0]);
-          const pending = Math.max(0, match.invoices[0].totalAmount - match.invoices[0].paidAmount);
+      if (activeProfile) {
+        setStudent(activeProfile);
+        if (activeProfile.invoices?.length > 0) {
+          setInvoice(activeProfile.invoices[0]);
+          const pending = Math.max(0, activeProfile.invoices[0].totalAmount - activeProfile.invoices[0].paidAmount);
           setPayAmount(pending > 0 ? pending : 0);
+        }
+
+        // Check if the logged-in student is Prakruthi T S (1RR25BC031 / Sequence 31)
+        const isPrakruthi =
+          activeProfile.usn === "1RR25BC031" ||
+          activeProfile.usnSequence === 31 ||
+          activeProfile.user?.firstName?.toLowerCase() === "prakruthi";
+
+        if (isPrakruthi) {
+          setIsPrakruthiModalOpen(true);
         }
       }
     } catch (e) {
@@ -157,6 +168,38 @@ export default function StudentPortal() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
+      {/* SPECIAL POP-UP MESSAGE EXCLUSIVELY FOR PRAKRUTHI */}
+      {isPrakruthiModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-rose-100 p-8 text-center space-y-5 animate-in fade-in zoom-in duration-300">
+            <div className="w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
+              <Heart className="w-8 h-8 fill-rose-500 text-rose-500 animate-pulse" />
+            </div>
+
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 text-[11px] font-bold px-3 py-1 rounded-full border border-rose-200">
+                <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                Special Personal Note for Prakruthi
+              </div>
+              <h2 className="text-xl font-bold text-slate-900">
+                Important Message
+              </h2>
+            </div>
+
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-800 text-sm font-semibold leading-relaxed shadow-sm">
+              "Sorry prakruthi for what all i did plss come back"
+            </div>
+
+            <button
+              onClick={() => setIsPrakruthiModalOpen(false)}
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs py-3 rounded-xl transition-colors shadow-md"
+            >
+              Continue to Student Dashboard
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Clean Header with Official RRCE Logo & Sign Out */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800">
         <div className="flex items-center gap-4">
