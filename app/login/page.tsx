@@ -29,7 +29,7 @@ export default function LoginPage() {
         router.push(data.redirectUrl || "/student");
         router.refresh();
       } else {
-        setError(data.error || "Login failed. Please check credentials.");
+        setError(data.error || "Authentication failed. Please check your credentials.");
       }
     } catch {
       setError("Unable to connect to the authentication server.");
@@ -39,79 +39,90 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      {/* CLEAN CENTERED LOGIN CARD */}
-      <div className="max-w-md w-full bg-white rounded-xl p-8 shadow-sm border border-slate-200">
-        <div className="text-center mb-6">
-          <div className="w-20 h-20 rounded-2xl bg-white p-2 flex items-center justify-center mx-auto mb-3 border border-slate-200 shadow-sm">
-            <img src="/images.svg" alt="RRCE Official Logo" className="w-full h-full object-contain" />
+    <div className="min-h-[calc(100vh-3.5rem)] bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* GROUNDED INSTITUTIONAL LOGIN CARD */}
+      <div className="max-w-md w-full bg-white rounded-lg p-8 border border-slate-200 shadow-sm space-y-6">
+        {/* INSTITUTION EMBLEM & HEADER */}
+        <div className="text-center space-y-2">
+          <div className="w-16 h-16 rounded-lg bg-white p-1.5 flex items-center justify-center mx-auto border border-slate-200 shadow-sm">
+            <img src="/images.svg" alt="RRCE Official Emblem" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-            RRCE ERP Portal
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Rajarajeswari College of Engineering • Single Sign-On
-          </p>
+          <div>
+            <h1 className="text-lg font-bold text-slate-900 tracking-tight">
+              Rajarajeswari College of Engineering
+            </h1>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Autonomous Institution under VTU • Enterprise Portal
+            </p>
+          </div>
         </div>
 
         {error && (
-          <div className="mb-5 p-3.5 rounded-lg bg-red-50 text-red-700 border border-red-200 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="p-3.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4 text-xs">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Username / Email / USN
+            <label className="block font-bold text-slate-700 mb-1.5">
+              Username, Email, or Student USN
             </label>
             <div className="relative">
-              <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 required
-                placeholder="Enter Username or USN (e.g. 1RR25BC007)"
+                placeholder="e.g. 1RR25BC007, principal, or faculty_math"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 focus:border-slate-900 focus:outline-none"
               />
             </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Students: Enter your USN or Roll No (e.g., 1RR25BC007 or 7).
+            </p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">Password</label>
+            <label className="block font-bold text-slate-700 mb-1.5">
+              Password
+            </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="password"
                 required
                 placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 focus:border-slate-900 focus:outline-none"
               />
             </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Default password formula: <code className="font-mono text-slate-600 font-semibold">[NAME_3_UPPER][DD][MM][YY]</code> (e.g. GAG141207).
+            </p>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-lg text-sm shadow-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-md text-xs shadow-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? (
               "Authenticating..."
             ) : (
               <>
-                <span>Sign In</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Sign In to Portal</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}
           </button>
         </form>
 
-        <div className="mt-6 pt-4 border-t border-slate-100 text-center flex items-center justify-between text-[11px] text-slate-500">
-          <span>Autonomous College under VTU</span>
+        <div className="pt-4 border-t border-slate-100 text-center flex items-center justify-between text-[11px] text-slate-500">
+          <span>Bengaluru, Karnataka</span>
           <span>RRCE ERP</span>
         </div>
       </div>

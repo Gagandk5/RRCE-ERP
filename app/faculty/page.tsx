@@ -14,9 +14,8 @@ import {
   Users,
   ShieldAlert,
   LogOut,
-  BookOpen,
-  MapPin,
   AlertCircle,
+  Search,
 } from "lucide-react";
 
 export default function FacultyPortal() {
@@ -30,6 +29,7 @@ export default function FacultyPortal() {
   const [attendanceMap, setAttendanceMap] = useState<Record<string, "PRESENT" | "ABSENT" | "LATE">>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState("");
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" | "warning" } | null>(null);
 
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -222,6 +222,12 @@ export default function FacultyPortal() {
   const absentCount = Object.values(attendanceMap).filter((s) => s === "ABSENT").length;
   const lateCount = Object.values(attendanceMap).filter((s) => s === "LATE").length;
 
+  const filteredStudents = students.filter((s) => {
+    const term = search.toLowerCase();
+    const fullName = `${s.user?.firstName || ""} ${s.user?.lastName || ""}`.toLowerCase();
+    return s.usn.toLowerCase().includes(term) || fullName.includes(term);
+  });
+
   const teacherClassesToday = [
     {
       time: "09:00 AM - 10:00 AM",
@@ -253,18 +259,18 @@ export default function FacultyPortal() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
-      {/* COMPACT INSTITUTIONAL HEADER (NO EMOJIS, NO WELCOME SECTION) */}
-      <div className="bg-slate-900 text-white rounded-xl p-5 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6 text-xs">
+      {/* GROUNDED HEADER BAR */}
+      <div className="bg-slate-900 text-white rounded-lg p-5 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-white p-1 flex items-center justify-center shrink-0 border border-slate-700">
-            <img src="/images.svg" alt="RRCE Logo" className="w-full h-full object-contain" />
+          <div className="w-10 h-10 rounded bg-white p-1 flex items-center justify-center shrink-0 border border-slate-700">
+            <img src="/images.svg" alt="RRCE Emblem" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-base font-bold text-white tracking-tight">
               Faculty Attendance Desk • Prof. Sunitha Sharma
             </h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-400 font-mono">
               Department of Basic Sciences & Mathematics • RRCE
             </p>
           </div>
@@ -273,15 +279,15 @@ export default function FacultyPortal() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setIsScheduleModalOpen(true)}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-md transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Schedule Extra Class</span>
+            <span>Schedule Class Slot</span>
           </button>
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 bg-slate-800 hover:bg-rose-600 text-slate-200 hover:text-white font-semibold text-xs px-3 py-2 rounded-md border border-slate-700 transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out</span>
@@ -291,12 +297,12 @@ export default function FacultyPortal() {
 
       {message && (
         <div
-          className={`p-3.5 rounded-lg border text-xs font-medium flex items-center justify-between ${
+          className={`p-3.5 rounded-md border font-medium flex items-center justify-between ${
             message.type === "success"
               ? "bg-emerald-50 text-emerald-900 border-emerald-200"
               : message.type === "warning"
               ? "bg-amber-50 text-amber-900 border-amber-200"
-              : "bg-red-50 text-red-900 border-red-200"
+              : "bg-rose-50 text-rose-900 border-rose-200"
           }`}
         >
           <span className="flex items-center gap-2">
@@ -311,120 +317,120 @@ export default function FacultyPortal() {
         </div>
       )}
 
-      {/* COMPACT KPI CARDS */}
+      {/* COMPACT METRIC CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Today's Classes</span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Today's Classes</span>
+            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[10px]">
               3 Lectures
             </span>
           </div>
-          <div className="text-xl font-bold text-slate-900 mt-1.5">
+          <div className="text-xl font-bold text-slate-900 mt-1">
             LH-201 <span className="text-xs font-normal text-slate-400">Next Lecture</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
             09:00 AM - Discrete Mathematics
           </p>
         </div>
 
-        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Batch</span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Active Batch</span>
+            <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px]">
               54 Enrolled
             </span>
           </div>
-          <div className="text-xl font-bold text-slate-900 mt-1.5">
+          <div className="text-xl font-bold text-slate-900 mt-1">
             BCA Sem 3 (Sec A)
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
             USN Sequence: 001 - 057
           </p>
         </div>
 
-        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">24h Edit Window</span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">24h Edit Window</span>
+            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">
               Active
             </span>
           </div>
-          <div className="text-xl font-bold text-slate-900 mt-1.5">
+          <div className="text-xl font-bold text-slate-900 mt-1">
             Editable
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
             24-Hour Edit Window Open
           </p>
         </div>
 
-        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Clash Engine</span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
+            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Clash Engine</span>
+            <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px]">
               3-Layer Active
             </span>
           </div>
-          <div className="text-xl font-bold text-slate-900 mt-1.5">
+          <div className="text-xl font-bold text-slate-900 mt-1">
             0 Conflicts
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
             Faculty • Room • Batch Verified
           </p>
         </div>
       </div>
 
       {/* NAVIGATION TABS */}
-      <div className="flex border-b border-slate-200 gap-6 text-xs font-bold">
+      <div className="flex border-b border-slate-200 gap-6 font-bold">
         <button
           onClick={() => setActiveTab("rollcall")}
-          className={`pb-3 transition-colors flex items-center gap-2 ${
+          className={`pb-2.5 transition-colors flex items-center gap-2 ${
             activeTab === "rollcall"
               ? "text-slate-900 border-b-2 border-slate-900"
               : "text-slate-500 hover:text-slate-800"
           }`}
         >
-          <Users className="w-4 h-4" />
+          <Users className="w-4 h-4 text-slate-600" />
           Mark Attendance (BCA 3rd Sem)
         </button>
 
         <button
           onClick={() => setActiveTab("schedule")}
-          className={`pb-3 transition-colors flex items-center gap-2 ${
+          className={`pb-2.5 transition-colors flex items-center gap-2 ${
             activeTab === "schedule"
               ? "text-slate-900 border-b-2 border-slate-900"
               : "text-slate-500 hover:text-slate-800"
           }`}
         >
-          <Calendar className="w-4 h-4" />
+          <Calendar className="w-4 h-4 text-slate-600" />
           Teaching Schedule & Timetable
         </button>
 
         <button
           onClick={() => setActiveTab("risk")}
-          className={`pb-3 transition-colors flex items-center gap-2 ${
+          className={`pb-2.5 transition-colors flex items-center gap-2 ${
             activeTab === "risk"
               ? "text-slate-900 border-b-2 border-slate-900"
               : "text-slate-500 hover:text-slate-800"
           }`}
         >
-          <AlertCircle className="w-4 h-4" />
+          <AlertCircle className="w-4 h-4 text-slate-600" />
           Attendance Warnings ({lowAttendanceStudents.length} Students)
         </button>
       </div>
 
       {/* TAB 1: ATTENDANCE MARKER */}
       {activeTab === "rollcall" && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-4">
+          <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <label className="text-xs font-bold text-slate-700 shrink-0">
+              <label className="font-bold text-slate-700 shrink-0">
                 Session:
               </label>
               <select
                 value={selectedSessionId}
                 onChange={(e) => setSelectedSessionId(e.target.value)}
-                className="text-xs font-semibold py-1.5 px-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                className="font-semibold py-1.5 px-3 bg-slate-50 border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 focus:outline-none"
               >
                 {sessions.map((sess) => (
                   <option key={sess.id} value={sess.id}>
@@ -437,17 +443,17 @@ export default function FacultyPortal() {
             <div className="flex items-center gap-3">
               {currentSession && (
                 <div
-                  className={`px-3 py-1 rounded-lg border text-xs font-bold flex items-center gap-2 ${
+                  className={`px-3 py-1 rounded-md border font-bold flex items-center gap-2 ${
                     currentSession.isLockedOverride
                       ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                       : isSessionLocked
-                      ? "bg-red-50 text-red-800 border-red-200"
+                      ? "bg-rose-50 text-rose-800 border-rose-200"
                       : "bg-blue-50 text-blue-800 border-blue-200"
                   }`}
                 >
                   {isSessionLocked ? (
                     <>
-                      <Lock className="w-3.5 h-3.5 text-red-600" />
+                      <Lock className="w-3.5 h-3.5 text-rose-600" />
                       <span>24-Hour Lockout Active</span>
                     </>
                   ) : currentSession.isLockedOverride ? (
@@ -467,7 +473,7 @@ export default function FacultyPortal() {
               <button
                 onClick={handleSaveAttendance}
                 disabled={saving || isSessionLocked}
-                className="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4 py-2 rounded-lg disabled:opacity-50 transition-colors flex items-center gap-1.5 shadow-sm"
+                className="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-md disabled:opacity-50 transition-colors flex items-center gap-1.5 shadow-sm"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{saving ? "Saving..." : "Submit Attendance"}</span>
@@ -475,95 +481,106 @@ export default function FacultyPortal() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
             <div className="flex items-center gap-4">
               <span className="text-slate-600 font-medium">Total: <strong>{students.length}</strong></span>
               <span className="text-emerald-700 font-bold">Present: {presentCount}</span>
-              <span className="text-red-700 font-bold">Absent: {absentCount}</span>
+              <span className="text-rose-700 font-bold">Absent: {absentCount}</span>
               <span className="text-amber-700 font-bold">Late: {lateCount}</span>
             </div>
 
             <div className="flex items-center gap-2">
+              <div className="relative w-48">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
+                <input
+                  type="text"
+                  placeholder="Filter student..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-8 pr-2 py-1 bg-white border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 focus:outline-none"
+                />
+              </div>
+
               <button
                 onClick={() => markAll("PRESENT")}
                 disabled={isSessionLocked}
-                className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-lg font-bold text-[11px] disabled:opacity-50"
+                className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-md font-bold text-[11px] disabled:opacity-50"
               >
                 Mark All Present
               </button>
               <button
                 onClick={() => markAll("ABSENT")}
                 disabled={isSessionLocked}
-                className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-lg font-bold text-[11px] disabled:opacity-50"
+                className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-md font-bold text-[11px] disabled:opacity-50"
               >
                 Clear All
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+            <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <span className="font-bold text-slate-700">
-                Official BCA 2025 Roll-Call Roster (Ordered by usnSequence ASC)
+                Official BCA 2025 Roll-Call Roster (Guaranteed usnSequence ASC)
               </span>
-              <span className="text-[11px] text-slate-500">
-                Click P (Present), A (Absent), or L (Late)
+              <span className="text-[11px] text-slate-500 font-mono">
+                Click P, A, or L
               </span>
             </div>
 
             <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 text-slate-700 font-bold sticky top-0 z-10 border-b border-slate-200">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200 sticky top-0 z-10 text-[11px]">
                   <tr>
-                    <th className="py-2.5 px-4">Seq</th>
-                    <th className="py-2.5 px-4">USN</th>
-                    <th className="py-2.5 px-4">Student Name</th>
-                    <th className="py-2.5 px-4 text-center">Status</th>
-                    <th className="py-2.5 px-4 text-right">Action</th>
+                    <th className="py-2.5 px-3">Seq</th>
+                    <th className="py-2.5 px-3">USN</th>
+                    <th className="py-2.5 px-3">Student Name</th>
+                    <th className="py-2.5 px-3 text-center">Status</th>
+                    <th className="py-2.5 px-3 text-right">Ergonomic Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {students.map((st) => {
+                  {filteredStudents.map((st) => {
                     const currentStatus = attendanceMap[st.id] || "PRESENT";
                     return (
                       <tr
                         key={st.id}
                         className={`transition-colors ${
                           currentStatus === "ABSENT"
-                            ? "bg-red-50/70"
+                            ? "bg-rose-50/60"
                             : currentStatus === "LATE"
-                            ? "bg-amber-50/70"
+                            ? "bg-amber-50/60"
                             : "hover:bg-slate-50"
                         }`}
                       >
-                        <td className="py-2.5 px-4 font-mono font-bold text-slate-400">
+                        <td className="py-2.5 px-3 font-mono font-bold text-slate-400">
                           #{String(st.usnSequence).padStart(3, "0")}
                         </td>
-                        <td className="py-2.5 px-4 font-mono font-bold text-slate-900">
+                        <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
                           {st.usn}
                         </td>
-                        <td className="py-2.5 px-4 font-semibold text-slate-900">
+                        <td className="py-2.5 px-3 font-semibold text-slate-900">
                           {st.user?.firstName} {st.user?.lastName}
                         </td>
-                        <td className="py-2.5 px-4 text-center">
+                        <td className="py-2.5 px-3 text-center">
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase border ${
                               currentStatus === "PRESENT"
-                                ? "bg-emerald-100 text-emerald-800"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : currentStatus === "ABSENT"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-amber-100 text-amber-800"
+                                ? "bg-rose-50 text-rose-700 border-rose-200"
+                                : "bg-amber-50 text-amber-700 border-amber-200"
                             }`}
                           >
                             {currentStatus}
                           </span>
                         </td>
-                        <td className="py-2.5 px-4 text-right">
+                        <td className="py-2.5 px-3 text-right">
                           <div className="inline-flex items-center gap-1">
                             <button
                               disabled={isSessionLocked}
                               onClick={() => toggleStatus(st.id, "PRESENT")}
-                              className={`w-7 h-7 rounded text-xs font-bold transition-colors disabled:opacity-40 ${
+                              className={`w-7 h-7 rounded font-bold transition-colors disabled:opacity-40 ${
                                 currentStatus === "PRESENT"
                                   ? "bg-slate-900 text-white"
                                   : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
@@ -574,9 +591,9 @@ export default function FacultyPortal() {
                             <button
                               disabled={isSessionLocked}
                               onClick={() => toggleStatus(st.id, "ABSENT")}
-                              className={`w-7 h-7 rounded text-xs font-bold transition-colors disabled:opacity-40 ${
+                              className={`w-7 h-7 rounded font-bold transition-colors disabled:opacity-40 ${
                                 currentStatus === "ABSENT"
-                                  ? "bg-red-600 text-white"
+                                  ? "bg-rose-600 text-white"
                                   : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
                               }`}
                             >
@@ -585,7 +602,7 @@ export default function FacultyPortal() {
                             <button
                               disabled={isSessionLocked}
                               onClick={() => toggleStatus(st.id, "LATE")}
-                              className={`w-7 h-7 rounded text-xs font-bold transition-colors disabled:opacity-40 ${
+                              className={`w-7 h-7 rounded font-bold transition-colors disabled:opacity-40 ${
                                 currentStatus === "LATE"
                                   ? "bg-amber-600 text-white"
                                   : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
@@ -607,32 +624,32 @@ export default function FacultyPortal() {
 
       {/* TAB 2: SCHEDULE */}
       {activeTab === "schedule" && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-4">
+          <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
                 <h2 className="text-sm font-bold text-slate-900">
                   Today's Teaching Schedule (Monday)
                 </h2>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 font-mono">
                   3-Layer Clash Engine Verified (Faculty • Room • Batch)
                 </p>
               </div>
 
               <button
                 onClick={() => setIsScheduleModalOpen(true)}
-                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-md transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Schedule Class Slot</span>
               </button>
             </div>
 
-            <div className="space-y-3 pt-1">
+            <div className="space-y-2.5">
               {teacherClassesToday.map((c, idx) => (
                 <div
                   key={idx}
-                  className={`p-3.5 rounded-lg border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                  className={`p-3.5 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                     c.status === "ACTIVE_NOW"
                       ? "bg-blue-50/80 border-blue-200"
                       : "bg-slate-50 border-slate-200"
@@ -640,7 +657,7 @@ export default function FacultyPortal() {
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900 text-sm">{c.subject}</h3>
+                      <h3 className="font-bold text-slate-900">{c.subject}</h3>
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
                           c.status === "ACTIVE_NOW"
@@ -657,7 +674,7 @@ export default function FacultyPortal() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                    <span className="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-md flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
                       {c.time}
                     </span>
@@ -671,8 +688,8 @@ export default function FacultyPortal() {
 
       {/* TAB 3: ATTENDANCE WARNINGS */}
       {activeTab === "risk" && (
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
               <h2 className="text-sm font-bold text-slate-900">
                 Attendance Compliance Alerts (&lt;75%)
@@ -681,14 +698,14 @@ export default function FacultyPortal() {
                 Students below the 75% minimum VTU eligibility requirement
               </p>
             </div>
-            <span className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded">
+            <span className="font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md">
               3 Students Alerted
             </span>
           </div>
 
-          <div className="space-y-2.5 pt-1">
+          <div className="space-y-2.5">
             {lowAttendanceStudents.map((st, idx) => (
-              <div key={idx} className="p-3.5 rounded-lg border border-amber-200 bg-amber-50/60 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div key={idx} className="p-3.5 rounded-lg border border-amber-200 bg-amber-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-slate-900">{st.name}</h3>
@@ -703,7 +720,7 @@ export default function FacultyPortal() {
 
                 <button
                   onClick={() => alert(`Reminder sent to ${st.name} (${st.usn})`)}
-                  className="px-3.5 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-lg font-semibold text-xs shrink-0 transition-colors"
+                  className="px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-md font-semibold text-xs shrink-0 transition-colors"
                 >
                   Send Student Reminder
                 </button>
@@ -713,40 +730,40 @@ export default function FacultyPortal() {
         </div>
       )}
 
-      {/* SCHEDULE MODAL */}
+      {/* TIMETABLE SCHEDULE MODAL WITH INLINE CLASH ALERTS */}
       {isScheduleModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-xl max-w-xl w-full shadow-lg border border-slate-200 p-6">
+          <div className="bg-white rounded-lg max-w-xl w-full shadow-lg border border-slate-200 p-6">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
+                <div className="w-8 h-8 rounded bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
                   <Layers className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-sm font-bold text-slate-900">
                     Schedule Class Slot
                   </h3>
-                  <p className="text-xs text-slate-500">
-                    3-Layer Timetable Clash Validation
+                  <p className="text-[11px] text-slate-500 font-mono">
+                    3-Layer Timetable Clash Validation Engine
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsScheduleModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+                className="text-slate-400 hover:text-slate-600 font-bold"
               >
                 ✕
               </button>
             </div>
 
             {clashResult && clashResult.hasClash && (
-              <div className="mb-4 p-3.5 bg-red-50 text-red-900 border border-red-200 rounded-lg text-xs space-y-2">
-                <div className="font-bold flex items-center gap-2 text-red-700">
+              <div className="mb-4 p-3 bg-rose-50 text-rose-900 border border-rose-200 rounded-md text-xs space-y-1.5">
+                <div className="font-bold flex items-center gap-2 text-rose-700">
                   <ShieldAlert className="w-4 h-4 shrink-0" />
-                  <span>3-Layer Clash Detected!</span>
+                  <span>3-Layer Clash Conflict Detected!</span>
                 </div>
                 {clashResult.clashes.map((c: any, idx: number) => (
-                  <p key={idx} className="text-[11px] leading-relaxed pl-6 list-disc">
+                  <p key={idx} className="text-[11px] leading-relaxed pl-5 font-mono">
                     • <strong>{c.type.replace("_", " ")}:</strong> {c.message}
                   </p>
                 ))}
@@ -754,13 +771,13 @@ export default function FacultyPortal() {
             )}
 
             {clashResult && !clashResult.hasClash && (
-              <div className="mb-4 p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs flex items-center gap-2 font-semibold">
+              <div className="mb-4 p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-md text-xs flex items-center gap-2 font-semibold">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Zero clashes detected. Slot is free across Faculty, Room, and Batch.</span>
+                <span>Zero clashes detected. Room, Faculty, and Batch are available.</span>
               </div>
             )}
 
-            <form onSubmit={handleScheduleSubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleScheduleSubmit} className="space-y-3.5">
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">Day of Week</label>
@@ -771,7 +788,7 @@ export default function FacultyPortal() {
                       setScheduleForm(updated);
                       checkLiveClash(updated);
                     }}
-                    className="w-full p-2 bg-white border border-slate-300 rounded-lg font-bold"
+                    className="w-full p-2 bg-white border border-slate-300 rounded-md font-bold"
                   >
                     <option value="MON">Monday</option>
                     <option value="TUE">Tuesday</option>
@@ -793,7 +810,7 @@ export default function FacultyPortal() {
                       setScheduleForm(updated);
                       checkLiveClash(updated);
                     }}
-                    className="w-full p-2 border border-slate-300 rounded-lg"
+                    className="w-full p-2 border border-slate-300 rounded-md font-mono"
                   />
                 </div>
 
@@ -808,7 +825,7 @@ export default function FacultyPortal() {
                       setScheduleForm(updated);
                       checkLiveClash(updated);
                     }}
-                    className="w-full p-2 border border-slate-300 rounded-lg"
+                    className="w-full p-2 border border-slate-300 rounded-md font-mono"
                   />
                 </div>
               </div>
@@ -821,7 +838,7 @@ export default function FacultyPortal() {
                   value={scheduleForm.subject}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, subject: e.target.value })}
                   placeholder="e.g. Discrete Mathematics (25BC301)"
-                  className="w-full p-2 border border-slate-300 rounded-lg"
+                  className="w-full p-2 border border-slate-300 rounded-md"
                 />
               </div>
 
@@ -838,7 +855,7 @@ export default function FacultyPortal() {
                       checkLiveClash(updated);
                     }}
                     placeholder="LH-201 or LAB-3"
-                    className="w-full p-2 border border-slate-300 rounded-lg font-bold"
+                    className="w-full p-2 border border-slate-300 rounded-md font-mono font-bold"
                   />
                 </div>
 
@@ -851,7 +868,7 @@ export default function FacultyPortal() {
                       setScheduleForm(updated);
                       checkLiveClash(updated);
                     }}
-                    className="w-full p-2 bg-white border border-slate-300 rounded-lg"
+                    className="w-full p-2 bg-white border border-slate-300 rounded-md"
                   >
                     {departments.map((d) => (
                       <option key={d.id} value={d.id}>
@@ -866,16 +883,16 @@ export default function FacultyPortal() {
                 <button
                   type="button"
                   onClick={() => setIsScheduleModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-semibold"
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-md font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={schedulingSlot || clashResult?.hasClash}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold disabled:opacity-50 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold disabled:opacity-50 transition-colors flex items-center gap-2"
                 >
-                  {schedulingSlot ? "Validating & Saving..." : "Confirm & Save Slot"}
+                  {schedulingSlot ? "Validating..." : "Save Schedule Slot"}
                 </button>
               </div>
             </form>
