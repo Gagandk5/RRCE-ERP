@@ -16,7 +16,6 @@ import {
   LogOut,
   BookOpen,
   MapPin,
-  Sparkles,
   AlertCircle,
 } from "lucide-react";
 
@@ -144,7 +143,7 @@ export default function FacultyPortal() {
       if (res.ok && data.success) {
         setMessage({
           type: "success",
-          text: "Class slot scheduled successfully! Conflict checks verified across Faculty, Room, and Batch.",
+          text: "Class slot scheduled successfully. Conflict checks verified across Faculty, Room, and Batch.",
         });
         setIsScheduleModalOpen(false);
         await loadFacultyData();
@@ -200,7 +199,7 @@ export default function FacultyPortal() {
       if (res.ok && data.success) {
         setMessage({
           type: "success",
-          text: `Attendance saved successfully for ${records.length} students!`,
+          text: `Attendance saved successfully for ${records.length} students.`,
         });
         await loadFacultyData();
       } else {
@@ -254,32 +253,29 @@ export default function FacultyPortal() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      {/* SIMPLE HUMANLIKE TEACHER WELCOME BANNER (NO GRADIENTS) */}
-      <div className="bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-white p-1.5 flex items-center justify-center shrink-0 border border-slate-700">
+    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+      {/* COMPACT INSTITUTIONAL HEADER (NO EMOJIS, NO WELCOME SECTION) */}
+      <div className="bg-slate-900 text-white rounded-xl p-5 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-lg bg-white p-1 flex items-center justify-center shrink-0 border border-slate-700">
             <img src="/images.svg" alt="RRCE Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs text-slate-300 bg-slate-800 border border-slate-700 px-2.5 py-0.5 rounded font-medium mb-1">
-              <span>Department of Basic Sciences & Mathematics</span>
-            </div>
-            <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-              Welcome, Prof. Sunitha Sharma! 👋
+            <h1 className="text-base font-bold text-white tracking-tight">
+              Faculty Attendance Desk • Prof. Sunitha Sharma
             </h1>
-            <p className="text-xs text-slate-400 mt-1">
-              Discrete Mathematics & Engineering Math • Rajarajeswari College of Engineering
+            <p className="text-xs text-slate-400">
+              Department of Basic Sciences & Mathematics • RRCE
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => setIsScheduleModalOpen(true)}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Schedule Extra Class</span>
           </button>
 
@@ -295,7 +291,7 @@ export default function FacultyPortal() {
 
       {message && (
         <div
-          className={`p-4 rounded-lg border text-xs font-medium flex items-center justify-between ${
+          className={`p-3.5 rounded-lg border text-xs font-medium flex items-center justify-between ${
             message.type === "success"
               ? "bg-emerald-50 text-emerald-900 border-emerald-200"
               : message.type === "warning"
@@ -315,64 +311,64 @@ export default function FacultyPortal() {
         </div>
       )}
 
-      {/* TOP SUMMARY CARDS (SOLID BASIC COLORS, NO GRADIENTS) */}
+      {/* COMPACT KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Today's Classes</span>
             <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
               3 Lectures
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">
-            LH-201 <span className="text-xs font-normal text-slate-400">Next Class</span>
+          <div className="text-xl font-bold text-slate-900 mt-1.5">
+            LH-201 <span className="text-xs font-normal text-slate-400">Next Lecture</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
+          <p className="text-[11px] text-slate-500 mt-0.5">
             09:00 AM - Discrete Mathematics
           </p>
         </div>
 
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Batch</span>
             <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
               54 Enrolled
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">
+          <div className="text-xl font-bold text-slate-900 mt-1.5">
             BCA Sem 3 (Sec A)
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            USN: 1RR25BC001 - 057
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            USN Sequence: 001 - 057
           </p>
         </div>
 
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">24h Edit Window</span>
             <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
               Active
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">
-            Open
+          <div className="text-xl font-bold text-slate-900 mt-1.5">
+            Editable
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Editable for 24 hours after creation
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            24-Hour Edit Window Open
           </p>
         </div>
 
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Clash Prevention</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Clash Engine</span>
             <span className="text-xs font-bold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
               3-Layer Active
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">
+          <div className="text-xl font-bold text-slate-900 mt-1.5">
             0 Conflicts
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
+          <p className="text-[11px] text-slate-500 mt-0.5">
             Faculty • Room • Batch Verified
           </p>
         </div>
@@ -401,7 +397,7 @@ export default function FacultyPortal() {
           }`}
         >
           <Calendar className="w-4 h-4" />
-          Today's Teaching Schedule & Timetable
+          Teaching Schedule & Timetable
         </button>
 
         <button
@@ -420,16 +416,15 @@ export default function FacultyPortal() {
       {/* TAB 1: ATTENDANCE MARKER */}
       {activeTab === "rollcall" && (
         <div className="space-y-6">
-          {/* SESSION BAR */}
-          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <label className="text-xs font-bold text-slate-700 shrink-0">
-                Class Session:
+                Session:
               </label>
               <select
                 value={selectedSessionId}
                 onChange={(e) => setSelectedSessionId(e.target.value)}
-                className="text-xs font-semibold py-2 px-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                className="text-xs font-semibold py-1.5 px-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:outline-none"
               >
                 {sessions.map((sess) => (
                   <option key={sess.id} value={sess.id}>
@@ -442,7 +437,7 @@ export default function FacultyPortal() {
             <div className="flex items-center gap-3">
               {currentSession && (
                 <div
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-2 ${
+                  className={`px-3 py-1 rounded-lg border text-xs font-bold flex items-center gap-2 ${
                     currentSession.isLockedOverride
                       ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                       : isSessionLocked
@@ -453,12 +448,12 @@ export default function FacultyPortal() {
                   {isSessionLocked ? (
                     <>
                       <Lock className="w-3.5 h-3.5 text-red-600" />
-                      <span>24-Hour Lockout Active (Requires HOD Override)</span>
+                      <span>24-Hour Lockout Active</span>
                     </>
                   ) : currentSession.isLockedOverride ? (
                     <>
                       <Unlock className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Unlocked via HOD/Principal Override</span>
+                      <span>Unlocked via Override</span>
                     </>
                   ) : (
                     <>
@@ -472,7 +467,7 @@ export default function FacultyPortal() {
               <button
                 onClick={handleSaveAttendance}
                 disabled={saving || isSessionLocked}
-                className="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-5 py-2.5 rounded-lg disabled:opacity-50 transition-colors flex items-center gap-1.5 shadow-sm"
+                className="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4 py-2 rounded-lg disabled:opacity-50 transition-colors flex items-center gap-1.5 shadow-sm"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{saving ? "Saving..." : "Submit Attendance"}</span>
@@ -480,8 +475,7 @@ export default function FacultyPortal() {
             </div>
           </div>
 
-          {/* QUICK SUMMARY AND CONTROLS */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
             <div className="flex items-center gap-4">
               <span className="text-slate-600 font-medium">Total: <strong>{students.length}</strong></span>
               <span className="text-emerald-700 font-bold">Present: {presentCount}</span>
@@ -493,25 +487,24 @@ export default function FacultyPortal() {
               <button
                 onClick={() => markAll("PRESENT")}
                 disabled={isSessionLocked}
-                className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-lg font-bold text-[11px] disabled:opacity-50"
+                className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-lg font-bold text-[11px] disabled:opacity-50"
               >
                 Mark All Present
               </button>
               <button
                 onClick={() => markAll("ABSENT")}
                 disabled={isSessionLocked}
-                className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-lg font-bold text-[11px] disabled:opacity-50"
+                className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-lg font-bold text-[11px] disabled:opacity-50"
               >
                 Clear All
               </button>
             </div>
           </div>
 
-          {/* STUDENT ROSTER TABLE */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs">
               <span className="font-bold text-slate-700">
-                Official BCA 2025 Roll-Call Roster (Guaranteed usnSequence ASC)
+                Official BCA 2025 Roll-Call Roster (Ordered by usnSequence ASC)
               </span>
               <span className="text-[11px] text-slate-500">
                 Click P (Present), A (Absent), or L (Late)
@@ -526,7 +519,7 @@ export default function FacultyPortal() {
                     <th className="py-2.5 px-4">USN</th>
                     <th className="py-2.5 px-4">Student Name</th>
                     <th className="py-2.5 px-4 text-center">Status</th>
-                    <th className="py-2.5 px-4 text-right">Quick Action</th>
+                    <th className="py-2.5 px-4 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -612,17 +605,17 @@ export default function FacultyPortal() {
         </div>
       )}
 
-      {/* TAB 2: SCHEDULE & TIMETABLE */}
+      {/* TAB 2: SCHEDULE */}
       {activeTab === "schedule" && (
         <div className="space-y-6">
-          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm space-y-4">
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="text-base font-bold text-slate-900">
+                <h2 className="text-sm font-bold text-slate-900">
                   Today's Teaching Schedule (Monday)
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Protected by 3-Layer Clash Engine (Faculty • Room • Batch)
+                  3-Layer Clash Engine Verified (Faculty • Room • Batch)
                 </p>
               </div>
 
@@ -631,15 +624,15 @@ export default function FacultyPortal() {
                 className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                <span>Schedule Extra Class</span>
+                <span>Schedule Class Slot</span>
               </button>
             </div>
 
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-1">
               {teacherClassesToday.map((c, idx) => (
                 <div
                   key={idx}
-                  className={`p-4 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                  className={`p-3.5 rounded-lg border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                     c.status === "ACTIVE_NOW"
                       ? "bg-blue-50/80 border-blue-200"
                       : "bg-slate-50 border-slate-200"
@@ -678,33 +671,33 @@ export default function FacultyPortal() {
 
       {/* TAB 3: ATTENDANCE WARNINGS */}
       {activeTab === "risk" && (
-        <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-sm font-bold text-slate-900">
                 Attendance Compliance Alerts (&lt;75%)
               </h2>
               <p className="text-xs text-slate-500">
-                Students below the 75% minimum VTU eligibility requirement in your subject
+                Students below the 75% minimum VTU eligibility requirement
               </p>
             </div>
             <span className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded">
-              3 Students Need Reminders
+              3 Students Alerted
             </span>
           </div>
 
-          <div className="space-y-3 pt-2">
+          <div className="space-y-2.5 pt-1">
             {lowAttendanceStudents.map((st, idx) => (
-              <div key={idx} className="p-4 rounded-xl border border-amber-200 bg-amber-50/60 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div key={idx} className="p-3.5 rounded-lg border border-amber-200 bg-amber-50/60 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-slate-900 text-sm">{st.name}</h3>
+                    <h3 className="font-bold text-slate-900">{st.name}</h3>
                     <span className="font-mono text-xs font-bold bg-white text-slate-700 px-2 py-0.5 rounded border border-amber-200">
                       {st.usn}
                     </span>
                   </div>
                   <p className="text-amber-800 mt-1 text-[11px]">
-                    Current Subject Attendance: <strong>{st.attendance}</strong>. Needs to attend next <strong>{st.missingClasses} classes</strong> to reach 75%.
+                    Current Attendance: <strong>{st.attendance}</strong>. Requires <strong>{st.missingClasses} additional sessions</strong> to reach 75%.
                   </p>
                 </div>
 
@@ -734,7 +727,7 @@ export default function FacultyPortal() {
                     Schedule Class Slot
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Validated by the 3-Layer Clash Engine
+                    3-Layer Timetable Clash Validation
                   </p>
                 </div>
               </div>
@@ -763,7 +756,7 @@ export default function FacultyPortal() {
             {clashResult && !clashResult.hasClash && (
               <div className="mb-4 p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs flex items-center gap-2 font-semibold">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Zero clashes detected! Slot is free across Faculty, Room, and Batch.</span>
+                <span>Zero clashes detected. Slot is free across Faculty, Room, and Batch.</span>
               </div>
             )}
 

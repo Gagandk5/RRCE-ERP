@@ -14,9 +14,8 @@ import {
   LogOut,
   Bell,
   MapPin,
-  BookOpen,
-  Sparkles,
   FileText,
+  ShieldCheck,
 } from "lucide-react";
 import { formatINR } from "@/lib/utils";
 
@@ -132,7 +131,7 @@ export default function StudentPortal() {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        setMessage(`Payment of ₹${payAmount.toLocaleString("en-IN")} processed successfully!`);
+        setMessage(`Payment of ₹${payAmount.toLocaleString("en-IN")} processed successfully.`);
         setInvoice(data.invoice);
         setReceipt({
           receiptNumber: `REC-2025-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -199,59 +198,54 @@ export default function StudentPortal() {
       title: "IA-2 Test Timetable Published",
       date: "26 Sep 2025",
       category: "Exams",
-      content: "The Second Internal Assessment for BCA 3rd Semester will commence on October 12th. Check notice board.",
+      content: "The Second Internal Assessment for BCA 3rd Semester will commence on October 12th.",
     },
     {
       id: "2",
       title: "Tuition Fee Installment Reminder",
       date: "24 Sep 2025",
       category: "Accounts",
-      content: "Students with pending fee balance are advised to pay online before Oct 31 to avoid hall ticket hold.",
+      content: "Students with pending fee balance are advised to pay online before Oct 31.",
     },
     {
       id: "3",
       title: "Inter-College Hackathon Registration",
       date: "22 Sep 2025",
       category: "Events",
-      content: "Register your 4-member teams at Department of Computer Applications by Friday.",
+      content: "Register 4-member teams at Department of Computer Applications by Friday.",
     },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-      {/* SIMPLE HUMANLIKE WELCOME BANNER (NO GRADIENTS) */}
-      <div className="bg-slate-900 text-white rounded-xl p-6 md:p-8 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-white p-1.5 flex items-center justify-center shrink-0 border border-slate-700">
+    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+      {/* COMPACT INSTITUTIONAL HEADER (NO EMOJIS, NO WELCOME SECTION) */}
+      <div className="bg-slate-900 text-white rounded-xl p-5 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-lg bg-white p-1 flex items-center justify-center shrink-0 border border-slate-700">
             <img src="/images.svg" alt="RRCE Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs text-slate-300 bg-slate-800 border border-slate-700 px-2.5 py-0.5 rounded font-medium mb-1">
-              <span>BCA 3rd Semester</span>
-              <span>•</span>
-              <span>Section A</span>
-            </div>
-            <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-              Good morning, {student?.user?.firstName || "Student"}! 👋
+            <h1 className="text-base font-bold text-white tracking-tight">
+              Student Dashboard • {student?.user?.firstName || "Student"} {student?.user?.lastName || ""}
             </h1>
-            <p className="text-xs text-slate-400 mt-1 font-mono">
-              USN: {student?.usn || "1RR25BC007"} • Rajarajeswari College of Engineering
+            <p className="text-xs text-slate-400 font-mono">
+              USN: {student?.usn || "1RR25BC007"} • BCA Semester 3 (Section A) • RRCE
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3.5 py-2 rounded-lg border border-slate-700 transition-colors"
+            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-700 transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Download Digital ID</span>
+            <span>ID Card</span>
           </button>
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out</span>
@@ -260,7 +254,7 @@ export default function StudentPortal() {
       </div>
 
       {message && (
-        <div className="p-4 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-medium flex items-center justify-between">
+        <div className="p-3.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-medium flex items-center justify-between">
           <span className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             {message}
@@ -269,105 +263,101 @@ export default function StudentPortal() {
         </div>
       )}
 
-      {/* TOP SUMMARY CARDS (SOLID BASIC COLORS, NO GRADIENTS) */}
+      {/* COMPACT KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Attendance Summary */}
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Attendance</span>
             <span className={`text-xs font-bold px-2 py-0.5 rounded border ${isBelowVTUThreshold ? "bg-red-50 text-red-700 border-red-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
               {attendancePercentage}%
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">
-            {attendedClasses} <span className="text-xs font-normal text-slate-400">/ {totalClasses} classes</span>
+          <div className="text-xl font-bold text-slate-900 mt-1.5">
+            {attendedClasses} <span className="text-xs font-normal text-slate-400">/ {totalClasses} Sessions</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            VTU Criteria: Minimum 75% required
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            VTU Criteria: Minimum 75% Required
           </p>
         </div>
 
-        {/* Tuition Fee Balance */}
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Fee Balance</span>
             <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
               {invoice?.status || "PENDING"}
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">
+          <div className="text-xl font-bold text-slate-900 mt-1.5">
             {formatINR(invoice ? Math.max(0, invoice.totalAmount - invoice.paidAmount) : 35000)}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
+          <p className="text-[11px] text-slate-500 mt-0.5">
             Paid {formatINR(invoice?.paidAmount || 50000)} of {formatINR(invoice?.totalAmount || 85000)}
           </p>
         </div>
 
-        {/* Current Semester */}
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Academic Year</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Academic Term</span>
             <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
               Active
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">
-            Semester 3
+          <div className="text-xl font-bold text-slate-900 mt-1.5">
+            BCA Sem 3
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Bachelor of Computer Applications
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            Academic Year 2025-2026
           </p>
         </div>
 
-        {/* Next Exam */}
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Next IA Exam</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Next Exam</span>
             <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-              In 15 Days
+              Oct 12
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">
-            Oct 12, 2025
+          <div className="text-xl font-bold text-slate-900 mt-1.5">
+            IA-2 Series
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Internal Assessment 2 (VTU)
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            Internal Assessment Examination
           </p>
         </div>
       </div>
 
-      {/* MAIN TWO-COLUMN LAYOUT */}
+      {/* TWO COLUMN CONTENT */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT COLUMN: TODAY'S SCHEDULE + ATTENDANCE HUMAN ADVICE */}
+        {/* LEFT COLUMN: CLASS SCHEDULE & ATTENDANCE STATS */}
         <div className="lg:col-span-7 space-y-6">
-          {/* TODAY'S CLASSES */}
-          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+          {/* TODAY'S CLASS TIMETABLE */}
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Today's Class Schedule</h2>
-                <p className="text-xs text-slate-500">Monday • BCA 3rd Sem (Sec A)</p>
+                <h2 className="text-sm font-bold text-slate-900">Today's Timetable</h2>
+                <p className="text-xs text-slate-500">Monday Class Schedule</p>
               </div>
-              <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded border border-slate-200 flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded border border-slate-200 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                4 Classes Today
+                4 Sessions
               </span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {todayClasses.map((c, idx) => (
                 <div
                   key={idx}
-                  className={`p-4 rounded-xl border transition-colors ${
+                  className={`p-3.5 rounded-lg border text-xs ${
                     c.status === "UPCOMING"
-                      ? "bg-blue-50/70 border-blue-200"
+                      ? "bg-blue-50/80 border-blue-200"
                       : c.status === "COMPLETED"
-                      ? "bg-slate-50 border-slate-200 opacity-75"
+                      ? "bg-slate-50 border-slate-200 opacity-80"
                       : "bg-white border-slate-200"
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-3 mb-1">
+                  <div className="flex items-center justify-between gap-2 mb-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 text-sm">{c.subject}</span>
+                      <span className="font-bold text-slate-900">{c.subject}</span>
                       <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">
                         {c.code}
                       </span>
@@ -404,31 +394,24 @@ export default function StudentPortal() {
             </div>
           </div>
 
-          {/* HUMANLIKE ATTENDANCE INSIGHTS */}
-          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
+          {/* SUBJECT ATTENDANCE COMPLIANCE */}
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Attendance Compliance & Advice</h2>
-                <p className="text-xs text-slate-500">Subject-wise progress and VTU exam eligibility</p>
+                <h2 className="text-sm font-bold text-slate-900">Attendance Compliance Breakdown</h2>
+                <p className="text-xs text-slate-500">Subject-wise attendance tracking</p>
               </div>
               <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">
                 Overall: {attendancePercentage}%
               </span>
             </div>
 
-            {/* Human Advice Banner */}
-            <div className="p-4 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xl text-xs flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-              <div>
-                <strong className="block font-bold text-sm text-emerald-950 mb-0.5">
-                  👍 You are in the Safe Zone!
-                </strong>
-                Your overall attendance is **84%** (above VTU's 75% minimum requirement). You can safely miss up to **2 more classes** without dropping below the eligibility threshold.
-              </div>
+            <div className="p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-lg text-xs">
+              <strong className="block font-bold mb-0.5">VTU Eligibility Status: Safe</strong>
+              Current attendance is 84% (above the 75% threshold). Maximum allowable absences remaining: 2 sessions.
             </div>
 
-            {/* Subject Progress List */}
-            <div className="space-y-3 pt-2 text-xs">
+            <div className="space-y-3 pt-1 text-xs">
               <div>
                 <div className="flex justify-between font-bold text-slate-800 mb-1">
                   <span>Discrete Mathematics (25BC301)</span>
@@ -452,31 +435,31 @@ export default function StudentPortal() {
               <div>
                 <div className="flex justify-between font-bold text-slate-800 mb-1">
                   <span>Database Management Systems (25BC303)</span>
-                  <span className="text-amber-700 font-mono">8/12 (66.7% - Warning)</span>
+                  <span className="text-amber-700 font-mono">8/12 (66.7%)</span>
                 </div>
                 <div className="w-full bg-slate-100 rounded-full h-2">
                   <div className="bg-amber-500 h-2 rounded-full" style={{ width: "66.7%" }}></div>
                 </div>
                 <p className="text-[11px] text-amber-700 mt-1">
-                  ⚠️ Need 2 more classes in DBMS to reach 75%.
+                  Requires 2 additional attended sessions to reach 75%.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: ANNOUNCEMENTS + DIGITAL ID CARD + FEE ACTION */}
+        {/* RIGHT COLUMN: NOTICES + STUDENT ID + FEE BILLING */}
         <div className="lg:col-span-5 space-y-6">
-          {/* DIGITAL STUDENT IDENTITY CARD (SOLID SLATE 900, NO GRADIENTS) */}
-          <div className="bg-slate-900 text-white rounded-xl p-6 shadow-sm border border-slate-800 space-y-4">
+          {/* DIGITAL STUDENT IDENTITY CARD */}
+          <div className="bg-slate-900 text-white rounded-xl p-5 shadow-sm border border-slate-800 space-y-3.5">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <img src="/images.svg" alt="RRCE Emblem" className="w-8 h-8 object-contain bg-white p-1 rounded shrink-0" />
+                <img src="/images.svg" alt="RRCE Emblem" className="w-7 h-7 object-contain bg-white p-1 rounded shrink-0" />
                 <div>
                   <h3 className="font-bold text-xs text-white uppercase tracking-wider">
                     Rajarajeswari College of Engg.
                   </h3>
-                  <p className="text-[10px] text-slate-400">Autonomous Institution • VTU Belagavi</p>
+                  <p className="text-[10px] text-slate-400">Autonomous Institution • VTU</p>
                 </div>
               </div>
               <span className="text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded">
@@ -484,24 +467,24 @@ export default function StudentPortal() {
               </span>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
-                <User className="w-7 h-7 text-slate-300" />
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-white shrink-0">
+                <User className="w-6 h-6 text-slate-300" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-white">
+                <h2 className="text-sm font-bold text-white">
                   {student?.user?.firstName} {student?.user?.lastName}
                 </h2>
                 <div className="inline-block font-mono text-xs font-bold text-slate-200 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 mt-0.5">
                   {student?.usn}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  BCA • Semester {student?.currentSemester || 3} (Sec A)
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  BCA Semester {student?.currentSemester || 3} (Sec A)
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-800/60 p-3 rounded-lg border border-slate-800">
+            <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-800/60 p-2.5 rounded-lg border border-slate-800">
               <div>
                 <span className="text-slate-400 block text-[10px]">Date of Birth:</span>
                 <span className="font-semibold text-white">
@@ -509,7 +492,7 @@ export default function StudentPortal() {
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">Admission Quota:</span>
+                <span className="text-slate-400 block text-[10px]">Quota:</span>
                 <span className="font-semibold text-white">{student?.quota || "KCET"}</span>
               </div>
               <div>
@@ -519,54 +502,54 @@ export default function StudentPortal() {
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">Mobile Contact:</span>
+                <span className="text-slate-400 block text-[10px]">Contact:</span>
                 <span className="font-mono text-white">{student?.user?.phone || "+91 8971115212"}</span>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
+            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
               <span>Valid through 2028-2029</span>
               <div className="flex items-center gap-1 font-mono text-white">
-                <QrCode className="w-4 h-4 text-slate-400" />
+                <QrCode className="w-3.5 h-3.5 text-slate-400" />
                 <span>VTU-VERIFIED</span>
               </div>
             </div>
           </div>
 
           {/* CAMPUS ANNOUNCEMENTS */}
-          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-slate-700" />
-                <h2 className="text-base font-bold text-slate-900">Campus Notices</h2>
+                <h2 className="text-sm font-bold text-slate-900">Campus Notices</h2>
               </div>
               <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
-                Latest Updates
+                Official
               </span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {announcements.map((a) => (
-                <div key={a.id} className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
+                <div key={a.id} className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-900">{a.title}</span>
                     <span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">
                       {a.category}
                     </span>
                   </div>
-                  <p className="text-slate-600 leading-relaxed text-[11px]">{a.content}</p>
-                  <span className="text-[10px] text-slate-400 block pt-1">{a.date}</span>
+                  <p className="text-slate-600 text-[11px] leading-relaxed">{a.content}</p>
+                  <span className="text-[10px] text-slate-400 block pt-0.5">{a.date}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* FEE BILLING & PAYMENT QUICK ACTION */}
-          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
+          {/* TUITION FEE BILLING */}
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-3.5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-slate-700" />
-                <h2 className="text-base font-bold text-slate-900">Tuition Fee Portal</h2>
+                <h2 className="text-sm font-bold text-slate-900">Tuition Fee Invoice</h2>
               </div>
               <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                 2025-26
@@ -574,9 +557,9 @@ export default function StudentPortal() {
             </div>
 
             {invoice && (
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2 text-xs">
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Invoice Number:</span>
+                  <span className="text-slate-500">Invoice:</span>
                   <span className="font-mono font-bold text-slate-900">{invoice.invoiceNumber}</span>
                 </div>
                 <div className="flex justify-between">
@@ -584,10 +567,10 @@ export default function StudentPortal() {
                   <span className="font-bold text-slate-900">{formatINR(invoice.totalAmount)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Paid So Far:</span>
+                  <span className="text-slate-500">Paid:</span>
                   <span className="font-bold text-emerald-700">{formatINR(invoice.paidAmount)}</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t border-slate-200 text-sm font-bold">
+                <div className="flex justify-between pt-1.5 border-t border-slate-200 font-bold">
                   <span className="text-slate-700">Remaining Balance:</span>
                   <span className="text-amber-700">
                     {formatINR(Math.max(0, invoice.totalAmount - invoice.paidAmount))}
