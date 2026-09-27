@@ -171,7 +171,7 @@ export default function StudentPortal() {
       {/* SPECIAL POP-UP MESSAGE EXCLUSIVELY FOR PRAKRUTHI */}
       {isPrakruthiModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-rose-100 p-8 text-center space-y-5 animate-in fade-in zoom-in duration-300">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-rose-100 p-8 text-center space-y-5 animate-in fade-in zoom-in duration-300">
             <div className="w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
               <Heart className="w-8 h-8 fill-rose-500 text-rose-500 animate-pulse" />
             </div>
@@ -182,12 +182,12 @@ export default function StudentPortal() {
                 Special Personal Note for Prakruthi
               </div>
               <h2 className="text-xl font-bold text-slate-900">
-                Important Message
+                A Message for You
               </h2>
             </div>
 
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-800 text-sm font-semibold leading-relaxed shadow-sm">
-              "Sorry prakruthi for what all i did plss come back"
+            <div className="p-5 bg-rose-50/50 rounded-xl border border-rose-100 text-slate-800 text-xs font-medium leading-relaxed shadow-sm text-left whitespace-pre-line">
+              "Prakruthi, I am truly sorry for how I acted and the hurt I caused you 😔. Looking back, I hate knowing that my actions drove you away. You mean the world to me, and losing your presence in my life has left an undeniable void 💔. If there’s any part of you open to it, I just want the chance to listen, make things right, and have you back in my life 🤍."
             </div>
 
             <button
