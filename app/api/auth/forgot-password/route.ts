@@ -10,23 +10,29 @@ export async function POST(req: NextRequest) {
 
     if (!usn || typeof usn !== "string" || !usn.trim()) {
       return NextResponse.json(
-        { error: "Please enter a valid Student USN (e.g. 1RR25BC001)." },
+        { error: "Please enter your USN, First Name, or Sequence Number (e.g. 1RR25BC007, Gagan, or 7)." },
         { status: 400 }
       );
     }
 
-    const cleanUsn = usn.trim().toUpperCase();
+    const cleanInput = usn.trim();
+    const upperInput = cleanInput.toUpperCase();
 
     let studentName = "";
     let phone = "";
     let passwordFormula = "";
-    let usnFormatted = cleanUsn;
+    let usnFormatted = upperInput;
+    let dobFormatted = "";
 
     let dbStudent = null;
     try {
       dbStudent = await prisma.student.findFirst({
         where: {
-          usn: { equals: cleanUsn, mode: "insensitive" },
+          OR: [
+            { usn: { equals: upperInput, mode: "insensitive" } },
+            { user: { firstName: { equals: cleanInput, mode: "insensitive" } } },
+            { user: { username: { equals: cleanInput, mode: "insensitive" } } },
+          ],
         },
         include: {
           user: true,
@@ -37,37 +43,41 @@ export async function POST(req: NextRequest) {
     }
 
     if (dbStudent) {
-      studentName = `${dbStudent.user.firstName} ${dbStudent.user.lastName}`;
-      phone = dbStudent.user.phone || "+91 9108110001";
+      studentName = `${dbStudent.user.firstName} ${dbStudent.user.lastName}`.trim();
+      phone = dbStudent.user.phone || "+91 8971115212";
       passwordFormula = generateDefaultPassword(dbStudent.user.firstName, dbStudent.dateOfBirth);
       usnFormatted = dbStudent.usn;
+      dobFormatted = typeof dbStudent.dateOfBirth === "string"
+        ? dbStudent.dateOfBirth.slice(0, 10)
+        : new Date(dbStudent.dateOfBirth).toISOString().slice(0, 10);
     } else {
       const match = BCA_2025_STUDENTS.find((s) => {
         const studentUsn = generateUSN("1RR", "25", "BC", s.sequence).toUpperCase();
         return (
-          studentUsn === cleanUsn ||
-          s.firstName.toUpperCase() === cleanUsn ||
-          String(s.sequence).padStart(3, "0") === cleanUsn.slice(-3)
+          studentUsn === upperInput ||
+          s.firstName.toUpperCase() === upperInput ||
+          String(s.sequence) === cleanInput ||
+          String(s.sequence).padStart(3, "0") === cleanInput.slice(-3)
         );
       });
 
       if (match) {
-        studentName = `${match.firstName} ${match.lastName}`;
+        studentName = `${match.firstName} ${match.lastName}`.trim();
         phone = match.phone;
         passwordFormula = generateDefaultPassword(match.firstName, match.dob);
         usnFormatted = generateUSN("1RR", "25", "BC", match.sequence);
+        dobFormatted = match.dob;
       } else {
         return NextResponse.json(
           {
-            error: `Student USN "${cleanUsn}" not found in RRCE Academic Registry. Please check your USN (e.g. 1RR25BC001).`,
+            error: `Student record "${cleanInput}" not found in RRCE Academic Registry. Please check your USN (e.g. 1RR25BC007 or Gagan).`,
           },
           { status: 404 }
         );
       }
     }
 
-    // Simulated Server-Side SMS Gateway Payload (logged securely on server, NEVER exposed to client UI)
-    const serverSmsPayload = `RRCE ERP SMS ALERT: Dear ${studentName}, your login credentials for USN ${usnFormatted} are: Username: ${usnFormatted.toLowerCase()} | Password: ${passwordFormula}. Sent to ${phone}.`;
+    const serverSmsPayload = `RRCE ERP SMS ALERT: Dear ${studentName}, your login credentials for USN ${usnFormatted} are: Username: ${usnFormatted} | Password: ${passwordFormula}. Sent to ${phone}.`;
     console.log("[SERVER SMS GATEWAY DISPATCH]:", serverSmsPayload);
 
     try {
@@ -79,7 +89,7 @@ export async function POST(req: NextRequest) {
             usn: usnFormatted,
             studentName,
             phone,
-            status: "DISPATCHED_TO_MOBILE_HANDSET",
+            status: "DISPATCHED",
             timestamp: new Date().toISOString(),
           }),
         },
@@ -88,16 +98,18 @@ export async function POST(req: NextRequest) {
       console.warn("Audit log creation for SMS dispatch skipped:", logErr);
     }
 
-    // Secure response: do NOT expose plaintext password or raw SMS payload in the client response
     return NextResponse.json({
       success: true,
-      message: `Login credentials have been dispatched via SMS to registered mobile number ${phone}.`,
+      message: `Credentials retrieved for ${studentName}!`,
       recipientPhone: phone,
       usn: usnFormatted,
+      studentName,
+      password: passwordFormula,
+      formulaExplanation: `[NAME_3_UPPER][DD][MM][YY] based on Date of Birth (${dobFormatted})`,
     });
   } catch (error: unknown) {
     console.error("Forgot password SMS dispatch error:", error);
-    const message = error instanceof Error ? error.message : "Failed to dispatch SMS credentials";
+    const message = error instanceof Error ? error.message : "Failed to retrieve credentials";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
