@@ -163,6 +163,7 @@ export default function AdmissionsPortal() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId: editStudent.id,
+          usn: editStudent.usn,
           ...editForm,
         }),
       });
@@ -171,7 +172,7 @@ export default function AdmissionsPortal() {
       if (res.ok && data.success) {
         setMessage({
           type: "success",
-          text: `Student ${data.student.name}'s details updated successfully! Default password auto-recalculated to: ${data.newPasswordFormula}`,
+          text: `Student ${editForm.firstName}'s details updated successfully! Default password auto-recalculated to: ${data.newFormulaPassword}`,
         });
         setIsEditModalOpen(false);
         await fetchData();

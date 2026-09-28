@@ -15,14 +15,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { studentId, usn, firstName, lastName, phone, dob, quota } = body;
+    const { studentId, usn: inputUsn, firstName, lastName, phone, dob, quota } = body;
 
-    if (!usn || !firstName || !dob) {
+    if ((!inputUsn && !studentId) || !firstName || !dob) {
       return NextResponse.json(
-        { error: "usn, firstName, and dob (Date of Birth) are required." },
+        { error: "USN or Student ID, First Name, and Date of Birth (DOB) are required." },
         { status: 400 }
       );
     }
+
+    let usn = inputUsn;
 
     // 1. Calculate new formula password automatically based on updated DOB and First Name
     const newFormulaPassword = generateDefaultPassword(firstName, dob);
@@ -32,12 +34,21 @@ export async function POST(req: NextRequest) {
     let dbConnected = true;
 
     try {
-      const studentRecord = await prisma.student.findUnique({
-        where: { usn },
-        include: { user: true },
-      });
+      let studentRecord = null;
+      if (usn) {
+        studentRecord = await prisma.student.findUnique({
+          where: { usn },
+          include: { user: true },
+        });
+      } else if (studentId) {
+        studentRecord = await prisma.student.findUnique({
+          where: { id: studentId },
+          include: { user: true },
+        });
+      }
 
       if (studentRecord) {
+        usn = studentRecord.usn;
         updatedStudent = await prisma.$transaction(async (tx) => {
           await tx.user.update({
             where: { id: studentRecord.userId },
@@ -80,23 +91,25 @@ export async function POST(req: NextRequest) {
     }
 
     // Update in-memory seed list fallback as well
-    const seedMatch = BCA_2025_STUDENTS.find((s) => {
-      const seqStr = String(s.sequence).padStart(3, "0");
-      return `1RR25BC${seqStr}`.toLowerCase() === usn.toLowerCase();
-    });
+    if (usn) {
+      const seedMatch = BCA_2025_STUDENTS.find((s) => {
+        const seqStr = String(s.sequence).padStart(3, "0");
+        return `1RR25BC${seqStr}`.toLowerCase() === usn.toLowerCase();
+      });
 
-    if (seedMatch) {
-      seedMatch.firstName = firstName;
-      seedMatch.lastName = lastName || "";
-      seedMatch.dob = dob;
-      if (phone) seedMatch.phone = phone;
-      if (quota) seedMatch.quota = quota as any;
+      if (seedMatch) {
+        seedMatch.firstName = firstName;
+        seedMatch.lastName = lastName || "";
+        seedMatch.dob = dob;
+        if (phone) seedMatch.phone = phone;
+        if (quota) seedMatch.quota = quota as any;
+      }
     }
 
     return NextResponse.json({
       success: true,
       newFormulaPassword,
-      message: `Student ${firstName}'s details updated successfully! Date of Birth set to ${dob}. Formula password automatically updated to: ${newFormulaPassword}`,
+      message: `Student ${firstName}'s details updated successfully! Date of Birth set to ${dob}. Formula password automatically recalculated to: ${newFormulaPassword}`,
       student: updatedStudent,
       dbConnected,
     });
