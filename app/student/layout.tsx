@@ -13,6 +13,8 @@ import {
   ChevronDown,
   Trophy,
   Megaphone,
+  Menu,
+  X,
 } from "lucide-react";
 
 export default function StudentLayout({
@@ -23,6 +25,8 @@ export default function StudentLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [student, setStudent] = useState<any>(null);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
   const examLinks = [
     { name: "Internal Marks", href: "/student/marks" },
     { name: "Semester Exams", href: "/student/semester-exams" },
@@ -35,6 +39,10 @@ export default function StudentLayout({
   useEffect(() => {
     if (isExamRoute) setIsExamsOpen(true);
   }, [isExamRoute]);
+
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     loadSession();
@@ -97,23 +105,73 @@ export default function StudentLayout({
   ];
 
   return (
-    <div className="flex min-h-screen bg-[#F9FAFB] font-sans text-zinc-900 antialiased">
-      {/* FULL-HEIGHT FIXED LEFT SIDEBAR */}
-      <aside className="sticky top-14 h-[calc(100vh-3.5rem)] w-64 shrink-0 bg-white border-r border-zinc-200/80 flex flex-col justify-between z-30 select-none">
-        <div>
-          {/* BRAND HEADER */}
-          <div className="p-5 border-b border-zinc-100 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shrink-0 border border-zinc-200 p-0.5 shadow-xs">
+    <div className="min-h-screen bg-[#F9FAFB] font-sans text-zinc-900 antialiased flex flex-col lg:flex-row">
+      {/* MOBILE TOP HEADER BAR (< 1024px) */}
+      <div className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-zinc-200/80 px-4 h-14 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setIsMobileOpen((open) => !open)}
+            aria-label="Toggle navigation menu"
+            className="p-2 -ml-2 rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 active:scale-95 transition-all"
+          >
+            {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center shrink-0 border border-zinc-200 p-0.5 shadow-xs">
               <img src="/images.svg" alt="RRCE Emblem" className="w-full h-full object-contain" />
             </div>
-            <div>
-              <span className="font-semibold text-sm tracking-tight text-zinc-900 block leading-tight">
-                RRCE ERP
-              </span>
-              <span className="text-xs text-zinc-400 block leading-tight mt-0.5">
-                Student Workspace
-              </span>
+            <span className="font-semibold text-sm tracking-tight text-zinc-900">
+              RRCE ERP
+            </span>
+          </div>
+        </div>
+
+        <span className="font-mono text-xs text-zinc-500 bg-zinc-100 border border-zinc-200/80 px-2.5 py-1 rounded-md">
+          {student?.usn || "1RR25BC007"}
+        </span>
+      </div>
+
+      {/* MOBILE DRAWER OVERLAY BACKDROP */}
+      {isMobileOpen && (
+        <div
+          onClick={() => setIsMobileOpen(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 transition-opacity lg:hidden"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* SIDEBAR (RESPONSIVE OFF-CANVAS DRAWER ON MOBILE, FIXED DOCKED ON DESKTOP) */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-zinc-200/80 flex flex-col justify-between transition-transform duration-300 ease-in-out select-none lg:fixed lg:top-0 lg:left-0 lg:bottom-0 lg:z-30 lg:w-64 lg:translate-x-0 ${
+          isMobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex-1 overflow-y-auto">
+          {/* BRAND HEADER */}
+          <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shrink-0 border border-zinc-200 p-0.5 shadow-xs">
+                <img src="/images.svg" alt="RRCE Emblem" className="w-full h-full object-contain" />
+              </div>
+              <div>
+                <span className="font-semibold text-sm tracking-tight text-zinc-900 block leading-tight">
+                  RRCE ERP
+                </span>
+                <span className="text-xs text-zinc-400 block leading-tight mt-0.5">
+                  Student Workspace
+                </span>
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setIsMobileOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+              aria-label="Close menu"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           {/* NAVIGATION LINKS */}
@@ -157,6 +215,7 @@ export default function StudentLayout({
                               <Link
                                 key={child.href}
                                 href={child.href}
+                                onClick={() => setIsMobileOpen(false)}
                                 className={`flex items-center rounded-xl px-3 py-2.5 text-xs transition-all ${
                                   isChildActive
                                     ? "bg-zinc-100 text-zinc-900 font-semibold"
@@ -178,6 +237,7 @@ export default function StudentLayout({
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setIsMobileOpen(false)}
                   className={`flex items-center gap-3 px-3.5 py-2.5 text-xs rounded-xl transition-all ${
                     isActive
                       ? "bg-zinc-100 text-zinc-900 font-semibold"
@@ -193,7 +253,7 @@ export default function StudentLayout({
         </div>
 
         {/* DOCKED PROFILE FOOTER */}
-        <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto">
+        <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto shrink-0">
           <span className="text-xs font-semibold text-zinc-900 truncate block">
             {student?.user?.firstName || "Gagan"} {student?.user?.lastName || "D K"}
           </span>
@@ -210,9 +270,11 @@ export default function StudentLayout({
         </div>
       </aside>
 
-      {/* MAIN VIEWPORT WITH LEFT MARGIN FOR SIDEBAR */}
-      <div className="min-h-screen min-w-0 flex-1 bg-[#F9FAFB] p-8 max-w-6xl">
-        {children}
+      {/* MAIN VIEWPORT CONTAINER WITH RESPONSIVE DESKTOP MARGIN */}
+      <div className="lg:ml-64 ml-0 min-h-screen min-w-0 flex-1 bg-[#F9FAFB] flex flex-col">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-5 sm:space-y-6">
+          {children}
+        </main>
       </div>
     </div>
   );

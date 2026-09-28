@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { CreditCard, Download, CheckCircle2 } from "lucide-react";
+import { CreditCard, CheckCircle2 } from "lucide-react";
 import { formatINR } from "@/lib/utils";
 
 export default function StudentFeesPage() {
@@ -10,7 +10,6 @@ export default function StudentFeesPage() {
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [payAmount, setPayAmount] = useState(35000);
   const [paying, setPaying] = useState(false);
-  const [receipt, setReceipt] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,12 +54,6 @@ export default function StudentFeesPage() {
       if (res.ok && data.success) {
         setMessage(`Payment of ₹${payAmount.toLocaleString("en-IN")} processed successfully.`);
         setInvoice(data.invoice);
-        setReceipt({
-          receiptNumber: `REC-2025-${Math.floor(100000 + Math.random() * 900000)}`,
-          paidAmount: payAmount,
-          date: new Date().toLocaleDateString("en-IN"),
-          invoiceNumber: invoice.invoiceNumber,
-        });
         setPayModalOpen(false);
       } else {
         setMessage(data.error || "Payment processing failed.");
@@ -83,13 +76,13 @@ export default function StudentFeesPage() {
   const totalPending = Math.max(0, totalBilled - totalPaid);
 
   return (
-    <div className="space-y-6 text-xs text-zinc-900 font-sans">
-      <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+    <div className="space-y-6 text-xs text-zinc-900 font-sans max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 pb-3">
         <div>
           <h1 className="text-base font-bold text-zinc-900 tracking-tight">
             Fee Invoices & Payment Ledger
           </h1>
-          <p className="text-xs text-zinc-500 font-mono">
+          <p className="text-xs text-zinc-500 font-mono mt-0.5">
             Rajarajeswari College of Engineering • Financial Accounts
           </p>
         </div>
@@ -97,7 +90,7 @@ export default function StudentFeesPage() {
         {totalPending > 0 && (
           <button
             onClick={() => setPayModalOpen(true)}
-            className="bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs px-3.5 py-1.5 rounded transition-colors flex items-center gap-1.5"
+            className="self-start sm:self-auto bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs px-3.5 py-1.5 rounded transition-colors flex items-center gap-1.5 shadow-xs"
           >
             <CreditCard className="w-3.5 h-3.5" />
             <span>Pay Pending Fee</span>
@@ -116,7 +109,7 @@ export default function StudentFeesPage() {
       )}
 
       {/* FINANCIAL STATEMENT SUMMARY */}
-      <div className="grid grid-cols-1 md:grid-cols-3 border border-zinc-200 rounded-lg divide-y md:divide-y-0 md:divide-x divide-zinc-200 bg-white shadow-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-3 border border-zinc-200 rounded-lg divide-y sm:divide-y-0 sm:divide-x divide-zinc-200 bg-white shadow-xs">
         <div className="p-4 space-y-1">
           <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">Total Billed</span>
           <span className="text-lg font-bold font-mono text-zinc-900">{formatINR(totalBilled)}</span>
@@ -132,8 +125,8 @@ export default function StudentFeesPage() {
       </div>
 
       {/* LEDGER TABLE */}
-      <div className="border border-zinc-200 rounded-lg overflow-hidden bg-white shadow-xs">
-        <div className="p-3 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
+      <div className="border border-zinc-200 rounded-lg overflow-hidden bg-white shadow-xs space-y-0">
+        <div className="p-3 bg-zinc-50 border-b border-zinc-200 flex flex-wrap items-center justify-between gap-2">
           <span className="font-semibold text-zinc-900 text-xs">
             Itemized Fee Breakdown
           </span>
@@ -142,52 +135,34 @@ export default function StudentFeesPage() {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="w-full overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+          <table className="min-w-[640px] w-full text-left border-collapse">
             <thead className="bg-zinc-50 text-zinc-500 uppercase tracking-wider text-[11px] font-semibold border-b border-zinc-200">
               <tr>
                 <th className="py-2.5 px-3">Invoice ID</th>
                 <th className="py-2.5 px-3">Fee Description</th>
                 <th className="py-2.5 px-3">Due Date</th>
                 <th className="py-2.5 px-3 text-right">Amount</th>
-                <th className="py-2.5 px-3 text-center">Status</th>
-                <th className="py-2.5 px-3 text-right">Receipt Action</th>
+                <th className="py-2.5 px-3 text-right">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {feeItems.map((item, idx) => (
-                <tr key={idx} className="hover:bg-zinc-50/80 transition-colors">
-                  <td className="py-2.5 px-3 font-mono font-bold text-zinc-900">
-                    {item.id}
-                  </td>
-                  <td className="py-2.5 px-3 font-semibold text-zinc-900">
-                    {item.desc}
-                  </td>
-                  <td className="py-2.5 px-3 font-mono text-zinc-500">
-                    {item.due}
-                  </td>
+              {feeItems.map((item) => (
+                <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
+                  <td className="py-2.5 px-3 font-mono font-bold text-zinc-900">{item.id}</td>
+                  <td className="py-2.5 px-3 font-medium text-zinc-800">{item.desc}</td>
+                  <td className="py-2.5 px-3 text-zinc-500">{item.due}</td>
                   <td className="py-2.5 px-3 text-right font-mono font-bold text-zinc-900">
                     {formatINR(item.amount)}
                   </td>
-                  <td className="py-2.5 px-3 text-center">
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${
-                        item.status === "Paid"
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                          : "bg-amber-50 text-amber-800 border-amber-200"
-                      }`}
-                    >
+                  <td className="py-2.5 px-3 text-right">
+                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${
+                      item.status === "Paid"
+                        ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                        : "bg-amber-50 text-amber-800 border-amber-200"
+                    }`}>
                       {item.status}
                     </span>
-                  </td>
-                  <td className="py-2.5 px-3 text-right">
-                    <button
-                      onClick={() => window.print()}
-                      className="text-xs text-zinc-600 hover:text-zinc-900 border border-zinc-200 px-2 py-1 rounded transition-colors inline-flex items-center gap-1 font-medium"
-                    >
-                      <Download className="w-3 h-3 text-zinc-400" />
-                      <span>Download Receipt (PDF)</span>
-                    </button>
                   </td>
                 </tr>
               ))}
@@ -196,73 +171,39 @@ export default function StudentFeesPage() {
         </div>
       </div>
 
-      {payModalOpen && invoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-lg max-w-md w-full shadow-md border border-zinc-200 p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
-              <div>
-                <h3 className="text-sm font-semibold text-zinc-900">
-                  Tuition Fee Online Payment Gateway
-                </h3>
-                <p className="text-[11px] text-zinc-500 font-mono">
-                  RRCE Autonomous Cashier
-                </p>
-              </div>
-              <button
-                onClick={() => setPayModalOpen(false)}
-                className="text-zinc-400 hover:text-zinc-600 font-bold text-sm"
-              >
-                ✕
-              </button>
+      {/* PAYMENT MODAL */}
+      {payModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl border border-zinc-200 p-6 max-w-md w-full space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+              <h3 className="font-semibold text-sm text-zinc-900">Pay Pending Tuition Fee</h3>
+              <button onClick={() => setPayModalOpen(false)} className="text-zinc-400 hover:text-zinc-600 font-bold">✕</button>
             </div>
-
             <form onSubmit={handleSimulatePayment} className="space-y-4">
-              <div className="p-3 bg-zinc-50 rounded border border-zinc-200 space-y-1 font-mono text-xs">
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Invoice:</span>
-                  <span className="font-bold text-zinc-800">{invoice.invoiceNumber}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Total Billed:</span>
-                  <span className="font-bold text-zinc-800">{formatINR(invoice.totalAmount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Remaining Due:</span>
-                  <span className="font-bold text-amber-700">
-                    {formatINR(Math.max(0, invoice.totalAmount - invoice.paidAmount))}
-                  </span>
-                </div>
-              </div>
-
               <div>
-                <label className="block font-semibold text-zinc-700 mb-1">
-                  Payment Amount (₹)
-                </label>
+                <label className="block text-xs font-medium text-zinc-600 mb-1">Amount to Pay (INR)</label>
                 <input
                   type="number"
-                  required
-                  min={1000}
-                  max={Math.max(1000, invoice.totalAmount - invoice.paidAmount)}
                   value={payAmount}
                   onChange={(e) => setPayAmount(Number(e.target.value))}
-                  className="w-full p-2 border border-zinc-300 rounded text-sm font-mono font-bold focus:ring-1 focus:ring-zinc-900 focus:outline-none"
+                  max={totalPending}
+                  className="w-full rounded-md border border-zinc-200 px-3 py-2 text-xs font-mono font-bold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400"
                 />
               </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setPayModalOpen(false)}
-                  className="px-4 py-2 text-zinc-600 hover:bg-zinc-100 rounded font-semibold text-xs"
+                  className="px-3.5 py-1.5 rounded border border-zinc-200 text-xs text-zinc-600 hover:bg-zinc-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={paying || payAmount <= 0}
-                  className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded font-semibold text-xs disabled:opacity-50 transition-colors flex items-center gap-2"
+                  disabled={paying}
+                  className="px-4 py-1.5 rounded bg-zinc-900 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50"
                 >
-                  {paying ? "Processing..." : `Pay ₹${payAmount.toLocaleString("en-IN")}`}
+                  {paying ? "Processing..." : "Confirm & Pay"}
                 </button>
               </div>
             </form>

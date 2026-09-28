@@ -20,50 +20,53 @@ export default function StudentResultsPage() {
   ]);
 
   return (
-    <div className="space-y-6 text-zinc-900 font-sans">
+    <div className="space-y-6 text-zinc-900 font-sans max-w-full overflow-hidden">
+      {/* Page Header */}
       <div className="border-b border-zinc-200 pb-4">
         <h1 className="text-lg font-semibold tracking-tight">Examination Results & Performance</h1>
         <p className="mt-0.5 text-xs text-zinc-500">Official VTU semester grade sheets and cumulative performance ledger</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs flex items-center justify-between">
+      {/* Overview Cards (Responsive Grid) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-xs font-medium text-zinc-400 block uppercase tracking-wider">Cumulative GPA (CGPA)</span>
-            <span className="text-2xl font-bold tracking-tight text-zinc-900 mt-1 block">8.83</span>
+            <span className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 mt-1 block font-mono">8.83</span>
             <span className="text-[11px] text-emerald-600 font-medium flex items-center gap-1 mt-1">
-              <TrendingUp className="h-3 w-3" /> Top 5% of Batch
+              <TrendingUp className="h-3 w-3 shrink-0" /> Top 5% of Batch
             </span>
           </div>
-          <div className="h-10 w-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+          <div className="h-10 w-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shrink-0">
             <Award className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs flex items-center justify-between">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-xs font-medium text-zinc-400 block uppercase tracking-wider">Latest SGPA (Sem 3)</span>
-            <span className="text-2xl font-bold tracking-tight text-zinc-900 mt-1 block">8.75</span>
+            <span className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 mt-1 block font-mono">8.75</span>
             <span className="text-[11px] text-zinc-500 mt-1 block">24 Credits Earned</span>
           </div>
-          <div className="h-10 w-10 rounded-full bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-700">
+          <div className="h-10 w-10 rounded-full bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-700 shrink-0">
             <BarChart3 className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs flex items-center justify-between">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-xs flex items-center justify-between sm:col-span-2 lg:col-span-1">
           <div>
             <span className="text-xs font-medium text-zinc-400 block uppercase tracking-wider">Degree Status</span>
-            <span className="text-sm font-semibold tracking-tight text-emerald-700 mt-1 block">PASSED WITH DISTINCTION</span>
+            <span className="text-xs sm:text-sm font-semibold tracking-tight text-emerald-700 mt-1 block">PASSED WITH DISTINCTION</span>
             <span className="text-[11px] text-zinc-500 mt-1 block">Zero Backlogs</span>
           </div>
-          <div className="h-10 w-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+          <div className="h-10 w-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shrink-0">
             <CheckCircle2 className="h-5 w-5" />
           </div>
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs space-y-4">
+      {/* Semester History Bar */}
+      <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-xs space-y-4">
         <h2 className="text-sm font-semibold text-zinc-900">Semester Grade Summary</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {semesters.map((s) => (
@@ -73,7 +76,7 @@ export default function StudentResultsPage() {
                 <span className="text-[10px] text-zinc-400">{s.date}</span>
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-xl font-bold text-zinc-900">{s.sgpa} <span className="text-xs font-normal text-zinc-500">SGPA</span></span>
+                <span className="text-lg sm:text-xl font-bold text-zinc-900 font-mono">{s.sgpa} <span className="text-xs font-normal text-zinc-500">SGPA</span></span>
                 <span className="text-xs text-zinc-600 font-mono">{s.credits} Credits</span>
               </div>
               <span className="inline-block rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5">
@@ -84,19 +87,20 @@ export default function StudentResultsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
+      {/* Detailed Grade Sheet */}
+      <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h2 className="text-sm font-semibold text-zinc-900">Semester 3 Detailed Marksheet</h2>
             <p className="text-xs text-zinc-500 mt-0.5">Breakdown of Internal (CIE) and Semester End (SEE) marks</p>
           </div>
-          <span className="text-xs font-mono text-zinc-500 bg-zinc-100 border border-zinc-200 px-2.5 py-1 rounded">
+          <span className="self-start sm:self-auto text-xs font-mono text-zinc-500 bg-zinc-100 border border-zinc-200 px-2.5 py-1 rounded">
             USN: 1RR25BC007
           </span>
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-zinc-200">
-          <table className="w-full text-left text-xs">
+        <div className="w-full overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 rounded-lg border border-zinc-200">
+          <table className="min-w-[640px] w-full text-left text-xs">
             <thead className="bg-zinc-50 border-b border-zinc-200 font-semibold text-zinc-600">
               <tr>
                 <th className="px-4 py-2.5">Course Code</th>

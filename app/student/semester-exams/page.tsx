@@ -58,15 +58,17 @@ export default function StudentSemesterExamsPage() {
   ]);
 
   return (
-    <div className="space-y-6 text-zinc-900 font-sans">
+    <div className="space-y-6 text-zinc-900 font-sans max-w-full overflow-hidden">
+      {/* Page Header */}
       <div className="border-b border-zinc-200 pb-4">
         <h1 className="text-lg font-semibold tracking-tight">Semester Examination Schedule</h1>
         <p className="mt-0.5 text-xs text-zinc-500">VTU end-semester exam timetable, hall seating allocation, and guidelines</p>
       </div>
 
-      <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4 flex flex-wrap items-center justify-between gap-4">
+      {/* Info Header Banner */}
+      <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-600 text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-600 text-white shrink-0">
             <FileCheck className="h-5 w-5" />
           </div>
           <div>
@@ -74,14 +76,15 @@ export default function StudentSemesterExamsPage() {
             <p className="text-xs text-sky-800 mt-0.5">Hall Tickets are issued. Ensure your attendance eligibility meets VTU 75% margin.</p>
           </div>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-white px-3 py-1 text-xs font-semibold text-sky-900">
-          <CheckCircle2 className="h-4 w-4 text-sky-600" /> Exam Form Submitted
+        <span className="self-start sm:self-auto inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-white px-3 py-1 text-xs font-semibold text-sky-900 shrink-0">
+          <CheckCircle2 className="h-4 w-4 text-sky-600 shrink-0" /> Exam Form Submitted
         </span>
       </div>
 
+      {/* Schedule Cards List */}
       <div className="space-y-3">
         {examSchedule.map((exam) => (
-          <div key={exam.code} className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm space-y-3">
+          <div key={exam.code} className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-xs transition-shadow hover:shadow-sm space-y-3">
             <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-100 pb-3">
               <div>
                 <span className="inline-block font-mono text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-200/80 px-2 py-0.5 rounded">
@@ -118,9 +121,10 @@ export default function StudentSemesterExamsPage() {
         ))}
       </div>
 
-      <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-5 space-y-3 text-xs">
+      {/* Guidelines Box */}
+      <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4 sm:p-5 space-y-3 text-xs">
         <div className="flex items-center gap-2 font-semibold text-zinc-900 text-sm">
-          <AlertCircle className="h-4 w-4 text-zinc-600" />
+          <AlertCircle className="h-4 w-4 text-zinc-600 shrink-0" />
           Examination Hall Rules & Code of Conduct
         </div>
         <ul className="list-disc list-inside space-y-1 text-zinc-600 leading-relaxed">

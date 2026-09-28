@@ -24,13 +24,14 @@ export default function StudentAdmitCardPage() {
   ]);
 
   return (
-    <div className="space-y-6 text-zinc-900 font-sans">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 pb-4">
+    <div className="space-y-6 text-zinc-900 font-sans max-w-full overflow-hidden">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 pb-4">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">VTU Hall Ticket / Admit Card</h1>
           <p className="mt-0.5 text-xs text-zinc-500">Official hall ticket for end-semester university examinations</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             type="button"
             onClick={() => window.print()}
@@ -50,24 +51,27 @@ export default function StudentAdmitCardPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-100 pb-5">
+      {/* Main Admit Card Box */}
+      <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-6 shadow-sm space-y-6">
+        {/* Header Branding */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-900 text-white font-bold text-base tracking-wider">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-zinc-900 text-white font-bold text-sm sm:text-base tracking-wider shrink-0">
               RRCE
             </div>
             <div>
-              <h2 className="text-base font-semibold text-zinc-900">RajaRajeswari College of Engineering</h2>
+              <h2 className="text-sm sm:text-base font-semibold text-zinc-900">RajaRajeswari College of Engineering</h2>
               <p className="text-xs text-zinc-500">Autonomous Institute • Affiliated to VTU Belagavi</p>
             </div>
           </div>
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+          <div className="self-start sm:self-auto inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
             VTU Approved & Validated
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+        {/* Student Information Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-xs">
           <div className="rounded-lg border border-zinc-100 bg-zinc-50/60 p-3 space-y-1">
             <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Candidate Name</span>
             <span className="font-semibold text-zinc-900 text-sm">{examDetails.studentName}</span>
@@ -94,13 +98,14 @@ export default function StudentAdmitCardPage() {
           </div>
         </div>
 
+        {/* Schedule Table with Responsive Wrapper */}
         <div>
           <h3 className="text-sm font-semibold text-zinc-900 mb-3 flex items-center gap-2">
             <FileText className="h-4 w-4 text-zinc-500" />
             Registered Examination Schedule
           </h3>
-          <div className="overflow-x-auto rounded-lg border border-zinc-200">
-            <table className="w-full text-left text-xs">
+          <div className="w-full overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 rounded-lg border border-zinc-200">
+            <table className="min-w-[640px] w-full text-left text-xs">
               <thead className="bg-zinc-50 border-b border-zinc-200 font-semibold text-zinc-600">
                 <tr>
                   <th className="px-4 py-2.5">Course Code</th>
@@ -131,9 +136,10 @@ export default function StudentAdmitCardPage() {
           </div>
         </div>
 
+        {/* Instructions */}
         <div className="rounded-lg bg-amber-50/60 border border-amber-200/80 p-4 text-xs text-amber-900 space-y-2">
           <div className="flex items-center gap-2 font-semibold">
-            <AlertCircle className="h-4 w-4 text-amber-700" />
+            <AlertCircle className="h-4 w-4 text-amber-700 shrink-0" />
             Important Examination Guidelines
           </div>
           <ul className="list-disc list-inside space-y-1 text-amber-800 text-[11px]">

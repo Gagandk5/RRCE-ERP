@@ -4,8 +4,6 @@ import React from "react";
 
 export default function StudentAttendancePage() {
   const overallPercentage = 83.3;
-  const totalHeld = 48;
-  const totalAttended = 40;
 
   const subjectLedger = [
     {
@@ -41,8 +39,8 @@ export default function StudentAttendancePage() {
   ];
 
   return (
-    <div className="space-y-8 text-zinc-900 font-sans">
-      <div className="flex items-center justify-between border-b border-zinc-200/60 pb-4">
+    <div className="space-y-6 sm:space-y-8 text-zinc-900 font-sans max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/60 pb-4">
         <div>
           <h1 className="text-base font-semibold text-zinc-900 tracking-tight">
             Attendance Ledger & Eligibility
@@ -51,14 +49,14 @@ export default function StudentAttendancePage() {
             VTU Autonomous Minimum 75% Requirement Criteria
           </p>
         </div>
-        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-4 py-1.5 font-mono">
+        <span className="self-start sm:self-auto text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-4 py-1.5 font-mono">
           Aggregate: {overallPercentage}%
         </span>
       </div>
 
       {/* RELAXED AIRY TABLE VIEW */}
-      <div className="bg-white rounded-2xl border border-zinc-200/70 p-7 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-6">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+      <div className="bg-white rounded-2xl border border-zinc-200/70 p-4 sm:p-7 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-4">
           <div>
             <h2 className="text-sm font-semibold text-zinc-900">
               Subject-Wise Attendance
@@ -69,8 +67,9 @@ export default function StudentAttendancePage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+        {/* RESPONSIVE TABLE WRAPPER */}
+        <div className="w-full overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+          <table className="min-w-[640px] w-full text-left border-collapse text-xs">
             <thead className="text-xs font-medium text-zinc-400 uppercase tracking-wider border-b border-zinc-100">
               <tr>
                 <th className="pb-4 px-4">Subject & Code</th>
