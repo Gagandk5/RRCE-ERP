@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import { ProfileProvider } from "@/components/ProfileContext";
 
 export const metadata: Metadata = {
   title: "RRCE ERP - Rajarajeswari College of Engineering",
@@ -24,10 +23,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased">
-        <ProfileProvider>
-          <Navbar />
-          <main className="flex-1 w-full">{children}</main>
-        </ProfileProvider>
+        <Navbar />
+        <main className="flex-1 w-full">{children}</main>
         <footer className="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
