@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatINR } from "@/lib/utils";
+import { ProfileAvatar } from "@/components/ProfileContext";
 
 export default function StudentOverviewPage() {
   const [student, setStudent] = useState<any>(null);
@@ -94,13 +95,16 @@ export default function StudentOverviewPage() {
     <div className="space-y-6 text-zinc-900 font-sans">
       {/* 2. UNIFIED HEADER CARD */}
       <div className="bg-white rounded-2xl border border-zinc-200/70 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-900 tracking-tight">
-            Good morning, {student?.user?.firstName || "Gagan"}
-          </h1>
-          <p className="text-xs text-zinc-500 mt-0.5">
-            BCA • 3rd Semester (Sec A) · Batch of 2025–26
-          </p>
+        <div className="flex items-center gap-4">
+          <ProfileAvatar sizeClassName="h-16 w-16" />
+          <div>
+            <h1 className="text-xl font-semibold text-zinc-900 tracking-tight">
+              Good morning, {student?.user?.firstName || "Gagan"}
+            </h1>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              BCA • 3rd Semester (Sec A) · Batch of 2025–26
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
