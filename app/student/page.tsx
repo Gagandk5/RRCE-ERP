@@ -9,9 +9,26 @@ export default function StudentOverviewPage() {
   const [student, setStudent] = useState<any>(null);
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [attendanceSummary, setAttendanceSummary] = useState({ totalHeld: 0, totalAttended: 0 });
 
   useEffect(() => {
     loadStudentData();
+    async function loadAttendanceSummary() {
+      try {
+        const response = await fetch("/api/student/attendance", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json();
+        setAttendanceSummary({
+          totalHeld: data.totalHeld || 0,
+          totalAttended: data.totalAttended || 0,
+        });
+      } catch (error) {
+        console.error("Failed to load attendance summary:", error);
+      }
+    }
+    void loadAttendanceSummary();
+    const refreshTimer = window.setInterval(() => void loadAttendanceSummary(), 10000);
+    return () => window.clearInterval(refreshTimer);
   }, []);
 
   async function loadStudentData() {
@@ -76,9 +93,9 @@ export default function StudentOverviewPage() {
     }
   }
 
-  const attendanceRate = 83.33333333333333;
-  const totalClasses = 48;
-  const attendedClasses = 40;
+  const attendanceRate = attendanceSummary.totalHeld
+    ? (attendanceSummary.totalAttended / attendanceSummary.totalHeld) * 100
+    : 0;
 
   const pendingFee = invoice ? Math.max(0, invoice.totalAmount - invoice.paidAmount) : 35000;
   const totalBilledFee = invoice?.totalAmount || 85000;
@@ -131,8 +148,8 @@ export default function StudentOverviewPage() {
             <span className="text-[11px] font-semibold tracking-wider text-zinc-400 uppercase">
               ATTENDANCE HEALTH
             </span>
-            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 rounded-full px-2.5 py-0.5 text-xs font-medium">
-              On Track (≥ 75%)
+            <span className={`${attendanceRate >= 75 ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : "bg-rose-50 text-rose-700 border-rose-200/50"} rounded-full border px-2.5 py-0.5 text-xs font-medium`}>
+              {attendanceRate >= 75 ? "On Track (≥ 75%)" : "Below 75%"}
             </span>
           </div>
           <div>
@@ -140,7 +157,7 @@ export default function StudentOverviewPage() {
               {attendanceRate.toFixed(1)}%
             </div>
             <p className="text-xs text-zinc-500 mt-1">
-              40 of 48 sessions attended
+              {attendanceSummary.totalAttended} of {attendanceSummary.totalHeld} sessions attended
             </p>
           </div>
         </div>

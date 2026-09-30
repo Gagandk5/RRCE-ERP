@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
             },
           },
           invoices: true,
-          attendanceRecords: {
+          sessionAttendanceRecords: {
             include: {
               session: {
                 select: {
@@ -135,7 +135,10 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
-      students,
+      students: students.map(({ sessionAttendanceRecords, ...student }) => ({
+        ...student,
+        attendanceRecords: sessionAttendanceRecords,
+      })),
       count: students.length,
       isMock: false,
     });

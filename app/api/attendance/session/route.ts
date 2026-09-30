@@ -213,7 +213,7 @@ export async function PUT(req: NextRequest) {
 
     await prisma.$transaction(
       records.map((r) =>
-        prisma.attendanceRecord.upsert({
+        prisma.sessionAttendanceRecord.upsert({
           where: {
             sessionId_studentId: {
               sessionId,

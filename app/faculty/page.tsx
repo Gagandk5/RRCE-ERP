@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Calendar,
@@ -277,6 +278,13 @@ export default function FacultyPortal() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <Link
+            href="/faculty/attendance"
+            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-md transition-colors"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Daily Attendance</span>
+          </Link>
           <button
             onClick={() => setIsScheduleModalOpen(true)}
             className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-md transition-colors"

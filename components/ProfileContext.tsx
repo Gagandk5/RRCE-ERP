@@ -9,29 +9,65 @@ type ProfileContextValue = {
 };
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
+const PROFILE_IMAGE_STORAGE_KEY = "rrce-erp-profile-image";
+
+async function createOptimizedImage(file: File): Promise<string> {
+	const image = await createImageBitmap(file);
+	const maxDimension = 512;
+	const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+	const canvas = document.createElement("canvas");
+	canvas.width = Math.round(image.width * scale);
+	canvas.height = Math.round(image.height * scale);
+	const context = canvas.getContext("2d");
+	if (!context) throw new Error("Could not process profile image");
+	context.drawImage(image, 0, 0, canvas.width, canvas.height);
+	image.close();
+	return canvas.toDataURL("image/jpeg", 0.88);
+}
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
 	const [profileImage, setProfileImage] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const profileImageRef = useRef<string | null>(null);
+	const uploadRequestRef = useRef(0);
 
-	useEffect(() => () => {
-		if (profileImageRef.current) URL.revokeObjectURL(profileImageRef.current);
+	useEffect(() => {
+		try {
+			setProfileImage(window.localStorage.getItem(PROFILE_IMAGE_STORAGE_KEY));
+		} catch (error) {
+			console.warn("Could not load saved profile image:", error);
+		}
+		return () => {
+			if (profileImageRef.current) URL.revokeObjectURL(profileImageRef.current);
+		};
 	}, []);
 
 	function openFilePicker() {
 		fileInputRef.current?.click();
 	}
 
-	function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+	async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
 		const file = event.target.files?.[0];
 		if (!file) return;
-
-		const imageUrl = URL.createObjectURL(file);
-		if (profileImageRef.current) URL.revokeObjectURL(profileImageRef.current);
-		profileImageRef.current = imageUrl;
-		setProfileImage(imageUrl);
 		event.target.value = "";
+		if (!file.type.startsWith("image/")) return;
+
+		const requestId = ++uploadRequestRef.current;
+		const previewUrl = URL.createObjectURL(file);
+		if (profileImageRef.current) URL.revokeObjectURL(profileImageRef.current);
+		profileImageRef.current = previewUrl;
+		setProfileImage(previewUrl);
+
+		try {
+			const imageData = await createOptimizedImage(file);
+			if (requestId !== uploadRequestRef.current) return;
+			window.localStorage.setItem(PROFILE_IMAGE_STORAGE_KEY, imageData);
+			setProfileImage(imageData);
+			URL.revokeObjectURL(previewUrl);
+			profileImageRef.current = null;
+		} catch (error) {
+			console.warn("Could not save profile image:", error);
+		}
 	}
 
 	return (

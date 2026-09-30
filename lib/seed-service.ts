@@ -8,7 +8,7 @@ export async function runDatabaseSeed() {
 
   // 1. Wipe old attendance, invoices, and student profiles to ensure clean real roster insertion
   try {
-    await prisma.attendanceRecord.deleteMany({});
+    await prisma.sessionAttendanceRecord.deleteMany({});
     await prisma.attendanceSession.deleteMany({});
     await prisma.invoice.deleteMany({});
     await prisma.student.deleteMany({});
@@ -199,7 +199,7 @@ export async function runDatabaseSeed() {
     const studentId = seededStudentIds[i];
     const isAbsent = i === 4 || i === 9;
     const isLate = i === 12;
-    await prisma.attendanceRecord.create({
+    await prisma.sessionAttendanceRecord.create({
       data: {
         sessionId: lockedSession.id,
         studentId,
@@ -225,7 +225,7 @@ export async function runDatabaseSeed() {
   for (let i = 0; i < Math.min(25, seededStudentIds.length); i++) {
     const studentId = seededStudentIds[i];
     const isAbsent = i === 7;
-    await prisma.attendanceRecord.create({
+    await prisma.sessionAttendanceRecord.create({
       data: {
         sessionId: activeSession.id,
         studentId,

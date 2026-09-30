@@ -12,6 +12,7 @@
 
 # production
 /build
+/private_uploads/
 
 # debug
 npm-debug.log*

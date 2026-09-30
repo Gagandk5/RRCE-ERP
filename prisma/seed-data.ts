@@ -74,6 +74,7 @@ export const STAFF_ACCOUNTS: RawStaff[] = [
     deptCode: "BS",
     defaultPassword: "SUN121085",
   },
+  
 ];
 
 // REAL 3rd SEMESTER 2nd YEAR BCA CLASS ROSTER (54 Students)
