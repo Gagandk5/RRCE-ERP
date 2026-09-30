@@ -93,13 +93,9 @@ export default function StudentOverviewPage() {
     }
   }
 
-<<<<<<< HEAD
   const attendanceRate = attendanceSummary.totalHeld
     ? (attendanceSummary.totalAttended / attendanceSummary.totalHeld) * 100
     : 0;
-=======
-  const attendanceRate = 83.33333333333333;
->>>>>>> c14b8227e5fb8e8b0485943b19de14a77745e3cd
 
   const pendingFee = invoice ? Math.max(0, invoice.totalAmount - invoice.paidAmount) : 35000;
   const totalBilledFee = invoice?.totalAmount || 85000;
@@ -152,13 +148,8 @@ export default function StudentOverviewPage() {
             <span className="text-[11px] font-semibold tracking-wider text-zinc-400 uppercase">
               ATTENDANCE HEALTH
             </span>
-<<<<<<< HEAD
             <span className={`${attendanceRate >= 75 ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : "bg-rose-50 text-rose-700 border-rose-200/50"} rounded-full border px-2.5 py-0.5 text-xs font-medium`}>
               {attendanceRate >= 75 ? "On Track (≥ 75%)" : "Below 75%"}
-=======
-            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 rounded-full px-2.5 py-0.5 text-xs font-medium shrink-0">
-              On Track (≥ 75%)
->>>>>>> c14b8227e5fb8e8b0485943b19de14a77745e3cd
             </span>
           </div>
           <div>
