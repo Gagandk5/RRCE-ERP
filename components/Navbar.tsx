@@ -76,7 +76,8 @@ export default function Navbar() {
     setExpandedNotificationId((current) => current === notificationId ? null : notificationId);
   }
 
-  if (pathname === "/login") {
+  // Hide global navbar on login page and student workspace (since student portal has its own single top navbar)
+  if (pathname === "/login" || pathname.startsWith("/student")) {
     return null;
   }
 
@@ -115,90 +116,26 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           {currentUser ? (
             <div className="flex items-center gap-3">
-              {currentUser.role === "STUDENT" && (
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsNotificationsOpen((open) => !open)}
-                    aria-label="Notifications"
-                    aria-expanded={isNotificationsOpen}
-                    className="relative rounded-full p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-                  >
-                    <Bell aria-hidden="true" className="h-5 w-5" />
-                    {hasUnreadNotifications && (
-                      <span aria-hidden="true" className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-                    )}
-                  </button>
-
-                  {isNotificationsOpen && (
-                    <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-zinc-200 bg-white text-left shadow-xl">
-                      <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3">
-                        <h2 className="text-sm font-semibold text-zinc-900">Notifications</h2>
-                        <span className="text-[11px] font-medium text-zinc-500">
-                          {notifications.filter((notification) => !notification.isRead).length} unread
-                        </span>
-                      </div>
-                      <div className="max-h-[min(70vh,28rem)] overflow-y-auto">
-                        {notifications.map((notification) => {
-                          const isExpanded = expandedNotificationId === notification.id;
-                          return (
-                            <button
-                              key={notification.id}
-                              type="button"
-                              onClick={() => handleNotificationClick(notification.id)}
-                              aria-expanded={isExpanded}
-                              className={`block w-full border-b border-zinc-100 px-4 py-3 text-left transition-colors last:border-b-0 ${
-                                notification.isRead
-                                  ? "bg-white hover:bg-zinc-50"
-                                  : "bg-zinc-50 hover:bg-zinc-100"
-                              }`}
-                            >
-                              <span className="flex items-start gap-2.5">
-                                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.isRead ? "bg-transparent" : "bg-red-500"}`} />
-                                <span className="min-w-0 flex-1">
-                                  <span className={`block text-xs text-zinc-900 ${notification.isRead ? "font-medium" : "font-semibold"}`}>
-                                    {notification.title}
-                                  </span>
-                                  <span className="mt-1 block text-xs leading-relaxed text-zinc-500">
-                                    {notification.shortSummary}
-                                  </span>
-                                  {isExpanded && (
-                                    <span className="mt-2 block border-t border-zinc-200 pt-2 text-xs leading-relaxed text-zinc-700">
-                                      {notification.fullMessage}
-                                    </span>
-                                  )}
-                                </span>
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              {currentUser.role === "STUDENT" && <ProfileAvatar sizeClassName="h-10 w-10" />}
               <div className="text-right">
                 <span className="text-sm font-medium text-zinc-900 block leading-none">
                   {currentUser.firstName} {currentUser.lastName}
                 </span>
-                <span className="font-mono text-xs text-zinc-500 block mt-1 leading-none">
-                  {currentUser.studentProfile?.usn || currentUser.usn || currentUser.username}
+                <span className="text-[11px] text-zinc-500 block leading-none mt-1">
+                  {currentUser.role}
                 </span>
               </div>
-
               <button
                 onClick={handleLogout}
-                className="text-xs text-zinc-600 hover:text-zinc-900 border border-zinc-200 px-2.5 py-1 rounded transition-colors flex items-center gap-1.5"
+                className="text-zinc-500 hover:text-zinc-900 p-2 rounded-lg hover:bg-zinc-100 transition-colors"
+                title="Sign out"
               >
-                <LogOut className="w-3 h-3 text-zinc-400" />
-                <span>Sign Out</span>
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           ) : (
             <Link
               href="/login"
-              className="text-xs text-zinc-600 hover:text-zinc-900 border border-zinc-200 px-3 py-1 rounded transition-colors font-medium"
+              className="bg-zinc-900 text-white font-medium text-xs px-3.5 py-1.5 rounded hover:bg-zinc-800 transition-colors"
             >
               Sign In
             </Link>

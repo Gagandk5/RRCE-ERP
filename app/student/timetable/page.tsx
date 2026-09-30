@@ -42,8 +42,8 @@ export default function StudentTimetablePage() {
   const currentSlots = timetableData[activeDay] || [];
 
   return (
-    <div className="space-y-8 text-zinc-900 font-sans">
-      <div className="flex items-center justify-between border-b border-zinc-200/60 pb-4">
+    <div className="space-y-6 sm:space-y-8 text-zinc-900 font-sans max-w-full overflow-hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200/60 pb-4">
         <div>
           <h1 className="text-base font-semibold text-zinc-900 tracking-tight">
             Academic Timetable
@@ -53,13 +53,13 @@ export default function StudentTimetablePage() {
           </p>
         </div>
 
-        {/* FLOATING SOFT PILL BAR DAY SELECTOR */}
-        <div className="flex items-center gap-1 bg-white border border-zinc-200/80 p-1 rounded-full shadow-sm">
+        {/* DAY SELECTOR PILL BAR WITH HORIZONTAL SCROLL ON MOBILE */}
+        <div className="flex items-center gap-1 bg-white border border-zinc-200/80 p-1 rounded-full shadow-sm overflow-x-auto max-w-full no-scrollbar">
           {(["MON", "TUE", "WED", "THU", "FRI", "SAT"] as const).map((day) => (
             <button
               key={day}
               onClick={() => setActiveDay(day)}
-              className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all ${
+              className={`px-3.5 sm:px-4 py-1.5 text-xs font-medium rounded-full transition-all shrink-0 ${
                 activeDay === day
                   ? "bg-zinc-900 text-white shadow-xs"
                   : "text-zinc-500 hover:text-zinc-900"
@@ -71,15 +71,15 @@ export default function StudentTimetablePage() {
         </div>
       </div>
 
-      {/* SCHEDULE CARDS - SPACED TIMETABLE SLOTS */}
-      <div className="space-y-4">
+      {/* SCHEDULE CARDS */}
+      <div className="space-y-3 sm:space-y-4">
         {currentSlots.map((slot, idx) => (
           <div
             key={idx}
-            className="p-5 rounded-2xl bg-white border border-zinc-200/70 flex items-center justify-between hover:border-zinc-300 transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)]"
+            className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-zinc-300 transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)]"
           >
             <div className="space-y-1">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-semibold text-zinc-900 text-sm">{slot.title}</h3>
                 <span className="font-mono text-xs text-zinc-400 bg-zinc-50 px-2.5 py-0.5 rounded-full border border-zinc-100">
                   {slot.code}
@@ -101,8 +101,8 @@ export default function StudentTimetablePage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-4">
-              <span className="font-mono text-xs font-medium text-zinc-600">
+            <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t border-zinc-100 sm:border-0">
+              <span className="font-mono text-xs font-medium text-zinc-600 bg-zinc-50 sm:bg-transparent px-2.5 py-1 sm:p-0 rounded border border-zinc-100 sm:border-0">
                 {slot.time}
               </span>
               <span className="font-mono text-xs font-bold text-zinc-700 bg-zinc-50 px-3 py-1 rounded-xl border border-zinc-200/80">

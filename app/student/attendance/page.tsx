@@ -26,9 +26,13 @@ type AttendanceData = {
 };
 
 export default function StudentAttendancePage() {
+<<<<<<< HEAD
   const [data, setData] = useState<AttendanceData>({ records: [], subjects: [], totalHeld: 0, totalAttended: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+=======
+  const overallPercentage = 83.3;
+>>>>>>> c14b8227e5fb8e8b0485943b19de14a77745e3cd
 
   const loadAttendance = useCallback(async (backgroundRefresh = false) => {
     if (!backgroundRefresh) setLoading(true);
@@ -56,21 +60,36 @@ export default function StudentAttendancePage() {
     : 0;
 
   return (
+<<<<<<< HEAD
     <div className="space-y-6 text-zinc-900 font-sans">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200/60 pb-4">
+=======
+    <div className="space-y-6 sm:space-y-8 text-zinc-900 font-sans max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/60 pb-4">
+>>>>>>> c14b8227e5fb8e8b0485943b19de14a77745e3cd
         <div>
           <h1 className="text-base font-semibold tracking-tight text-zinc-900">Attendance Ledger &amp; Eligibility</h1>
           <p className="mt-0.5 text-xs text-zinc-400">Live subject totals · updated automatically</p>
         </div>
+<<<<<<< HEAD
         <span className="rounded-full border border-emerald-100 bg-emerald-50 px-4 py-1.5 font-mono text-xs font-semibold text-emerald-700">
+=======
+        <span className="self-start sm:self-auto text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-4 py-1.5 font-mono">
+>>>>>>> c14b8227e5fb8e8b0485943b19de14a77745e3cd
           Aggregate: {overallPercentage}%
         </span>
       </div>
 
+<<<<<<< HEAD
       {error && <div role="alert" className="flex items-center justify-between gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700"><span className="flex items-center gap-2"><AlertCircle className="h-4 w-4" />{error}</span><button type="button" onClick={() => void loadAttendance()} className="font-semibold underline underline-offset-2">Retry</button></div>}
 
       <section className="space-y-5 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 pb-4">
+=======
+      {/* RELAXED AIRY TABLE VIEW */}
+      <div className="bg-white rounded-2xl border border-zinc-200/70 p-4 sm:p-7 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-4">
+>>>>>>> c14b8227e5fb8e8b0485943b19de14a77745e3cd
           <div>
             <h2 className="text-sm font-semibold text-zinc-900">Subject-wise attendance</h2>
             <p className="mt-0.5 text-xs text-zinc-400">{data.totalAttended} attended out of {data.totalHeld} recorded classes</p>
@@ -78,10 +97,24 @@ export default function StudentAttendancePage() {
           <span className="inline-flex items-center gap-1.5 text-[11px] text-zinc-400"><RefreshCw className="h-3 w-3" />Refreshes every 10 seconds</span>
         </div>
 
+<<<<<<< HEAD
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] border-collapse text-left text-xs">
             <thead className="border-b border-zinc-100 text-[10px] font-medium uppercase tracking-wider text-zinc-400">
               <tr><th className="px-4 pb-3">Subject &amp; code</th><th className="px-4 pb-3 text-center">Attended</th><th className="px-4 pb-3 text-center">Percentage</th><th className="px-4 pb-3 text-center">Status</th></tr>
+=======
+        {/* RESPONSIVE TABLE WRAPPER */}
+        <div className="w-full overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+          <table className="min-w-[640px] w-full text-left border-collapse text-xs">
+            <thead className="text-xs font-medium text-zinc-400 uppercase tracking-wider border-b border-zinc-100">
+              <tr>
+                <th className="pb-4 px-4">Subject & Code</th>
+                <th className="pb-4 px-4 text-center">Sessions Attended</th>
+                <th className="pb-4 px-4 text-center">Percentage</th>
+                <th className="pb-4 px-4 text-center">VTU Status</th>
+                <th className="pb-4 px-4 text-right">Margin / Requirement</th>
+              </tr>
+>>>>>>> c14b8227e5fb8e8b0485943b19de14a77745e3cd
             </thead>
             <tbody className="divide-y divide-zinc-50">
               {data.subjects.map((subject) => {

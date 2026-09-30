@@ -14,7 +14,11 @@ import {
   ChevronDown,
   Trophy,
   Megaphone,
+  Menu,
+  X,
+  Bell,
 } from "lucide-react";
+import { ProfileAvatar } from "@/components/ProfileContext";
 
 export default function StudentLayout({
   children,
@@ -24,6 +28,36 @@ export default function StudentLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [student, setStudent] = useState<any>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Notification state
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: "Bus Route Update",
+      shortSummary: "Route 4 pickup time has changed.",
+      fullMessage: "Starting Monday, the Route 4 bus will arrive at your usual stop 10 minutes earlier. Please check the updated transport schedule before your next trip.",
+      isRead: false,
+    },
+    {
+      id: 2,
+      title: "Semester 3 Results Out",
+      shortSummary: "Your semester results are ready to view.",
+      fullMessage: "Semester 3 examination results are now available in the Results section of your student dashboard. Contact the examination office if you notice any discrepancy.",
+      isRead: false,
+    },
+    {
+      id: 3,
+      title: "Download Admit Card",
+      shortSummary: "Your upcoming exam admit card is available.",
+      fullMessage: "The admit card for your upcoming examination is ready. Visit the Admit Card section, verify your details, and download it before exam day.",
+      isRead: true,
+    },
+  ]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [expandedNotificationId, setExpandedNotificationId] = useState<number | null>(null);
+  const hasUnreadNotifications = notifications.some((n) => !n.isRead);
+
   const examLinks = [
     { name: "Internal Marks", href: "/student/marks" },
     { name: "Semester Exams", href: "/student/semester-exams" },
@@ -87,6 +121,13 @@ export default function StudentLayout({
     }
   }
 
+  function handleNotificationClick(id: number) {
+    setNotifications((current) =>
+      current.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+    );
+    setExpandedNotificationId((current) => (current === id ? null : id));
+  }
+
   const navItems = [
     { name: "Overview", href: "/student", icon: LayoutDashboard, exact: true },
     { name: "Timetable", href: "/student/timetable", icon: CalendarDays },
@@ -99,27 +140,154 @@ export default function StudentLayout({
   ];
 
   return (
-    <div className="flex min-h-screen bg-[#F9FAFB] font-sans text-zinc-900 antialiased">
-      {/* FULL-HEIGHT FIXED LEFT SIDEBAR */}
-      <aside className="sticky top-14 h-[calc(100vh-3.5rem)] w-64 shrink-0 bg-white border-r border-zinc-200/80 flex flex-col justify-between z-30 select-none">
-        <div>
-          {/* BRAND HEADER */}
-          <div className="p-5 border-b border-zinc-100 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shrink-0 border border-zinc-200 p-0.5 shadow-xs">
+    <div className="min-h-screen bg-[#F9FAFB] font-sans text-zinc-900 antialiased flex flex-col">
+      {/* SINGLE UNIFIED TOP NAVIGATION BAR */}
+      <header className="sticky top-0 z-40 bg-white border-b border-zinc-200 h-14 px-4 sm:px-6 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          {/* SIDEBAR RETRACT / TOGGLE BUTTON */}
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen((open) => !open)}
+            title={isSidebarOpen ? "Retract side panel" : "Expand side panel"}
+            aria-label="Toggle side panel"
+            className="p-2 -ml-2 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 active:scale-95 transition-all flex items-center justify-center"
+          >
+            <Menu className="w-5 h-5 text-zinc-700" />
+          </button>
+
+          {/* BRAND EMBLEM & LOGO */}
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-white flex items-center justify-center shrink-0 border border-zinc-200 p-0.5 shadow-xs">
               <img src="/images.svg" alt="RRCE Emblem" className="w-full h-full object-contain" />
             </div>
-            <div>
-              <span className="font-semibold text-sm tracking-tight text-zinc-900 block leading-tight">
-                RRCE ERP
+            <span className="font-bold text-zinc-900 text-sm tracking-tight">
+              RRCE ERP
+            </span>
+            <span className="bg-red-50 text-red-600 border border-red-200 font-bold text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider ml-1">
+              STUDENT
+            </span>
+          </div>
+        </div>
+
+        {/* RIGHT TOP NAVBAR CONTROLS */}
+        <div className="flex items-center gap-3">
+          {/* NOTIFICATION BELL DROPDOWN */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsNotificationsOpen((open) => !open)}
+              aria-label="Notifications"
+              aria-expanded={isNotificationsOpen}
+              className="relative rounded-full p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none"
+            >
+              <Bell aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
+              {hasUnreadNotifications && (
+                <span aria-hidden="true" className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+              )}
+            </button>
+
+            {isNotificationsOpen && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-zinc-200 bg-white text-left shadow-xl">
+                <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3">
+                  <h2 className="text-sm font-semibold text-zinc-900">Notifications</h2>
+                  <span className="text-[11px] font-medium text-zinc-500">
+                    {notifications.filter((n) => !n.isRead).length} unread
+                  </span>
+                </div>
+                <div className="max-h-[min(70vh,28rem)] overflow-y-auto">
+                  {notifications.map((n) => {
+                    const isExpanded = expandedNotificationId === n.id;
+                    return (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => handleNotificationClick(n.id)}
+                        aria-expanded={isExpanded}
+                        className={`block w-full border-b border-zinc-100 px-4 py-3 text-left transition-colors last:border-b-0 ${
+                          n.isRead ? "bg-white hover:bg-zinc-50" : "bg-zinc-50 hover:bg-zinc-100"
+                        }`}
+                      >
+                        <span className="flex items-start gap-2.5">
+                          <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.isRead ? "bg-transparent" : "bg-red-500"}`} />
+                          <span className="min-w-0 flex-1">
+                            <span className={`block text-xs text-zinc-900 ${n.isRead ? "font-medium" : "font-semibold"}`}>
+                              {n.title}
+                            </span>
+                            <span className="mt-1 block text-xs leading-relaxed text-zinc-500">
+                              {n.shortSummary}
+                            </span>
+                            {isExpanded && (
+                              <span className="mt-2 block border-t border-zinc-200 pt-2 text-xs leading-relaxed text-zinc-700">
+                                {n.fullMessage}
+                              </span>
+                            )}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* STUDENT PROFILE IDENTITY */}
+          <div className="flex items-center gap-2.5">
+            <ProfileAvatar sizeClassName="h-8 w-8 sm:h-9 sm:w-9" />
+            <div className="text-left hidden sm:block">
+              <span className="text-xs font-semibold text-zinc-900 block leading-tight">
+                {student?.user?.firstName || "Gagan"} {student?.user?.lastName || "D K"}
               </span>
-              <span className="text-xs text-zinc-400 block leading-tight mt-0.5">
-                Student Workspace
+              <span className="text-[11px] text-zinc-400 block leading-tight mt-0.5 font-mono">
+                Student • {student?.usn || "1RR25BC007"}
               </span>
             </div>
           </div>
+        </div>
+      </header>
+
+      {/* BACKDROP OVERLAY FOR MOBILE SIDEBAR */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 lg:hidden"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* RETRACTABLE SIDE PANEL */}
+      <aside
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-zinc-200 flex flex-col justify-between transition-transform duration-300 ease-in-out select-none ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex-1 overflow-y-auto">
+          {/* SIDEBAR HEADER WITH BRAND & RETRACT CLOSE BUTTON */}
+          <div className="p-4 border-b border-zinc-100 flex items-center justify-between h-14">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-white flex items-center justify-center shrink-0 border border-zinc-200 p-0.5 shadow-xs">
+                <img src="/images.svg" alt="RRCE Emblem" className="w-full h-full object-contain" />
+              </div>
+              <span className="font-bold text-zinc-900 text-sm tracking-tight">
+                RRCE ERP
+              </span>
+              <span className="bg-red-50 text-red-600 border border-red-200 font-bold text-[9px] px-1 py-0.5 rounded uppercase tracking-wider">
+                STUDENT
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+              aria-label="Close side panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
 
           {/* NAVIGATION LINKS */}
-          <nav className="p-3 space-y-1 mt-2">
+          <nav className="p-2 space-y-1 mt-2">
             {navItems.map((item) => {
               const isActive = item.children
                 ? isExamRoute
@@ -136,13 +304,13 @@ export default function StudentLayout({
                       onClick={() => setIsExamsOpen((open) => !open)}
                       aria-expanded={isExamsOpen}
                       aria-controls="student-exams-submenu"
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs rounded-xl transition-all ${
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs rounded-lg transition-all ${
                         isActive
-                          ? "bg-zinc-100 text-zinc-900 font-semibold"
-                          : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 font-medium"
+                          ? "bg-sky-50 text-sky-700 font-semibold border-l-4 border-sky-600 rounded-r-lg"
+                          : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 font-medium"
                       }`}
                     >
-                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-zinc-900" : "text-zinc-400"}`} />
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-sky-700" : "text-zinc-400"}`} />
                       <span className="flex-1 text-left">{item.name}</span>
                       <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-300 ${isExamsOpen ? "rotate-180" : "rotate-0"}`} />
                     </button>
@@ -159,9 +327,9 @@ export default function StudentLayout({
                               <Link
                                 key={child.href}
                                 href={child.href}
-                                className={`flex items-center rounded-xl px-3 py-2.5 text-xs transition-all ${
+                                className={`flex items-center rounded-lg px-3 py-2 text-xs transition-all ${
                                   isChildActive
-                                    ? "bg-zinc-100 text-zinc-900 font-semibold"
+                                    ? "bg-sky-50 text-sky-700 font-semibold"
                                     : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 font-medium"
                                 }`}
                               >
@@ -180,13 +348,13 @@ export default function StudentLayout({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 text-xs rounded-xl transition-all ${
+                  className={`flex items-center gap-3 px-3.5 py-2.5 text-xs rounded-lg transition-all ${
                     isActive
-                      ? "bg-zinc-100 text-zinc-900 font-semibold"
-                      : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 font-medium"
+                      ? "bg-sky-50 text-sky-700 font-semibold border-l-4 border-sky-600 rounded-r-lg"
+                      : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 font-medium"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-zinc-900" : "text-zinc-400"}`} />
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-sky-700" : "text-zinc-400"}`} />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -194,27 +362,27 @@ export default function StudentLayout({
           </nav>
         </div>
 
-        {/* DOCKED PROFILE FOOTER */}
-        <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto">
-          <span className="text-xs font-semibold text-zinc-900 truncate block">
-            {student?.user?.firstName || "Gagan"} {student?.user?.lastName || "D K"}
-          </span>
-          <span className="font-mono text-[11px] text-zinc-400 block mt-0.5">
-            {student?.usn || "1RR25BC007"}
-          </span>
+        {/* RED LOGOUT ACTION BUTTON AT SIDEBAR BOTTOM */}
+        <div className="border-t border-zinc-100 p-2">
           <button
             onClick={handleLogout}
-            className="text-xs text-zinc-500 hover:text-rose-600 flex items-center gap-1.5 mt-2 transition-colors font-medium"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
           >
-            <LogOut className="w-3.5 h-3.5 text-zinc-400" />
-            <span>Sign out</span>
+            <LogOut className="w-4 h-4 text-rose-600" />
+            <span>Logout</span>
           </button>
         </div>
       </aside>
 
-      {/* MAIN VIEWPORT WITH LEFT MARGIN FOR SIDEBAR */}
-      <div className="min-h-screen min-w-0 flex-1 bg-[#F9FAFB] p-8 max-w-6xl">
-        {children}
+      {/* MAIN VIEWPORT CONTAINER WITH DYNAMIC SIDEBAR MARGIN */}
+      <div
+        className={`min-h-screen min-w-0 flex-1 bg-[#F9FAFB] flex flex-col transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? "lg:ml-64" : "ml-0"
+        }`}
+      >
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-5 sm:space-y-6">
+          {children}
+        </main>
       </div>
     </div>
   );
