@@ -27,9 +27,9 @@ type RosterStudent = {
 type AttendanceRecordResponse = { studentId: string; status: Status };
 
 const STATUS_OPTIONS: Array<{ value: Status; label: string }> = [
-	{ value: "PRESENT", label: "Present" },
-	{ value: "ABSENT", label: "Absent" },
-	{ value: "EXCUSED", label: "Excused" },
+	{ value: "PRESENT", label: "P" },
+	{ value: "ABSENT", label: "A" },
+	{ value: "EXCUSED", label: "L" },
 ];
 
 function localDateString() {
@@ -146,6 +146,14 @@ export default function FacultyAttendancePage() {
 		setAttendance(Object.fromEntries(students.map((student) => [student.id, "PRESENT"])));
 	}
 
+	function clearAttendance() {
+		setAttendance(Object.fromEntries(students.map((student) => [student.id, "EXCUSED"])));
+	}
+
+	function markRemainingAbsent() {
+		setAttendance((current) => Object.fromEntries(students.map((student) => [student.id, current[student.id] === "PRESENT" ? "PRESENT" : "ABSENT"])));
+	}
+
 	async function saveAttendance() {
 		if (!subjectId || !students.length) return;
 		setSaving(true);
@@ -180,7 +188,7 @@ export default function FacultyAttendancePage() {
 				{selectedSubject && <div className="rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-right text-xs text-zinc-500"><span className="font-mono font-semibold text-zinc-800">{selectedSubject.departmentCode} · Sem {selectedSubject.semester} · Sec {selectedSubject.section}</span><span className="mt-0.5 block">{selectedSubject.departmentName}</span></div>}
 			</header>
 
-			<section className="grid grid-cols-1 gap-3 rounded-xl border border-zinc-200 bg-white p-4 sm:grid-cols-[minmax(0,1fr)_220px_auto] sm:items-end">
+			<section className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-[minmax(0,1fr)_220px_auto] sm:items-end">
 				<label className="block text-xs font-medium text-zinc-700">Subject
 					<select value={subjectId} onChange={(event) => setSubjectId(event.target.value)} disabled={loadingSubjects || !subjects.length} className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50">
 						{loadingSubjects && <option value="">Loading subjects…</option>}
@@ -191,10 +199,15 @@ export default function FacultyAttendancePage() {
 				<label className="block text-xs font-medium text-zinc-700">Class date
 					<span className="relative mt-1.5 block"><CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" /><input type="date" value={date} max={localDateString()} onChange={(event) => setDate(event.target.value)} className="block w-full rounded-lg border border-zinc-200 bg-white py-2.5 pl-9 pr-3 text-sm text-zinc-900 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-100" /></span>
 				</label>
-				<button type="button" onClick={markAllPresent} disabled={!students.length || loadingRoster || saving} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50">
-					<CheckCheck className="h-4 w-4" />Mark All Present
-				</button>
+				<div className="flex flex-wrap gap-2 sm:col-span-3 sm:justify-end">
+					<button type="button" onClick={markAllPresent} disabled={!students.length || loadingRoster || saving} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+						<CheckCheck className="h-4 w-4" />Mark All Present
+					</button>
+					<button type="button" onClick={clearAttendance} disabled={!students.length || loadingRoster || saving} className="inline-flex h-11 items-center justify-center rounded-md border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">Clear</button>
+					<button type="button" onClick={markRemainingAbsent} disabled={!students.length || loadingRoster || saving} className="inline-flex h-11 items-center justify-center rounded-md border border-rose-200 bg-rose-50 px-3.5 text-xs font-semibold text-rose-800 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50">Mark Remaining Absent</button>
+				</div>
 			</section>
+			<div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900"><span><strong>24-Hour Edit Lock:</strong> 18h 42m remaining</span><span className="font-mono text-[10px] uppercase tracking-wider">Registry status: editable</span></div>
 
 			{error && <div role="alert" className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700"><CircleAlert className="h-4 w-4 shrink-0" />{error}</div>}
 
@@ -217,8 +230,8 @@ export default function FacultyAttendancePage() {
 								return <tr key={student.id} className="hover:bg-zinc-50/70">
 									<td className="px-4 py-3 font-mono text-xs font-semibold text-zinc-500">{student.usn}</td>
 									<td className="px-4 py-3"><div className="flex items-center gap-3"><span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-100 text-[11px] font-semibold text-zinc-500">{initials(student)}{student.user.photoUrl && <img src={student.user.photoUrl} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />}</span><span className="text-xs font-medium text-zinc-800">{student.user.firstName} {student.user.lastName}</span></div></td>
-									<td className="px-4 py-3"><div className="mx-auto flex w-fit rounded-lg border border-zinc-200 bg-zinc-50 p-0.5" role="group" aria-label={`Attendance for ${student.usn}`}>
-										{STATUS_OPTIONS.map((option) => <button key={option.value} type="button" aria-pressed={status === option.value} onClick={() => setStatus(student.id, option.value)} disabled={saving || loadingRoster} className={`min-w-[82px] rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors disabled:cursor-not-allowed ${status === option.value ? option.value === "PRESENT" ? "bg-emerald-600 text-white shadow-sm" : option.value === "ABSENT" ? "bg-rose-600 text-white shadow-sm" : "bg-amber-500 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-800"}`}>{option.label}</button>)}
+									<td className="px-4 py-3"><div className="mx-auto flex w-fit rounded-md border border-slate-200 bg-slate-50 p-0.5" role="group" aria-label={`Attendance for ${student.usn}`}>
+										{STATUS_OPTIONS.map((option) => <button key={option.value} type="button" aria-label={`${option.label} for ${student.usn}`} aria-pressed={status === option.value} onClick={() => setStatus(student.id, option.value)} disabled={saving || loadingRoster} className={`min-h-11 min-w-11 rounded-md px-3 text-xs font-bold transition-colors disabled:cursor-not-allowed ${status === option.value ? option.value === "PRESENT" ? "bg-emerald-600 text-white" : option.value === "ABSENT" ? "bg-rose-600 text-white" : "bg-amber-500 text-white" : "text-slate-500 hover:text-slate-800"}`}>{option.label}</button>)}
 									</div></td>
 								</tr>;
 							})}
