@@ -100,14 +100,6 @@ export default function StudentOverviewPage() {
   const pendingFee = invoice ? Math.max(0, invoice.totalAmount - invoice.paidAmount) : 35000;
   const totalBilledFee = invoice?.totalAmount || 85000;
   const totalPaidFee = invoice?.paidAmount || 50000;
-  const safeBunks = attendanceRate >= 75
-    ? Math.max(0, Math.floor(attendanceSummary.totalAttended / 0.75 - attendanceSummary.totalHeld))
-    : 0;
-  const attendanceLedger = [
-    { code: "25BC301", name: "Discrete Mathematics", attended: 18, held: 20 },
-    { code: "25BC302", name: "Data Structures & Algorithms", attended: 16, held: 20 },
-    { code: "25BC303", name: "Database Management Systems", attended: 19, held: 21 },
-  ];
 
   const todayClasses = [
     { time: "09:00 - 10:00 AM", code: "25BC301", title: "Discrete Mathematics", instructor: "Prof. Sunitha Sharma", room: "LH-201" },
@@ -148,17 +140,7 @@ export default function StudentOverviewPage() {
         </div>
       </div>
 
-      {/* 2. ACTION QUEUE */}
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3"><div><h2 className="text-sm font-semibold text-slate-900">My Action Items &amp; Alerts</h2><p className="mt-0.5 text-xs text-slate-500">Institutional tasks requiring your attention</p></div><span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">3 active</span></div>
-        <div className="divide-y divide-slate-100">
-          <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"><div><span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700">Financial review</span><p className="mt-1 text-xs font-medium text-slate-800">Tuition Balance Pending: {formatINR(pendingFee)} <span className="font-normal text-slate-500">(Due: 31 Oct 2025)</span></p></div><Link href="/student/fees" className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-700">Pay Online</Link></div>
-          <div className="px-4 py-3"><span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Examination notice</span><p className="mt-1 text-xs font-medium text-slate-800">IA-2 Assessment Series starts Oct 12, 2026.</p></div>
-          <div className="flex items-center justify-between gap-3 px-4 py-3"><div><span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700">Attendance eligibility</span><p className="mt-1 text-xs font-medium text-slate-800">{attendanceRate.toFixed(1)}% compliance</p></div><span className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">Eligible for SEE Examinations</span></div>
-        </div>
-      </section>
-
-      {/* 3. STATUS CARDS */}
+      {/* 2. STATUS CARDS (RESPONSIVE GRID: 1 COL MOBILE, 2 COL TABLET, 3 COL DESKTOP) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {/* Card 1: Attendance Health */}
         <div className="bg-white rounded-2xl border border-zinc-200/70 p-4 sm:p-6 space-y-3 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
@@ -224,32 +206,46 @@ export default function StudentOverviewPage() {
         </div>
       </div>
 
-      {/* 4. ACADEMIC WORKSPACE */}
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[3fr_2fr]">
-        <section className="space-y-3 sm:space-y-4">
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">
-              Today&apos;s Schedule &amp; Lecture Halls
-            </h2>
-            <p className="mt-0.5 text-xs text-slate-500">Monday agenda · 4 scheduled periods</p>
-          </div>
+      {/* 3. TODAY'S CLASSES SECTION */}
+      <div className="space-y-3 sm:space-y-4">
+        <div>
+          <h2 className="text-base font-semibold text-zinc-900">
+            Today's Classes
+          </h2>
+          <p className="text-xs text-zinc-400 mt-0.5">
+            Monday Class Schedule & Lecture Halls
+          </p>
+        </div>
 
-          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <div className="hidden grid-cols-[110px_100px_minmax(0,1fr)_150px_110px] gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-slate-400 sm:grid"><span>Period</span><span>Code</span><span>Subject</span><span>Faculty</span><span>Hall</span></div>
-            {todayClasses.map((item, idx) => (
-              <div
-                key={idx}
-                className="grid grid-cols-1 gap-2 border-b border-slate-100 p-4 last:border-0 sm:grid-cols-[110px_100px_minmax(0,1fr)_150px_110px] sm:items-center sm:gap-3"
-              >
-                <span className="font-mono text-xs text-slate-500">{item.time}</span><span className="font-mono text-xs font-semibold text-slate-600">{item.code}</span><span className="text-sm font-semibold text-slate-900">{item.title}</span><span className="text-xs text-slate-500">{item.instructor}</span><span className="font-mono text-xs font-semibold text-slate-700">{item.room}</span>
+        <div className="space-y-3">
+          {todayClasses.map((item, idx) => (
+            <div
+              key={idx}
+              className="bg-white rounded-xl border border-zinc-200/70 p-4 hover:border-zinc-300 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+            >
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-zinc-900 text-sm">{item.title}</span>
+                  <span className="font-mono text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-md font-medium">
+                    {item.code}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500">
+                  Instructor: {item.instructor}
+                </p>
               </div>
-            ))}
-          </div>
-        </section>
-        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-          <div className="border-b border-slate-200 px-4 py-3"><h2 className="text-sm font-semibold text-slate-900">VTU Attendance Compliance Summary</h2><p className="mt-0.5 text-xs text-slate-500">75% minimum threshold · safe bunk margin: {safeBunks} class{safeBunks === 1 ? "" : "es"}</p></div>
-          <div className="divide-y divide-slate-100">{attendanceLedger.map((subject) => { const rate = (subject.attended / subject.held) * 100; const margin = rate >= 75 ? Math.max(0, Math.floor(subject.attended / 0.75 - subject.held)) : 0; return <div key={subject.code} className="px-4 py-3"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold text-slate-800">{subject.name}</p><p className="mt-1 font-mono text-[10px] text-slate-400">{subject.code} · {subject.attended}/{subject.held} attended</p></div><span className={`rounded-md border px-2 py-1 font-mono text-xs font-semibold ${rate >= 75 ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-rose-200 bg-rose-50 text-rose-800"}`}>{rate.toFixed(1)}%</span></div><p className={`mt-2 text-[10px] font-medium ${rate >= 75 ? "text-emerald-700" : "text-rose-700"}`}>{rate >= 75 ? `${margin} safe bunk${margin === 1 ? "" : "s"} remaining` : "Attendance shortage: immediate recovery required"}</p></div>; })}</div>
-        </section>
+
+              <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t border-zinc-100 sm:border-0">
+                <span className="font-mono text-xs text-zinc-600 bg-zinc-50 sm:bg-transparent px-2.5 py-1 sm:p-0 rounded border border-zinc-100 sm:border-0">
+                  {item.time}
+                </span>
+                <span className="font-mono bg-zinc-100 px-2.5 py-1 rounded-md text-xs font-medium text-zinc-800">
+                  {item.room}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

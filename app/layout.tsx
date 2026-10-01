@@ -26,7 +26,7 @@ export default function RootLayout({
       <body className="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased">
         <ProfileProvider>
           <Navbar />
-          <main className="min-w-0 flex-1 w-full lg:pl-64">{children}</main>
+          <main className="flex-1 w-full">{children}</main>
         </ProfileProvider>
       </body>
     </html>
