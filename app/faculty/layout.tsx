@@ -10,11 +10,7 @@ import {
   LogOut,
   CalendarDays,
   GraduationCap,
-  Bell,
-  Menu,
-  X,
-  User,
-  ShieldCheck,
+  Users,
 } from "lucide-react";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 
@@ -29,7 +25,6 @@ export default function FacultyLayout({
   const [facultyUser, setFacultyUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchSession();
@@ -43,7 +38,7 @@ export default function FacultyLayout({
         setFacultyUser(data.user);
       }
     } catch {
-      // Offline or mock fallback
+      // Mock / offline fallback
     } finally {
       setLoading(false);
     }
@@ -61,16 +56,34 @@ export default function FacultyLayout({
 
   const navItems = [
     {
-      name: "Today",
+      name: "Today's Schedule",
       href: "/faculty",
       icon: LayoutDashboard,
       active: pathname === "/faculty",
     },
     {
-      name: "Roll-Call",
+      name: "Roll-Call Attendance",
       href: "/faculty/attendance",
       icon: CheckSquare,
       active: pathname.startsWith("/faculty/attendance"),
+    },
+    {
+      name: "Timetable & Planner",
+      href: "/faculty?tab=schedule",
+      icon: CalendarDays,
+      active: false,
+    },
+    {
+      name: "Marks Entry (CIE)",
+      href: "/faculty?tab=marks",
+      icon: GraduationCap,
+      active: false,
+    },
+    {
+      name: "Mentorship & Proctoring",
+      href: "/faculty?tab=risk",
+      icon: Users,
+      active: false,
     },
   ];
 
@@ -80,33 +93,40 @@ export default function FacultyLayout({
   const displayEmail = facultyUser?.email || "jaishankar.m@rrce.org";
   const displayDept = facultyUser?.departmentCode || "BCA";
 
+  const initials = displayName
+    .split(" ")
+    .filter((p) => !p.startsWith("Prof") && !p.startsWith("Dr"))
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2) || "JM";
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row antialiased text-zinc-900 selection:bg-zinc-900 selection:text-white">
-      {/* 1. DESKTOP FIXED SIDEBAR (lg:w-64) */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-zinc-200/90 flex-col justify-between shrink-0 h-screen sticky top-0 z-30">
-        <div>
+    <div className="min-h-screen bg-slate-50 antialiased text-zinc-900 selection:bg-zinc-900 selection:text-white">
+      {/* 1. FIXED LEFT SIDEBAR (lg:w-64) */}
+      <aside className="hidden lg:flex w-64 bg-white border-r border-zinc-200/80 fixed inset-y-0 left-0 flex-col justify-between p-5 z-30 select-none">
+        <div className="space-y-6">
           {/* SIDEBAR HEADER */}
-          <div className="h-16 px-5 border-b border-zinc-200/80 flex items-center justify-between">
+          <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
             <Link href="/faculty" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-white p-1 border border-zinc-200 shadow-xs flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-white p-1 border border-zinc-200 shadow-2xs flex items-center justify-center shrink-0">
                 <img src="/images.svg" alt="RRCE Emblem" className="w-full h-full object-contain" />
               </div>
               <div>
-                <span className="font-bold text-sm text-zinc-950 tracking-tight block leading-tight">
+                <span className="font-semibold text-sm text-zinc-900 tracking-tight block leading-tight">
                   RRCE Faculty
                 </span>
                 <span className="text-[10px] text-zinc-500 font-mono block leading-tight">
-                  Teacher Desk
+                  Department of {displayDept}
                 </span>
               </div>
             </Link>
-            <span className="font-mono text-[10px] bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded font-semibold border border-zinc-200">
-              Sem 3
+            <span className="font-mono text-[10px] bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-md font-semibold border border-zinc-200/80 shrink-0">
+              AY 2025–26 • Sem 3
             </span>
           </div>
 
           {/* NAVIGATION LINKS */}
-          <nav className="p-3 space-y-1">
+          <nav className="space-y-1">
             <div className="px-3 py-1.5 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
               Academic Operations
             </div>
@@ -116,31 +136,25 @@ export default function FacultyLayout({
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all touch-manipulation ${
+                  className={`rounded-xl px-3.5 py-2.5 text-xs font-medium transition-colors flex items-center gap-3 ${
                     item.active
-                      ? "bg-zinc-900 text-white shadow-xs"
-                      : "text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100"
+                      ? "bg-zinc-100 text-zinc-950 font-semibold border border-zinc-200/60 shadow-2xs"
+                      : "text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 border border-transparent"
                   }`}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.name}</span>
+                  <Icon className={`w-4 h-4 shrink-0 ${item.active ? "text-zinc-900" : "text-zinc-400"}`} />
+                  <span className="truncate">{item.name}</span>
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* BOTTOM PROFILE & SECURITY TILE */}
-        <div className="p-3 border-t border-zinc-200/80 space-y-2 bg-zinc-50/60">
-          {/* USER INFO */}
-          <div className="p-3 rounded-xl bg-white border border-zinc-200/80 flex items-center gap-3 shadow-2xs">
-            <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0 text-xs">
-              {displayName
-                .split(" ")
-                .filter((p) => !p.startsWith("Prof") && !p.startsWith("Dr"))
-                .map((n) => n[0])
-                .join("")
-                .slice(0, 2) || "JM"}
+        {/* DOCKED PROFILE BOX */}
+        <div className="bg-zinc-50 border border-zinc-200/70 p-3 rounded-2xl space-y-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-zinc-200/80 text-zinc-800 text-xs font-bold flex items-center justify-center shrink-0">
+              {initials}
             </div>
             <div className="min-w-0 flex-1">
               <span className="font-semibold text-xs text-zinc-900 truncate block leading-tight">
@@ -152,19 +166,20 @@ export default function FacultyLayout({
             </div>
           </div>
 
-          {/* ACTION BUTTONS: CHANGE PASSWORD & SIGN OUT */}
-          <div className="space-y-1">
+          <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-zinc-200/60 text-xs font-medium">
             <button
               onClick={() => setIsPasswordModalOpen(true)}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 rounded-xl transition-colors border border-transparent hover:border-zinc-200 touch-manipulation"
+              className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-white border border-zinc-200/80 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-50 transition-colors shadow-2xs text-[11px]"
+              title="Change Password"
             >
               <KeyRound className="w-3.5 h-3.5 text-zinc-500" />
-              <span>Change Password</span>
+              <span>Password</span>
             </button>
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100 touch-manipulation"
+              className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-white border border-zinc-200/80 text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-colors shadow-2xs text-[11px]"
+              title="Sign Out"
             >
               <LogOut className="w-3.5 h-3.5 text-rose-500" />
               <span>Sign Out</span>
@@ -183,7 +198,7 @@ export default function FacultyLayout({
             RRCE Faculty
           </span>
           <span className="text-[10px] font-mono bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-200">
-            BCA Sem 3
+            Sem 3
           </span>
         </Link>
 
@@ -208,7 +223,7 @@ export default function FacultyLayout({
       </header>
 
       {/* 3. MAIN CONTENT VIEWPORT */}
-      <main className="flex-1 w-full overflow-x-hidden min-h-[calc(100vh-3.5rem)] pb-20 lg:pb-8">
+      <main className="lg:pl-64 min-h-screen bg-slate-50 flex-1 w-full overflow-x-hidden pb-16 lg:pb-8">
         {children}
       </main>
 
@@ -220,14 +235,14 @@ export default function FacultyLayout({
             <Link
               key={item.name}
               href={item.href}
-              className={`flex flex-col items-center gap-1 min-w-[64px] min-h-[44px] justify-center text-[11px] font-semibold transition-all touch-manipulation ${
+              className={`flex flex-col items-center gap-1 min-w-[60px] min-h-[44px] justify-center text-[10px] font-semibold transition-all touch-manipulation ${
                 item.active
                   ? "text-zinc-950 scale-105"
                   : "text-zinc-400 hover:text-zinc-600"
               }`}
             >
               <Icon className="w-4 h-4" />
-              <span>{item.name}</span>
+              <span className="truncate max-w-[70px]">{item.name.split(" ")[0]}</span>
               {item.active && (
                 <span className="w-1 h-1 rounded-full bg-zinc-950 mt-0.5" />
               )}
