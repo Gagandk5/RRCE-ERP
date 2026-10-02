@@ -12,6 +12,8 @@ export interface RawStaff {
   lastName: string;
   phone: string;
   deptCode?: string;
+  designation?: string;
+  primarySubject?: string;
   defaultPassword: string;
 }
 
@@ -35,6 +37,105 @@ export const DEPARTMENTS: RawDepartment[] = [
   { code: "BS", name: "Department of Basic Sciences & Humanities", usnCode: "BS" },
 ];
 
+export const OFFICIAL_BCA_FACULTY: RawStaff[] = [
+  {
+    username: "jaishankar_m",
+    email: "jaishankar.m@rrce.org",
+    firstName: "Jaishankar",
+    lastName: "M",
+    phone: "+91 9845123401",
+    role: "FACULTY",
+    deptCode: "BCA",
+    designation: "Assistant Professor",
+    defaultPassword: "JAI150684",
+    primarySubject: "Digital Principles and Computer Organization (B25BCA301)",
+  },
+  {
+    username: "shreya_s",
+    email: "shreya.s@rrce.org",
+    firstName: "Shreya",
+    lastName: "S",
+    phone: "+91 9845123402",
+    role: "FACULTY",
+    deptCode: "BCA",
+    designation: "Assistant Professor",
+    defaultPassword: "SHR100489",
+    primarySubject: "Object Oriented Programming in C++ (B25BCA302)",
+  },
+  {
+    username: "thilagavallii_s",
+    email: "thilagavallii.s@rrce.org",
+    firstName: "Thilagavallii",
+    lastName: "S",
+    phone: "+91 9845123403",
+    role: "FACULTY",
+    deptCode: "BCA",
+    designation: "Assistant Professor",
+    defaultPassword: "THI220886",
+    primarySubject: "Operating System Concepts (B25BCA303)",
+  },
+  {
+    username: "pushpalatha_g",
+    email: "pushpalatha.g@rrce.org",
+    firstName: "Pushpalatha",
+    lastName: "G",
+    phone: "+91 9845123404",
+    role: "FACULTY",
+    deptCode: "BCA",
+    designation: "Associate Professor",
+    defaultPassword: "PUS180383",
+    primarySubject: "Relational Data Base Management System (B25BCA304)",
+  },
+  {
+    username: "deeraj_c",
+    email: "deeraj.c@rrce.org",
+    firstName: "Deeraj",
+    lastName: "C",
+    phone: "+91 9845123405",
+    role: "FACULTY",
+    deptCode: "BCA",
+    designation: "Assistant Professor",
+    defaultPassword: "DEE051191",
+    primarySubject: "Software Engineering (B25BCA305)",
+  },
+  {
+    username: "darshan_p",
+    email: "darshan.p@rrce.org",
+    firstName: "Darshan",
+    lastName: "P",
+    phone: "+91 9845123406",
+    role: "FACULTY",
+    deptCode: "BCA",
+    designation: "Assistant Professor",
+    defaultPassword: "DAR120790",
+    primarySubject: "Reasoning and Aptitude (B25BCA306)",
+  },
+  {
+    username: "muruganandham_sk",
+    email: "muruganandham.sk@rrce.org",
+    firstName: "Muruganandham",
+    lastName: "S K",
+    phone: "+91 9845123407",
+    role: "FACULTY",
+    deptCode: "BCA",
+    designation: "Associate Professor",
+    defaultPassword: "MUR090978",
+    primarySubject: "Object Oriented Programming in C++ Lab (B25BCAL307)",
+  },
+  {
+    username: "hod_bca",
+    email: "hod.bca@rrce.org",
+    firstName: "Praveen",
+    lastName: "Gowda",
+    phone: "+91 9845123400",
+    role: "HOD",
+    deptCode: "BCA",
+    designation: "Professor & Head",
+    defaultPassword: "PRA200880",
+    primarySubject: "Department Administration",
+  },
+];
+
 export const STAFF_ACCOUNTS: RawStaff[] = [
   {
     email: "principal@rrce.org",
@@ -54,27 +155,7 @@ export const STAFF_ACCOUNTS: RawStaff[] = [
     phone: "+91 9845023456",
     defaultPassword: "SUR150575",
   },
-  {
-    email: "hod.bca@rrce.org",
-    username: "hod_bca",
-    role: "HOD",
-    firstName: "Praveen",
-    lastName: "Gowda",
-    phone: "+91 9845034567",
-    deptCode: "BCA",
-    defaultPassword: "PRA200880",
-  },
-  {
-    email: "faculty.math@rrce.org",
-    username: "faculty_math",
-    role: "FACULTY",
-    firstName: "Sunitha",
-    lastName: "Sharma",
-    phone: "+91 9845045678",
-    deptCode: "BS",
-    defaultPassword: "SUN121085",
-  },
-  
+  ...OFFICIAL_BCA_FACULTY,
 ];
 
 // REAL 3rd SEMESTER 2nd YEAR BCA CLASS ROSTER (54 Students)

@@ -5,8 +5,8 @@ import React from "react";
 export default function StudentMarksPage() {
   const cieLedger = [
     {
-      code: "25BC301",
-      title: "Discrete Mathematics",
+      code: "B25BCA301",
+      title: "Digital Principles & Computer Org",
       ia1: 22,
       ia2: 21,
       ia3: "-",
@@ -16,8 +16,8 @@ export default function StudentMarksPage() {
       isEligible: true,
     },
     {
-      code: "25BC302",
-      title: "Data Structures & Algorithms",
+      code: "B25BCA302",
+      title: "Object Oriented Programming in C++",
       ia1: 20,
       ia2: 23,
       ia3: "-",
@@ -27,8 +27,19 @@ export default function StudentMarksPage() {
       isEligible: true,
     },
     {
-      code: "25BC303",
-      title: "Database Management Systems",
+      code: "B25BCA303",
+      title: "Operating System Concepts",
+      ia1: 19,
+      ia2: 22,
+      ia3: "-",
+      assignment: 21,
+      totalCie: 41.5,
+      maxCie: 50,
+      isEligible: true,
+    },
+    {
+      code: "B25BCA304",
+      title: "Relational Data Base Management System",
       ia1: 18,
       ia2: 19,
       ia3: "-",
@@ -38,8 +49,8 @@ export default function StudentMarksPage() {
       isEligible: true,
     },
     {
-      code: "25BCL31",
-      title: "Data Structures Practical Lab",
+      code: "B25BCAL307",
+      title: "Object Oriented Programming in C++ Lab",
       ia1: 24,
       ia2: 24,
       ia3: "-",

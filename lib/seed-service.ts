@@ -131,30 +131,54 @@ export async function runDatabaseSeed() {
     });
   }
 
-  const facultyMathId = staffMap.get("faculty_math")!;
-  const hodBcaId = staffMap.get("hod_bca")!;
+  const jaishankarId = staffMap.get("jaishankar_m")!;
+  const shreyaId = staffMap.get("shreya_s")!;
+  const thilagavalliiId = staffMap.get("thilagavallii_s")!;
+  const pushpalathaId = staffMap.get("pushpalatha_g")!;
 
   const timetableData = [
     {
       dayOfWeek: "MON",
       startTime: "09:00",
       endTime: "10:00",
-      subject: "Discrete Mathematics (25BC301)",
+      subject: "Digital Principles and Computer Organization (B25BCA301)",
       departmentId: bcaDeptId,
       semester: 3,
       section: "A",
-      facultyId: facultyMathId,
+      facultyId: jaishankarId,
       roomNumber: "LH-201",
     },
     {
       dayOfWeek: "MON",
       startTime: "10:00",
       endTime: "11:00",
-      subject: "Data Structures & Algorithms (25BC302)",
+      subject: "Object Oriented Programming in C++ (B25BCA302)",
       departmentId: bcaDeptId,
       semester: 3,
       section: "A",
-      facultyId: hodBcaId,
+      facultyId: shreyaId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "MON",
+      startTime: "11:15",
+      endTime: "12:15",
+      subject: "Operating System Concepts (B25BCA303)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: thilagavalliiId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "MON",
+      startTime: "14:00",
+      endTime: "15:00",
+      subject: "Relational Data Base Management System (B25BCA304)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: pushpalathaId,
       roomNumber: "LH-201",
     },
   ];
@@ -183,8 +207,8 @@ export async function runDatabaseSeed() {
 
   const lockedSession = await prisma.attendanceSession.create({
     data: {
-      subject: "Discrete Mathematics (25BC301)",
-      facultyId: facultyMathId,
+      subject: "Digital Principles and Computer Organization (B25BCA301)",
+      facultyId: jaishankarId,
       departmentId: bcaDeptId,
       semester: 3,
       section: "A",
@@ -210,8 +234,8 @@ export async function runDatabaseSeed() {
 
   const activeSession = await prisma.attendanceSession.create({
     data: {
-      subject: "Data Structures & Algorithms (25BC302)",
-      facultyId: hodBcaId,
+      subject: "Object Oriented Programming in C++ (B25BCA302)",
+      facultyId: shreyaId,
       departmentId: bcaDeptId,
       semester: 3,
       section: "A",
