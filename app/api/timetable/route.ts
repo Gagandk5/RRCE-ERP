@@ -35,37 +35,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (slots.length === 0) {
-      const mockSlots = [
-        {
-          id: "mock-slot-1",
-          dayOfWeek: "MON",
-          startTime: "09:00",
-          endTime: "10:00",
-          subject: "Discrete Mathematics (25BC101)",
-          departmentId: "mock-dept-bca",
-          semester: 1,
-          section: "A",
-          facultyId: "mock-staff-faculty_math",
-          roomNumber: "LH-201",
-          faculty: { id: "mock-staff-faculty_math", firstName: "Sunitha", lastName: "Sharma", email: "faculty.math@rrce.org" },
-          department: { id: "mock-dept-bca", code: "BCA", name: "Bachelor of Computer Applications", usnCode: "BC" },
-        },
-        {
-          id: "mock-slot-2",
-          dayOfWeek: "MON",
-          startTime: "10:00",
-          endTime: "11:00",
-          subject: "Problem Solving with C (25BC102)",
-          departmentId: "mock-dept-bca",
-          semester: 1,
-          section: "A",
-          facultyId: "mock-staff-hod_bca",
-          roomNumber: "LH-201",
-          faculty: { id: "mock-staff-hod_bca", firstName: "Praveen", lastName: "Gowda", email: "hod.bca@rrce.org" },
-          department: { id: "mock-dept-bca", code: "BCA", name: "Bachelor of Computer Applications", usnCode: "BC" },
-        },
-      ];
-      return NextResponse.json({ slots: mockSlots, isMock: true });
+      return NextResponse.json({ slots: [], isMock: false });
     }
 
     return NextResponse.json({ slots, isMock: false });

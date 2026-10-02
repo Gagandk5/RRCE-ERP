@@ -168,12 +168,14 @@ export async function seedNeonDirectly() {
         [id, s.email, s.username, passwordHash, s.role, s.firstName, s.lastName, s.phone, deptId]
       );
       staffIdMap.set(s.username, res.rows[0].id);
+      staffIdMap.set(s.email, res.rows[0].id);
     }
 
     // 5. Ingest 54 Real BCA 3rd Sem Students into Neon DB
     console.log(`Seeding ${BCA_2025_STUDENTS.length} real BCA 3rd Sem students into Neon DB...`);
     const bcaDeptId = deptIdMap.get("BCA")!;
     let insertedCount = 0;
+    const seededStudentIds: string[] = [];
 
     for (const st of BCA_2025_STUDENTS) {
       const usn = generateUSN("1RR", "25", "BC", st.sequence);
@@ -184,6 +186,7 @@ export async function seedNeonDirectly() {
 
       const userId = `user-student-${st.sequence}`;
       const studentId = `student-${st.sequence}`;
+      seededStudentIds.push(studentId);
 
       // Insert User
       await pool.query(
@@ -216,7 +219,100 @@ export async function seedNeonDirectly() {
       insertedCount++;
     }
 
-    // 6. Log Audit Record
+    // 6. Seed Official Timetable Slots for BCA 3rd Sem
+    console.log("Seeding official BCA 3rd Sem timetable slots into Neon DB...");
+    await pool.query('DELETE FROM "TimetableSlot" WHERE "departmentId" = $1 AND "semester" = 3', [bcaDeptId]);
+
+    const jaishankarId = staffIdMap.get("jaishankar.m@rrce.org")!;
+    const shreyaId = staffIdMap.get("shreya.s@rrce.org")!;
+    const thilagavalliiId = staffIdMap.get("thilagavallii.s@rrce.org")!;
+    const pushpalathaId = staffIdMap.get("pushpalatha.g@rrce.org")!;
+    const deerajId = staffIdMap.get("deeraj.c@rrce.org")!;
+    const darshanId = staffIdMap.get("darshan.p@rrce.org")!;
+
+    const timetableSlots = [
+      // MON
+      { day: "MON", start: "09:00", end: "10:00", subj: "Digital Principles and Computer Organization (B25BCA301)", facultyId: jaishankarId, room: "LH-201" },
+      { day: "MON", start: "10:00", end: "11:00", subj: "Object Oriented Programming in C++ (B25BCA302)", facultyId: shreyaId, room: "LH-201" },
+      { day: "MON", start: "11:15", end: "12:15", subj: "Operating System Concepts (B25BCA303)", facultyId: thilagavalliiId, room: "LH-201" },
+      { day: "MON", start: "14:00", end: "15:00", subj: "Relational Data Base Management System (B25BCA304)", facultyId: pushpalathaId, room: "LH-201" },
+      // TUE
+      { day: "TUE", start: "09:00", end: "10:00", subj: "Software Engineering (B25BCA305)", facultyId: deerajId, room: "LH-201" },
+      { day: "TUE", start: "10:00", end: "11:00", subj: "Reasoning and Aptitude (B25BCA306)", facultyId: darshanId, room: "LH-201" },
+      { day: "TUE", start: "11:15", end: "12:15", subj: "Digital Principles and Computer Organization (B25BCA301)", facultyId: jaishankarId, room: "LH-201" },
+      { day: "TUE", start: "14:00", end: "16:00", subj: "Object Oriented Programming in C++ Lab (B25BCAL307)", facultyId: shreyaId, room: "LAB-2" },
+      // WED
+      { day: "WED", start: "09:00", end: "10:00", subj: "Operating System Concepts (B25BCA303)", facultyId: thilagavalliiId, room: "LH-201" },
+      { day: "WED", start: "10:00", end: "11:00", subj: "Relational Data Base Management System (B25BCA304)", facultyId: pushpalathaId, room: "LH-201" },
+      { day: "WED", start: "11:15", end: "12:15", subj: "Digital Principles and Computer Organization (B25BCA301)", facultyId: jaishankarId, room: "LH-201" },
+      { day: "WED", start: "14:00", end: "16:00", subj: "Relational Data Base Management System Lab (B25BCAL308)", facultyId: pushpalathaId, room: "LAB-3" },
+      // THU
+      { day: "THU", start: "09:00", end: "10:00", subj: "Object Oriented Programming in C++ (B25BCA302)", facultyId: shreyaId, room: "LH-201" },
+      { day: "THU", start: "10:00", end: "11:00", subj: "Software Engineering (B25BCA305)", facultyId: deerajId, room: "LH-201" },
+      { day: "THU", start: "11:15", end: "12:15", subj: "Operating System Concepts (B25BCA303)", facultyId: thilagavalliiId, room: "LH-201" },
+      // FRI
+      { day: "FRI", start: "09:00", end: "10:00", subj: "Digital Principles and Computer Organization (B25BCA301)", facultyId: jaishankarId, room: "LH-201" },
+      { day: "FRI", start: "10:00", end: "11:00", subj: "Relational Data Base Management System (B25BCA304)", facultyId: pushpalathaId, room: "LH-201" },
+      { day: "FRI", start: "11:15", end: "12:15", subj: "Reasoning and Aptitude (B25BCA306)", facultyId: darshanId, room: "LH-201" },
+    ];
+
+    for (let i = 0; i < timetableSlots.length; i++) {
+      const slot = timetableSlots[i];
+      await pool.query(
+        `INSERT INTO "TimetableSlot" ("id", "dayOfWeek", "startTime", "endTime", "subject", "departmentId", "semester", "section", "facultyId", "roomNumber", "updatedAt")
+         VALUES ($1, $2, $3, $4, $5, $6, 3, 'A', $7, $8, NOW())`,
+        [`slot-bca-3-${i + 1}`, slot.day, slot.start, slot.end, slot.subj, bcaDeptId, slot.facultyId, slot.room]
+      );
+    }
+
+    // 7. Seed Active & Historical Attendance Sessions
+    console.log("Seeding attendance sessions & student records into Neon DB...");
+    const jaishankarSessionId = "sess-bca-jaishankar-active";
+    const lockedSessionId = "sess-bca-jaishankar-locked";
+
+    // Insert locked past session
+    await pool.query(
+      `INSERT INTO "AttendanceSession" ("id", "subject", "facultyId", "departmentId", "semester", "section", "date", "lockedAt", "isLockedOverride", "updatedAt")
+       VALUES ($1, $2, $3, $4, 3, 'A', NOW() - INTERVAL '3 days', NOW() - INTERVAL '2 days', false, NOW())
+       ON CONFLICT ("id") DO UPDATE SET "subject" = EXCLUDED."subject", "lockedAt" = EXCLUDED."lockedAt"`,
+      [lockedSessionId, "Digital Principles and Computer Organization (B25BCA301)", jaishankarId, bcaDeptId]
+    );
+
+    // Insert active current session for Prof. Jaishankar M
+    await pool.query(
+      `INSERT INTO "AttendanceSession" ("id", "subject", "facultyId", "departmentId", "semester", "section", "date", "lockedAt", "isLockedOverride", "updatedAt")
+       VALUES ($1, $2, $3, $4, 3, 'A', NOW(), NOW() + INTERVAL '24 hours', false, NOW())
+       ON CONFLICT ("id") DO UPDATE SET "subject" = EXCLUDED."subject", "lockedAt" = EXCLUDED."lockedAt"`,
+      [jaishankarSessionId, "Digital Principles and Computer Organization (B25BCA301)", jaishankarId, bcaDeptId]
+    );
+
+    // Populate attendance records for the active session
+    for (let i = 0; i < seededStudentIds.length; i++) {
+      const stId = seededStudentIds[i];
+      const isAbsent = i === 3 || i === 19 || i === 44;
+      const isLate = i === 7;
+      const status = isAbsent ? "ABSENT" : isLate ? "LATE" : "PRESENT";
+
+      await pool.query(
+        `INSERT INTO "AttendanceRecord" ("id", "sessionId", "studentId", "status", "updatedAt")
+         VALUES ($1, $2, $3, $4, NOW())
+         ON CONFLICT ("sessionId", "studentId") DO UPDATE SET "status" = EXCLUDED."status", "updatedAt" = NOW()`,
+        [`rec-act-${stId}`, jaishankarSessionId, stId, status]
+      );
+
+      // Also for locked session
+      const pastAbsent = i === 4 || i === 9;
+      const pastLate = i === 12;
+      const pastStatus = pastAbsent ? "ABSENT" : pastLate ? "LATE" : "PRESENT";
+      await pool.query(
+        `INSERT INTO "AttendanceRecord" ("id", "sessionId", "studentId", "status", "updatedAt")
+         VALUES ($1, $2, $3, $4, NOW())
+         ON CONFLICT ("sessionId", "studentId") DO UPDATE SET "status" = EXCLUDED."status", "updatedAt" = NOW()`,
+        [`rec-lck-${stId}`, lockedSessionId, stId, pastStatus]
+      );
+    }
+
+    // 8. Log Audit Record
     await pool.query(
       `INSERT INTO "AuditLog" ("id", "action", "performedBy", "details", "timestamp")
        VALUES ($1, $2, $3, $4, NOW())`,

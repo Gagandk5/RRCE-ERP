@@ -56,49 +56,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (sessions.length === 0) {
-      const mockSessions = [
-        {
-          id: "mock-sess-active",
-          subject: "Problem Solving with C (25BC102)",
-          facultyId: "mock-staff-hod_bca",
-          departmentId: "mock-dept-bca",
-          semester: 1,
-          section: "A",
-          date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          lockedAt: new Date(Date.now() + 22 * 60 * 60 * 1000).toISOString(),
-          isLockedOverride: false,
-          faculty: { firstName: "Praveen", lastName: "Gowda", email: "hod.bca@rrce.org" },
-          department: { code: "BCA", name: "Bachelor of Computer Applications" },
-          records: [],
-          lockoutStatus: {
-            isLocked: false,
-            remainingMs: 22 * 60 * 60 * 1000,
-            formattedRemaining: "22h left to edit",
-          },
-        },
-        {
-          id: "mock-sess-locked",
-          subject: "Discrete Mathematics (25BC101)",
-          facultyId: "mock-staff-faculty_math",
-          departmentId: "mock-dept-bca",
-          semester: 1,
-          section: "A",
-          date: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-          createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-          lockedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          isLockedOverride: false,
-          faculty: { firstName: "Sunitha", lastName: "Sharma", email: "faculty.math@rrce.org" },
-          department: { code: "BCA", name: "Bachelor of Computer Applications" },
-          records: [],
-          lockoutStatus: {
-            isLocked: true,
-            remainingMs: 0,
-            formattedRemaining: "Locked (24-hour limit exceeded)",
-          },
-        },
-      ];
-      return NextResponse.json({ sessions: mockSessions, isMock: true });
+      return NextResponse.json({ sessions: [], isMock: false });
     }
 
     const formatted = sessions.map((sess) => ({

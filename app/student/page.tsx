@@ -102,10 +102,10 @@ export default function StudentOverviewPage() {
   const totalPaidFee = invoice?.paidAmount || 50000;
 
   const todayClasses = [
-    { time: "09:00 - 10:00 AM", code: "25BC301", title: "Discrete Mathematics", instructor: "Prof. Sunitha Sharma", room: "LH-201" },
-    { time: "10:00 - 11:00 AM", code: "25BC302", title: "Data Structures & Algorithms", instructor: "Dr. Praveen Gowda", room: "LH-201" },
-    { time: "11:15 - 12:15 PM", code: "25BC303", title: "Database Management Systems", instructor: "Prof. Kavitha N", room: "Lab-3" },
-    { time: "02:00 - 04:00 PM", code: "25BCL31", title: "Data Structures Practical Lab", instructor: "Dr. Praveen Gowda", room: "Computer Lab 2" },
+    { time: "09:00 - 10:00 AM", code: "B25BCA301", title: "Digital Principles & Computer Organization", instructor: "Prof. Jaishankar M", room: "LH-201" },
+    { time: "10:00 - 11:00 AM", code: "B25BCA302", title: "Object Oriented Programming in C++", instructor: "Prof. Shreya S", room: "LH-201" },
+    { time: "11:15 - 12:15 PM", code: "B25BCA303", title: "Operating System Concepts", instructor: "Prof. Thilagavallii S", room: "LH-201" },
+    { time: "02:00 - 03:00 PM", code: "B25BCA304", title: "Relational Data Base Management System", instructor: "Prof. Pushpalatha G", room: "LH-201" },
   ];
 
   return (

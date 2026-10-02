@@ -7,35 +7,36 @@ export default function StudentTimetablePage() {
 
   const timetableData: Record<string, any[]> = {
     MON: [
-      { time: "09:00 - 10:00 AM", code: "25BC301", title: "Discrete Mathematics", type: "Theory", instructor: "Prof. Sunitha Sharma", room: "LH-201" },
-      { time: "10:00 - 11:00 AM", code: "25BC302", title: "Data Structures & Algorithms", type: "Theory", instructor: "Dr. Praveen Gowda", room: "LH-201" },
-      { time: "11:15 - 12:15 PM", code: "25BC303", title: "Database Management Systems", type: "Theory", instructor: "Prof. Kavitha N", room: "Lab-3" },
-      { time: "02:00 - 04:00 PM", code: "25BCL31", title: "Data Structures Practical Lab", type: "Lab", instructor: "Dr. Praveen Gowda", room: "Computer Lab 2" },
+      { time: "09:00 - 10:00 AM", code: "B25BCA301", title: "Digital Principles and Computer Organization", type: "Theory", instructor: "Prof. Jaishankar M", room: "LH-201" },
+      { time: "10:00 - 11:00 AM", code: "B25BCA302", title: "Object Oriented Programming in C++", type: "Theory", instructor: "Prof. Shreya S", room: "LH-201" },
+      { time: "11:15 - 12:15 PM", code: "B25BCA303", title: "Operating System Concepts", type: "Theory", instructor: "Prof. Thilagavallii S", room: "LH-201" },
+      { time: "02:00 - 03:00 PM", code: "B25BCA304", title: "Relational Data Base Management System", type: "Theory", instructor: "Prof. Pushpalatha G", room: "LH-201" },
     ],
     TUE: [
-      { time: "09:00 - 10:00 AM", code: "25BC303", title: "Database Management Systems", type: "Theory", instructor: "Prof. Kavitha N", room: "LH-201" },
-      { time: "10:00 - 11:00 AM", code: "25BC301", title: "Discrete Mathematics", type: "Theory", instructor: "Prof. Sunitha Sharma", room: "LH-201" },
-      { time: "11:15 - 12:15 PM", code: "25BC304", title: "Software Engineering & Agile", type: "Theory", instructor: "Prof. Rajesh Kumar", room: "LH-201" },
-      { time: "02:00 - 04:00 PM", code: "25BCL32", title: "DBMS SQL Practical Lab", type: "Lab", instructor: "Prof. Kavitha N", room: "Lab-3" },
+      { time: "09:00 - 10:00 AM", code: "B25BCA305", title: "Software Engineering", type: "Theory", instructor: "Prof. Deeraj C", room: "LH-201" },
+      { time: "10:00 - 11:00 AM", code: "B25BCA306", title: "Reasoning and Aptitude", type: "Theory", instructor: "Prof. Darshan P", room: "LH-201" },
+      { time: "11:15 - 12:15 PM", code: "B25BCA301", title: "Digital Principles and Computer Organization", type: "Theory", instructor: "Prof. Jaishankar M", room: "LH-201" },
+      { time: "02:00 - 04:00 PM", code: "B25BCAL307", title: "Object Oriented Programming in C++ Lab", type: "Lab", instructor: "Prof. Shreya S & Dr. Muruganandham S K", room: "Computer Lab 2" },
     ],
     WED: [
-      { time: "09:00 - 10:00 AM", code: "25BC302", title: "Data Structures & Algorithms", type: "Theory", instructor: "Dr. Praveen Gowda", room: "LH-201" },
-      { time: "10:00 - 11:00 AM", code: "25BC304", title: "Software Engineering & Agile", type: "Theory", instructor: "Prof. Rajesh Kumar", room: "LH-201" },
-      { time: "11:15 - 12:15 PM", code: "25BC301", title: "Discrete Mathematics", type: "Theory", instructor: "Prof. Sunitha Sharma", room: "LH-201" },
+      { time: "09:00 - 10:00 AM", code: "B25BCA303", title: "Operating System Concepts", type: "Theory", instructor: "Prof. Thilagavallii S", room: "LH-201" },
+      { time: "10:00 - 11:00 AM", code: "B25BCA304", title: "Relational Data Base Management System", type: "Theory", instructor: "Prof. Pushpalatha G", room: "LH-201" },
+      { time: "11:15 - 12:15 PM", code: "B25BCA301", title: "Digital Principles and Computer Organization", type: "Theory", instructor: "Prof. Jaishankar M", room: "LH-201" },
+      { time: "02:00 - 04:00 PM", code: "B25BCAL308", title: "Relational Data Base Management System Lab", type: "Lab", instructor: "Prof. Pushpalatha G & Prof. Deeraj C", room: "Computer Lab 3" },
     ],
     THU: [
-      { time: "09:00 - 10:00 AM", code: "25BC304", title: "Software Engineering & Agile", type: "Theory", instructor: "Prof. Rajesh Kumar", room: "LH-201" },
-      { time: "10:00 - 11:00 AM", code: "25BC303", title: "Database Management Systems", type: "Theory", instructor: "Prof. Kavitha N", room: "LH-201" },
-      { time: "11:15 - 12:15 PM", code: "25BC302", title: "Data Structures & Algorithms", type: "Theory", instructor: "Dr. Praveen Gowda", room: "LH-201" },
-      { time: "02:00 - 03:00 PM", code: "25BC301", title: "Discrete Mathematics Tutorial", type: "Tutorial", instructor: "Prof. Sunitha Sharma", room: "LH-201" },
+      { time: "09:00 - 10:00 AM", code: "B25BCA302", title: "Object Oriented Programming in C++", type: "Theory", instructor: "Prof. Shreya S", room: "LH-201" },
+      { time: "10:00 - 11:00 AM", code: "B25BCA305", title: "Software Engineering", type: "Theory", instructor: "Prof. Deeraj C", room: "LH-201" },
+      { time: "11:15 - 12:15 PM", code: "B25BCA303", title: "Operating System Concepts", type: "Theory", instructor: "Prof. Thilagavallii S", room: "LH-201" },
+      { time: "02:00 - 03:00 PM", code: "B25BCA306", title: "Reasoning and Aptitude", type: "Theory", instructor: "Prof. Darshan P", room: "LH-201" },
     ],
     FRI: [
-      { time: "09:00 - 10:00 AM", code: "25BC301", title: "Discrete Mathematics", type: "Theory", instructor: "Prof. Sunitha Sharma", room: "LH-201" },
-      { time: "10:00 - 11:00 AM", code: "25BC302", title: "Data Structures & Algorithms", type: "Theory", instructor: "Dr. Praveen Gowda", room: "LH-201" },
-      { time: "11:15 - 12:15 PM", code: "25BC303", title: "Database Management Systems", type: "Theory", instructor: "Prof. Kavitha N", room: "LH-201" },
+      { time: "09:00 - 10:00 AM", code: "B25BCA301", title: "Digital Principles and Computer Organization", type: "Theory", instructor: "Prof. Jaishankar M", room: "LH-201" },
+      { time: "10:00 - 11:00 AM", code: "B25BCA304", title: "Relational Data Base Management System", type: "Theory", instructor: "Prof. Pushpalatha G", room: "LH-201" },
+      { time: "11:15 - 12:15 PM", code: "B25BCA306", title: "Reasoning and Aptitude", type: "Theory", instructor: "Prof. Darshan P", room: "LH-201" },
     ],
     SAT: [
-      { time: "09:00 - 11:00 AM", code: "25BC305", title: "Aptitude & Technical Soft Skills", type: "Seminar", instructor: "Placement Directorate", room: "Auditorium" },
+      { time: "09:00 - 11:00 AM", code: "B25BCA306", title: "Aptitude & Technical Soft Skills", type: "Seminar", instructor: "Prof. Darshan P", room: "Seminar Hall" },
     ],
   };
 

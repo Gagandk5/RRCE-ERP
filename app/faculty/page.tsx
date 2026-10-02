@@ -21,6 +21,7 @@ import {
 
 export default function FacultyPortal() {
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<"rollcall" | "schedule" | "risk">("rollcall");
   const [students, setStudents] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -38,11 +39,11 @@ export default function FacultyPortal() {
     dayOfWeek: "MON",
     startTime: "09:00",
     endTime: "10:00",
-    subject: "Discrete Mathematics (25BC301)",
+    subject: "Digital Principles and Computer Organization (B25BCA301)",
     departmentId: "",
     semester: 3,
     section: "A",
-    facultyId: "mock-staff-faculty_math",
+    facultyId: "",
     roomNumber: "LH-201",
   });
   const [clashResult, setClashResult] = useState<any>(null);
@@ -56,14 +57,30 @@ export default function FacultyPortal() {
   async function loadFacultyData() {
     setLoading(true);
     try {
-      const dRes = await fetch("/api/departments");
-      if (dRes.ok) {
-        const d = await dRes.json();
-        setDepartments(d.departments || []);
-        if (d.departments?.length > 0 && !scheduleForm.departmentId) {
-          setScheduleForm((prev) => ({ ...prev, departmentId: d.departments[0].id }));
+      const meRes = await fetch("/api/auth/me");
+      let loggedInUser: any = null;
+      if (meRes.ok) {
+        const meData = await meRes.json();
+        if (meData.authenticated && meData.user) {
+          loggedInUser = meData.user;
+          setCurrentUser(loggedInUser);
         }
       }
+
+      const dRes = await fetch("/api/departments");
+      let deptList: any[] = [];
+      if (dRes.ok) {
+        const d = await dRes.json();
+        deptList = d.departments || [];
+        setDepartments(deptList);
+      }
+
+      const bcaDept = deptList.find((d: any) => d.code === "BCA") || deptList[0];
+      setScheduleForm((prev) => ({
+        ...prev,
+        departmentId: prev.departmentId || bcaDept?.id || "",
+        facultyId: prev.facultyId || loggedInUser?.id || "",
+      }));
 
       const stRes = await fetch("/api/students?dept=BCA");
       if (stRes.ok) {
@@ -229,29 +246,33 @@ export default function FacultyPortal() {
     return s.usn.toLowerCase().includes(term) || fullName.includes(term);
   });
 
-  const teacherClassesToday = [
-    {
-      time: "09:00 AM - 10:00 AM",
-      subject: "Discrete Mathematics (25BC301)",
-      batch: "BCA Sem 3 (Sec A)",
-      room: "LH-201",
-      status: "ACTIVE_NOW",
-    },
-    {
-      time: "11:15 AM - 12:15 PM",
-      subject: "Engineering Mathematics III (25BS301)",
-      batch: "CSE Sem 3 (Sec B)",
-      room: "LH-104",
-      status: "UPCOMING",
-    },
-    {
-      time: "02:00 PM - 03:00 PM",
-      subject: "Discrete Mathematics Tutorial",
-      batch: "BCA Sem 3 (Sec A)",
-      room: "LH-201",
-      status: "SCHEDULED",
-    },
-  ];
+  const userSlots = timetableSlots.filter((slot: any) => {
+    if (!currentUser?.id) return true;
+    return slot.facultyId === currentUser.id || slot.faculty?.email === currentUser.email;
+  });
+
+  const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const currentDayCode = dayNames[new Date().getDay()] || "MON";
+  const todayUserSlots = userSlots.filter((s: any) => s.dayOfWeek === (currentDayCode === "SUN" ? "MON" : currentDayCode));
+  const activeSlots = todayUserSlots.length > 0 ? todayUserSlots : userSlots;
+
+  const teacherClassesToday = activeSlots.length > 0
+    ? activeSlots.map((s: any, idx: number) => ({
+        time: `${s.startTime} - ${s.endTime}`,
+        subject: s.subject,
+        batch: `${s.department?.code || "BCA"} Sem ${s.semester} (Sec ${s.section})`,
+        room: s.roomNumber,
+        status: idx === 0 ? "ACTIVE_NOW" : "SCHEDULED",
+      }))
+    : [
+        {
+          time: "09:00 - 10:00",
+          subject: "Digital Principles and Computer Organization (B25BCA301)",
+          batch: "BCA Sem 3 (Sec A)",
+          room: "LH-201",
+          status: "ACTIVE_NOW",
+        },
+      ];
 
   const lowAttendanceStudents = [
     { name: "Deepika C S", usn: "1RR25BC005", attendance: "68%", missingClasses: 2 },
@@ -269,10 +290,10 @@ export default function FacultyPortal() {
           </div>
           <div>
             <h1 className="text-base font-bold text-white tracking-tight">
-              Faculty Attendance Desk • Prof. Sunitha Sharma
+              Faculty Desk • Prof. {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "Jaishankar M"}
             </h1>
             <p className="text-xs text-slate-400 font-mono">
-              Department of Basic Sciences & Mathematics • RRCE
+              Department of {currentUser?.department?.name || "Bachelor of Computer Applications"} • RRCE
             </p>
           </div>
         </div>
@@ -291,14 +312,6 @@ export default function FacultyPortal() {
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Schedule Class Slot</span>
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 bg-slate-800 hover:bg-rose-600 text-slate-200 hover:text-white font-semibold text-xs px-3 py-2 rounded-md border border-slate-700 transition-colors"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
           </button>
         </div>
       </div>
@@ -331,14 +344,17 @@ export default function FacultyPortal() {
           <div className="flex items-center justify-between">
             <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Today's Classes</span>
             <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[10px]">
-              3 Lectures
+              {teacherClassesToday.length} {teacherClassesToday.length === 1 ? "Lecture" : "Lectures"}
             </span>
           </div>
           <div className="text-xl font-bold text-slate-900 mt-1">
-            LH-201 <span className="text-xs font-normal text-slate-400">Next Lecture</span>
+            {teacherClassesToday[0]?.room || "LH-201"}{" "}
+            <span className="text-xs font-normal text-slate-400">Next Lecture</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
-            09:00 AM - Discrete Mathematics
+          <p className="text-[11px] text-slate-500 mt-0.5 font-mono truncate">
+            {teacherClassesToday[0]
+              ? `${teacherClassesToday[0].time} • ${teacherClassesToday[0].subject}`
+              : "09:00 - 10:00 • Digital Principles and Computer Organization (B25BCA301)"}
           </p>
         </div>
 
@@ -440,11 +456,15 @@ export default function FacultyPortal() {
                 onChange={(e) => setSelectedSessionId(e.target.value)}
                 className="font-semibold py-1.5 px-3 bg-slate-50 border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 focus:outline-none"
               >
-                {sessions.map((sess) => (
-                  <option key={sess.id} value={sess.id}>
-                    {sess.subject} ({new Date(sess.date).toLocaleDateString("en-GB")})
-                  </option>
-                ))}
+                {sessions.length === 0 ? (
+                  <option value="">No Active Sessions</option>
+                ) : (
+                  sessions.map((sess) => (
+                    <option key={sess.id} value={sess.id}>
+                      {sess.subject} ({new Date(sess.date).toLocaleDateString("en-GB")})
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -637,7 +657,7 @@ export default function FacultyPortal() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
                 <h2 className="text-sm font-bold text-slate-900">
-                  Today's Teaching Schedule (Monday)
+                  Today's Teaching Schedule ({["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date().getDay()]})
                 </h2>
                 <p className="text-xs text-slate-500 font-mono">
                   3-Layer Clash Engine Verified (Faculty • Room • Batch)
@@ -845,7 +865,7 @@ export default function FacultyPortal() {
                   required
                   value={scheduleForm.subject}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, subject: e.target.value })}
-                  placeholder="e.g. Discrete Mathematics (25BC301)"
+                  placeholder="e.g. Digital Principles and Computer Organization (B25BCA301)"
                   className="w-full p-2 border border-slate-300 rounded-md"
                 />
               </div>

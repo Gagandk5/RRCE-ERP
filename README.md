@@ -72,15 +72,17 @@ Or click the **"Seed DB"** button in the navigation bar!
 
 ---
 
-## 🧪 Demo User Accounts
+## 🧪 Official Staff & Demo Accounts
 
-| Role | Username / Identifier | Password | Description |
+| Role | Email / Login Identifier | Initial Password | Description |
 | :--- | :--- | :--- | :--- |
-| **Principal** | `principal` | `RAM010170` | Dr. Ramesh Kumar (Principal RRCE) |
-| **Admissions** | `admissions` | `SUR150575` | Suresh Reddy (Admissions Officer) |
-| **HOD BCA** | `hod_bca` | `PRA200880` | Dr. Praveen Gowda (HOD BCA) |
-| **Faculty Math**| `faculty_math` | `SUN121085` | Prof. Sunitha Sharma (Mathematics) |
-| **Student** | `1rr25bc001` | `AMI080707` | Amith T (BCA 2025 Batch, Roll #1) |
+| **Principal** | `principal@rrce.org` | `rrce2025` | Dr. Ramesh Kumar (Principal RRCE) |
+| **Admissions** | `admissions@rrce.org` | `rrce2025` | Suresh Reddy (Admissions Officer) |
+| **HOD BCA** | `hod.bca@rrce.org` | `rrce2025` | Dr. Praveen Gowda (HOD BCA) |
+| **Faculty BCA** | `jaishankar.m@rrce.org` | `rrce2025` | Prof. Jaishankar M (DPCO - B25BCA301) |
+| **Faculty BCA** | `shreya.s@rrce.org` | `rrce2025` | Prof. Shreya S (OOP C++ - B25BCA302) |
+| **Faculty BCA** | `pushpalatha.g@rrce.org` | `rrce2025` | Prof. Pushpalatha G (RDBMS - B25BCA304) |
+| **Student** | `1rr25bc001` / `1rr25bc007` | `AMI080707` / `GAG141207` | Official BCA 2025 Batch Students |
 
 ---
 

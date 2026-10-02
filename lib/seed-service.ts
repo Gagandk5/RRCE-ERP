@@ -137,8 +137,12 @@ export async function runDatabaseSeed() {
   const shreyaId = staffMap.get("shreya.s@rrce.org")!;
   const thilagavalliiId = staffMap.get("thilagavallii.s@rrce.org")!;
   const pushpalathaId = staffMap.get("pushpalatha.g@rrce.org")!;
+  const deerajId = staffMap.get("deeraj.c@rrce.org")!;
+  const darshanId = staffMap.get("darshan.p@rrce.org")!;
+  const muruganandhamId = staffMap.get("muruganandham.sk@rrce.org")!;
 
   const timetableData = [
+    // MON
     {
       dayOfWeek: "MON",
       startTime: "09:00",
@@ -183,6 +187,164 @@ export async function runDatabaseSeed() {
       facultyId: pushpalathaId,
       roomNumber: "LH-201",
     },
+    // TUE
+    {
+      dayOfWeek: "TUE",
+      startTime: "09:00",
+      endTime: "10:00",
+      subject: "Software Engineering (B25BCA305)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: deerajId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "TUE",
+      startTime: "10:00",
+      endTime: "11:00",
+      subject: "Reasoning and Aptitude (B25BCA306)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: darshanId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "TUE",
+      startTime: "11:15",
+      endTime: "12:15",
+      subject: "Digital Principles and Computer Organization (B25BCA301)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: jaishankarId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "TUE",
+      startTime: "14:00",
+      endTime: "16:00",
+      subject: "Object Oriented Programming in C++ Lab (B25BCAL307)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: shreyaId,
+      roomNumber: "LAB-2",
+    },
+    // WED
+    {
+      dayOfWeek: "WED",
+      startTime: "09:00",
+      endTime: "10:00",
+      subject: "Operating System Concepts (B25BCA303)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: thilagavalliiId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "WED",
+      startTime: "10:00",
+      endTime: "11:00",
+      subject: "Relational Data Base Management System (B25BCA304)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: pushpalathaId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "WED",
+      startTime: "11:15",
+      endTime: "12:15",
+      subject: "Digital Principles and Computer Organization (B25BCA301)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: jaishankarId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "WED",
+      startTime: "14:00",
+      endTime: "16:00",
+      subject: "Relational Data Base Management System Lab (B25BCAL308)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: pushpalathaId,
+      roomNumber: "LAB-3",
+    },
+    // THU
+    {
+      dayOfWeek: "THU",
+      startTime: "09:00",
+      endTime: "10:00",
+      subject: "Object Oriented Programming in C++ (B25BCA302)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: shreyaId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "THU",
+      startTime: "10:00",
+      endTime: "11:00",
+      subject: "Software Engineering (B25BCA305)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: deerajId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "THU",
+      startTime: "11:15",
+      endTime: "12:15",
+      subject: "Operating System Concepts (B25BCA303)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: thilagavalliiId,
+      roomNumber: "LH-201",
+    },
+    // FRI
+    {
+      dayOfWeek: "FRI",
+      startTime: "09:00",
+      endTime: "10:00",
+      subject: "Digital Principles and Computer Organization (B25BCA301)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: jaishankarId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "FRI",
+      startTime: "10:00",
+      endTime: "11:00",
+      subject: "Relational Data Base Management System (B25BCA304)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: pushpalathaId,
+      roomNumber: "LH-201",
+    },
+    {
+      dayOfWeek: "FRI",
+      startTime: "11:15",
+      endTime: "12:15",
+      subject: "Reasoning and Aptitude (B25BCA306)",
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      facultyId: darshanId,
+      roomNumber: "LH-201",
+    },
   ];
 
   for (const slot of timetableData) {
@@ -205,8 +367,9 @@ export async function runDatabaseSeed() {
 
   // Attendance sessions setup for real roster
   const lockedDate = new Date(Date.now() - 72 * 60 * 60 * 1000);
-  const activeDate = new Date(Date.now() - 2 * 60 * 60 * 1000);
+  const activeDate = new Date();
 
+  // 1. Locked past session for historical records
   const lockedSession = await prisma.attendanceSession.create({
     data: {
       subject: "Digital Principles and Computer Organization (B25BCA301)",
@@ -221,7 +384,7 @@ export async function runDatabaseSeed() {
     },
   });
 
-  for (let i = 0; i < Math.min(20, seededStudentIds.length); i++) {
+  for (let i = 0; i < seededStudentIds.length; i++) {
     const studentId = seededStudentIds[i];
     const isAbsent = i === 4 || i === 9;
     const isLate = i === 12;
@@ -234,7 +397,36 @@ export async function runDatabaseSeed() {
     });
   }
 
-  const activeSession = await prisma.attendanceSession.create({
+  // 2. Active current session for Prof. Jaishankar M (B25BCA301)
+  const jaishankarSession = await prisma.attendanceSession.create({
+    data: {
+      subject: "Digital Principles and Computer Organization (B25BCA301)",
+      facultyId: jaishankarId,
+      departmentId: bcaDeptId,
+      semester: 3,
+      section: "A",
+      date: activeDate,
+      createdAt: activeDate,
+      lockedAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      isLockedOverride: false,
+    },
+  });
+
+  for (let i = 0; i < seededStudentIds.length; i++) {
+    const studentId = seededStudentIds[i];
+    const isAbsent = i === 3 || i === 19 || i === 44;
+    const isLate = i === 7;
+    await prisma.sessionAttendanceRecord.create({
+      data: {
+        sessionId: jaishankarSession.id,
+        studentId,
+        status: isAbsent ? "ABSENT" : isLate ? "LATE" : "PRESENT",
+      },
+    });
+  }
+
+  // 3. Active session for Prof. Shreya S (B25BCA302)
+  const shreyaSession = await prisma.attendanceSession.create({
     data: {
       subject: "Object Oriented Programming in C++ (B25BCA302)",
       facultyId: shreyaId,
@@ -243,17 +435,17 @@ export async function runDatabaseSeed() {
       section: "A",
       date: activeDate,
       createdAt: activeDate,
-      lockedAt: new Date(activeDate.getTime() + 24 * 60 * 60 * 1000),
+      lockedAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       isLockedOverride: false,
     },
   });
 
-  for (let i = 0; i < Math.min(25, seededStudentIds.length); i++) {
+  for (let i = 0; i < seededStudentIds.length; i++) {
     const studentId = seededStudentIds[i];
-    const isAbsent = i === 7;
+    const isAbsent = i === 8 || i === 23;
     await prisma.sessionAttendanceRecord.create({
       data: {
-        sessionId: activeSession.id,
+        sessionId: shreyaSession.id,
         studentId,
         status: isAbsent ? "ABSENT" : "PRESENT",
       },

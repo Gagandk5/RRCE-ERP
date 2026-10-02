@@ -385,27 +385,105 @@ export default function HODPortal() {
 
       {activeTab === "faculty" && (
         <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5 space-y-4">
-          <h2 className="text-sm font-bold text-slate-900">Department Faculty & Subject Allocation</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">BCA Department Faculty & Course Allocation</h2>
+              <p className="text-xs text-slate-500 font-mono">Official VTU Curriculum Allocation • Semester 3</p>
+            </div>
+            <span className="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded font-bold text-xs">
+              8 Faculty Members
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
             <div className="p-4 rounded-md border border-slate-200 bg-slate-50 space-y-2">
               <div>
                 <h3 className="font-bold text-slate-900 text-sm">Dr. Praveen Gowda (HOD)</h3>
-                <p className="text-slate-500">Professor & Head, Department of Computer Applications</p>
+                <p className="text-slate-500 font-mono text-[11px]">Professor & Head • BCA Directorate</p>
               </div>
               <div className="pt-2 border-t border-slate-200 space-y-1">
-                <p className="font-bold text-slate-700">Assigned Courses:</p>
-                <p className="text-slate-800 font-mono">• Data Structures & Algorithms (25BC302)</p>
+                <p className="font-bold text-slate-700">Role:</p>
+                <p className="text-slate-800 font-mono">• Academic Supervision & Timetable Architecture</p>
               </div>
             </div>
 
             <div className="p-4 rounded-md border border-slate-200 bg-slate-50 space-y-2">
               <div>
-                <h3 className="font-bold text-slate-900 text-sm">Prof. Sunitha Sharma</h3>
-                <p className="text-slate-500">Associate Professor, Department of Basic Sciences</p>
+                <h3 className="font-bold text-slate-900 text-sm">Prof. Jaishankar M</h3>
+                <p className="text-slate-500 font-mono text-[11px]">Assistant Professor • BCA</p>
               </div>
               <div className="pt-2 border-t border-slate-200 space-y-1">
                 <p className="font-bold text-slate-700">Assigned Courses:</p>
-                <p className="text-slate-800 font-mono">• Discrete Mathematics (25BC301)</p>
+                <p className="text-slate-800 font-mono">• Digital Principles and Computer Organization (B25BCA301)</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-md border border-slate-200 bg-slate-50 space-y-2">
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Prof. Shreya S</h3>
+                <p className="text-slate-500 font-mono text-[11px]">Assistant Professor • BCA</p>
+              </div>
+              <div className="pt-2 border-t border-slate-200 space-y-1">
+                <p className="font-bold text-slate-700">Assigned Courses:</p>
+                <p className="text-slate-800 font-mono">• Object Oriented Programming in C++ (B25BCA302)</p>
+                <p className="text-slate-800 font-mono">• C++ Lab (B25BCAL307)</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-md border border-slate-200 bg-slate-50 space-y-2">
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Prof. Thilagavallii S</h3>
+                <p className="text-slate-500 font-mono text-[11px]">Assistant Professor • BCA</p>
+              </div>
+              <div className="pt-2 border-t border-slate-200 space-y-1">
+                <p className="font-bold text-slate-700">Assigned Courses:</p>
+                <p className="text-slate-800 font-mono">• Operating System Concepts (B25BCA303)</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-md border border-slate-200 bg-slate-50 space-y-2">
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Prof. Pushpalatha G</h3>
+                <p className="text-slate-500 font-mono text-[11px]">Associate Professor • BCA</p>
+              </div>
+              <div className="pt-2 border-t border-slate-200 space-y-1">
+                <p className="font-bold text-slate-700">Assigned Courses:</p>
+                <p className="text-slate-800 font-mono">• Relational Data Base Management System (B25BCA304)</p>
+                <p className="text-slate-800 font-mono">• RDBMS Lab (B25BCAL308)</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-md border border-slate-200 bg-slate-50 space-y-2">
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Prof. Deeraj C</h3>
+                <p className="text-slate-500 font-mono text-[11px]">Assistant Professor • BCA</p>
+              </div>
+              <div className="pt-2 border-t border-slate-200 space-y-1">
+                <p className="font-bold text-slate-700">Assigned Courses:</p>
+                <p className="text-slate-800 font-mono">• Software Engineering (B25BCA305)</p>
+                <p className="text-slate-800 font-mono">• RDBMS Lab (B25BCAL308)</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-md border border-slate-200 bg-slate-50 space-y-2">
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Prof. Darshan P</h3>
+                <p className="text-slate-500 font-mono text-[11px]">Assistant Professor • BCA</p>
+              </div>
+              <div className="pt-2 border-t border-slate-200 space-y-1">
+                <p className="font-bold text-slate-700">Assigned Courses:</p>
+                <p className="text-slate-800 font-mono">• Reasoning and Aptitude (B25BCA306)</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-md border border-slate-200 bg-slate-50 space-y-2">
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Dr. Muruganandham S K</h3>
+                <p className="text-slate-500 font-mono text-[11px]">Associate Professor • BCA</p>
+              </div>
+              <div className="pt-2 border-t border-slate-200 space-y-1">
+                <p className="font-bold text-slate-700">Assigned Courses:</p>
+                <p className="text-slate-800 font-mono">• Object Oriented Programming in C++ Lab (B25BCAL307)</p>
               </div>
             </div>
           </div>
