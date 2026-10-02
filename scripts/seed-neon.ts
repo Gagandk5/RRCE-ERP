@@ -156,8 +156,8 @@ export async function seedNeonDirectly() {
       const res = await pool.query(
         `INSERT INTO "User" ("id", "email", "username", "passwordHash", "role", "firstName", "lastName", "phone", "departmentId", "isActive", "isPasswordResetRequired", "updatedAt")
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, false, NOW())
-         ON CONFLICT ("username") DO UPDATE SET
-           "email" = EXCLUDED."email",
+         ON CONFLICT ("email") DO UPDATE SET
+           "username" = EXCLUDED."username",
            "passwordHash" = EXCLUDED."passwordHash",
            "firstName" = EXCLUDED."firstName",
            "lastName" = EXCLUDED."lastName",

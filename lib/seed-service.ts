@@ -43,9 +43,11 @@ export async function runDatabaseSeed() {
     const deptId = staff.deptCode ? deptMap.get(staff.deptCode) : undefined;
 
     const user = await prisma.user.upsert({
-      where: { username: staff.username },
+      where: { email: staff.email },
       update: {
+        username: staff.username,
         email: staff.email,
+        passwordHash,
         firstName: staff.firstName,
         lastName: staff.lastName,
         phone: staff.phone,
@@ -131,10 +133,10 @@ export async function runDatabaseSeed() {
     });
   }
 
-  const jaishankarId = staffMap.get("jaishankar_m")!;
-  const shreyaId = staffMap.get("shreya_s")!;
-  const thilagavalliiId = staffMap.get("thilagavallii_s")!;
-  const pushpalathaId = staffMap.get("pushpalatha_g")!;
+  const jaishankarId = staffMap.get("jaishankar.m@rrce.org")!;
+  const shreyaId = staffMap.get("shreya.s@rrce.org")!;
+  const thilagavalliiId = staffMap.get("thilagavallii.s@rrce.org")!;
+  const pushpalathaId = staffMap.get("pushpalatha.g@rrce.org")!;
 
   const timetableData = [
     {
