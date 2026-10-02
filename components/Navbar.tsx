@@ -76,8 +76,8 @@ export default function Navbar() {
     setExpandedNotificationId((current) => current === notificationId ? null : notificationId);
   }
 
-  // Hide global navbar on login page and student workspace (since student portal has its own single top navbar)
-  if (pathname === "/login" || pathname.startsWith("/student")) {
+  // Hide global navbar on root gateway, login page, and student workspace (which owns its own navbar)
+  if (pathname === "/" || pathname === "/login" || pathname.startsWith("/student")) {
     return null;
   }
 
