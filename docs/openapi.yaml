@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: RRCE ERP Platform API
+  description: Official Enterprise API specification for RajaRajeswari College of Engineering (RRCE) ERP System.
+  version: 1.0.0
+  contact:
+    name: RRCE ERP Engineering Team
+    email: admissions@rrce.org
+servers:
+  - url: https://rrce-erp.vercel.app/api
+    description: Production Server (Vercel Mumbai bom1)
+  - url: http://localhost:3000/api
+    description: Local Development Server
+
+paths:
+  /auth/login:
+    post:
+      summary: User Authentication
+      description: Authenticates students, faculty, HODs, admissions officers, or principal using USN, email, or username.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - identifier
+                - password
+              properties:
+                identifier:
+                  type: string
+                  example: "1RR25BC007"
+                password:
+                  type: string
+                  example: "GAG141207"
+      responses:
+        200:
+          description: Successful authentication. Sets HTTP-only session cookie.
+        401:
+          description: Invalid credentials.
+        429:
+          description: Too many login attempts. Rate limit exceeded.
+
+  /auth/me:
+    get:
+      summary: Get Current User Session
+      description: Returns profile, role, department, and student profile of the currently signed-in user.
+      responses:
+        200:
+          description: Authenticated user profile data.
+        401:
+          description: Unauthorized / No active session.
+
+  /auth/change-password:
+    post:
+      summary: Change User Password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 6
+                confirmPassword:
+                  type: string
+      responses:
+        200:
+          description: Password updated successfully.
+
+  /auth/forgot-password:
+    post:
+      summary: Forgot Password Recovery
+      description: Recovers institutional default password formula using USN, student name, or sequence number.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - usn
+              properties:
+                usn:
+                  type: string
+                  example: "1RR25BC007"
+      responses:
+        200:
+          description: Recovered student identity and institutional password formula.
+
+  /students:
+    get:
+      summary: Get Student Roster
+      parameters:
+        - name: dept
+          in: query
+          schema:
+            type: string
+            example: "BCA"
+        - name: sem
+          in: query
+          schema:
+            type: integer
+            example: 3
+        - name: q
+          in: query
+          description: Search term matching USN or name
+          schema:
+            type: string
+      responses:
+        200:
+          description: Array of enrolled student records with attendance and invoice details.
+    post:
+      summary: Enroll New Student
+      description: Enrolls a new student, automatically generates standard VTU USN, formula password, and annual tuition invoice.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+                - dob
+                - departmentId
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                dob:
+                  type: string
+                  format: date
+                departmentId:
+                  type: string
+                quota:
+                  type: string
+                  enum: [KCET, COMEDK, MANAGEMENT]
+                semester:
+                  type: integer
+                  default: 3
+      responses:
+        200:
+          description: Student enrolled successfully.
+
+  /students/update:
+    post:
+      summary: Update Student Master Record
+      description: Updates student master data (name, phone, DOB, quota, photoUrl) or reallocates branch. Attendance records are strictly protected.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                studentId:
+                  type: string
+                usn:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                phone:
+                  type: string
+                dob:
+                  type: string
+                  format: date
+                quota:
+                  type: string
+                photoUrl:
+                  type: string
+      responses:
+        200:
+          description: Student profile updated.
+
+  /faculty/attendance:
+    get:
+      summary: Get Faculty Attendance Sessions
+      responses:
+        200:
+          description: Attendance sessions and timetable slots for logged-in professor.
+    post:
+      summary: Mark or Update Attendance
+      description: Records PRESENT/ABSENT/LATE status for batch of students. Locked after 24 hours unless overridden by HOD.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+                - records
+              properties:
+                sessionId:
+                  type: string
+                records:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - studentId
+                      - status
+                    properties:
+                      studentId:
+                        type: string
+                      status:
+                        type: string
+                        enum: [PRESENT, ABSENT, LATE]
+      responses:
+        200:
+          description: Attendance saved.
+
+  /attendance/unlock:
+    post:
+      summary: Override 24-Hour Attendance Lockout
+      description: Allows HOD or Principal to unlock historical attendance sessions with audit logging.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+                - reason
+              properties:
+                sessionId:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        200:
+          description: Session unlocked.
+
+  /timetable:
+    get:
+      summary: Get Academic Timetable
+      parameters:
+        - name: dept
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: Weekly timetable slots.

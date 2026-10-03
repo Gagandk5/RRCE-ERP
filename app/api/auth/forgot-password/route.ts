@@ -3,7 +3,22 @@ import prisma from "@/lib/prisma";
 import { generateDefaultPassword, generateUSN } from "@/lib/utils";
 import { BCA_2025_STUDENTS } from "@/prisma/seed-data";
 
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
+
 export async function POST(req: NextRequest) {
+  const clientIp = getClientIp(req);
+  const rateLimit = checkRateLimit(clientIp, {
+    limit: 6,
+    windowMs: 60 * 1000,
+    keyPrefix: "forgot-pwd",
+  });
+
+  if (!rateLimit.success) {
+    logger.warn({ ip: clientIp }, "Rate limit exceeded on /api/auth/forgot-password");
+    return rateLimitResponse(rateLimit.limit, rateLimit.resetMs);
+  }
+
   try {
     const body = await req.json();
     const { usn } = body;

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ProfileProvider } from "@/components/ProfileContext";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "RRCE ERP - Rajarajeswari College of Engineering",
@@ -28,6 +29,7 @@ export default function RootLayout({
           <Navbar />
           <main className="flex-1 w-full">{children}</main>
         </ProfileProvider>
+        <Analytics />
       </body>
     </html>
   );

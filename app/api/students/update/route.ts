@@ -4,6 +4,8 @@ import { getSessionFromRequest, hashPassword } from "@/lib/auth";
 import { generateDefaultPassword, generateUSN } from "@/lib/utils";
 import { BCA_2025_STUDENTS } from "@/prisma/seed-data";
 
+import { studentUpdateSchema } from "@/lib/validations";
+
 export async function POST(req: NextRequest) {
   const session = getSessionFromRequest(req);
   if (!session || !["ADMISSIONS", "PRINCIPAL"].includes(session.role)) {
@@ -15,6 +17,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+    const parseResult = studentUpdateSchema.safeParse(body);
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { error: parseResult.error.issues[0]?.message || "Invalid student data." },
+        { status: 400 }
+      );
+    }
     const {
       studentId,
       usn: inputUsn,
