@@ -79,18 +79,20 @@ export async function GET(request: NextRequest) {
 		const totalHeld = sessionRecords.length;
 		const totalAttended = sessionRecords.filter((record) => countsAsPresent(record.status)).length;
 
-<<<<<<< Updated upstream
 		return NextResponse.json(
 			{
-				records: records.map((record) => ({
+				records: sessionRecords.map((record) => ({
 					id: record.id,
-					date: record.date.toISOString().slice(0, 10),
+					date: record.session.date.toISOString().slice(0, 10),
 					status: record.status,
-					subject: record.subject,
+					subject: {
+						code: record.session.subjectRef?.code || record.session.subject || "UNKNOWN",
+						name: record.session.subjectRef?.name || record.session.subject || "Unknown subject",
+					},
 				})),
 				subjects,
-				totalHeld,
-				totalAttended,
+			totalHeld,
+			totalAttended,
 			},
 			{
 				headers: {
@@ -98,22 +100,6 @@ export async function GET(request: NextRequest) {
 				},
 			}
 		);
-=======
-		return NextResponse.json({
-			records: sessionRecords.map((record) => ({
-				id: record.id,
-				date: record.session.date.toISOString().slice(0, 10),
-				status: record.status,
-				subject: {
-					code: record.session.subjectRef?.code || record.session.subject || "UNKNOWN",
-					name: record.session.subjectRef?.name || record.session.subject || "Unknown subject",
-				},
-			})),
-			subjects,
-			totalHeld,
-			totalAttended,
-		});
->>>>>>> Stashed changes
 	} catch (error) {
 		console.error("Student attendance load failed:", error);
 		return NextResponse.json(

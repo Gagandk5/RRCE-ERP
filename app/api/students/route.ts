@@ -68,7 +68,6 @@ export async function GET(req: NextRequest) {
       console.warn("DB query for students failed, using in-memory roster:", dbErr);
     }
 
-<<<<<<< Updated upstream
     if (students.length === 0) {
       const mockList = BCA_2025_STUDENTS.map((s) => {
         const usn = generateUSN("1RR", "25", "BC", s.sequence);
@@ -136,9 +135,6 @@ export async function GET(req: NextRequest) {
         isMock: true,
       });
     }
-
-=======
->>>>>>> Stashed changes
     return NextResponse.json({
       students: students.map(({ sessionAttendanceRecords, ...student }) => ({
         ...student,

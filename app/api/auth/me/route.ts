@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-<<<<<<< Updated upstream
-import { getSessionFromRequest } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { getSessionFromRequest, resolveSessionUser } from "@/lib/auth";
 import { BCA_2025_STUDENTS } from "@/prisma/seed-data";
 import { generateUSN } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-=======
-import { getSessionFromRequest, resolveSessionUser } from "@/lib/auth";
->>>>>>> Stashed changes
 
 export async function GET(req: NextRequest) {
   const session = getSessionFromRequest(req);
@@ -26,76 +21,26 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-<<<<<<< Updated upstream
-    let user = await prisma.user.findUnique({
-      where: { id: session.userId },
-      include: {
-        department: true,
-        studentProfile: {
-          include: {
-            department: true,
-            invoices: true,
-          },
-        },
-      },
-    });
-
-    if (!user && session.usn) {
-      user = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { studentProfile: { usn: { equals: session.usn, mode: "insensitive" } } },
-            { username: { equals: session.username, mode: "insensitive" } },
-          ],
-        },
-        include: {
-          department: true,
-          studentProfile: {
-            include: {
-              department: true,
-              invoices: true,
-            },
-          },
-=======
     const user = await resolveSessionUser(session);
 
     if (user) {
       const resolvedUser = user as any;
-      return NextResponse.json({
-        authenticated: true,
-        user: {
-          id: resolvedUser.id,
-          email: resolvedUser.email,
-          username: resolvedUser.username,
-          role: resolvedUser.role,
-          firstName: resolvedUser.firstName,
-          lastName: resolvedUser.lastName,
-          phone: resolvedUser.phone,
-          isPasswordResetRequired: resolvedUser.isPasswordResetRequired,
-          department: resolvedUser.department,
-          studentProfile: resolvedUser.studentProfile,
->>>>>>> Stashed changes
-        },
-      });
-    }
-
-    if (user) {
       return NextResponse.json(
         {
           authenticated: true,
           user: {
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            role: user.role,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            phone: user.phone,
-            photoUrl: user.photoUrl,
-            isPasswordResetRequired: user.isPasswordResetRequired,
-            department: user.department,
-            studentProfile: user.studentProfile,
-            usn: user.studentProfile?.usn || session.usn,
+            id: resolvedUser.id,
+            email: resolvedUser.email,
+            username: resolvedUser.username,
+            role: resolvedUser.role,
+            firstName: resolvedUser.firstName,
+            lastName: resolvedUser.lastName,
+            phone: resolvedUser.phone,
+            photoUrl: resolvedUser.photoUrl,
+            isPasswordResetRequired: resolvedUser.isPasswordResetRequired,
+            department: resolvedUser.department,
+            studentProfile: resolvedUser.studentProfile,
+            usn: resolvedUser.studentProfile?.usn || session.usn,
           },
         },
         {
@@ -109,7 +54,6 @@ export async function GET(req: NextRequest) {
     console.warn("DB fetch failed in /api/auth/me, returning session data:", error);
   }
 
-<<<<<<< Updated upstream
   // Fallback: If DB is unreachable or student is in-memory, synthesize student profile from BCA_2025_STUDENTS
   if (session.role === "STUDENT" && session.usn) {
     const sMatch = BCA_2025_STUDENTS.find(
@@ -175,7 +119,4 @@ export async function GET(req: NextRequest) {
       },
     }
   );
-=======
-  return NextResponse.json({ authenticated: false, user: null }, { status: 401 });
->>>>>>> Stashed changes
 }
