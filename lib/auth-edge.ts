@@ -1,3 +1,4 @@
+// Edge Runtime authentication & role authorization utilities
 import { jwtVerify, SignJWT } from "jose";
 import { JWTPayload, Role } from "./types";
 
