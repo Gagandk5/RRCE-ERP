@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { getSessionFromRequest, comparePassword, hashPassword } from "@/lib/auth";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { validatePassword } from "@/lib/password-policy";
+import { formatAuditDetails } from "@/lib/audit-sanitizer";
 
 export async function POST(req: NextRequest) {
   const clientIp = getClientIp(req);
@@ -36,9 +38,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (newPassword.length < 6) {
+    // Password strength check (Item 12)
+    const policyResult = validatePassword(newPassword);
+    if (!policyResult.valid) {
       return NextResponse.json(
-        { error: "New password must be at least 6 characters in length." },
+        {
+          error: policyResult.errors[0],
+          details: policyResult.errors,
+        },
         { status: 400 }
       );
     }
@@ -83,15 +90,24 @@ export async function POST(req: NextRequest) {
       data: {
         passwordHash: newPasswordHash,
         isPasswordResetRequired: false,
+        tokenVersion: { increment: 1 },
       },
     });
+
+    // Invalidate all existing refresh tokens across all sessions (Item 19)
+    try {
+      const { revokeAllUserRefreshTokens } = await import("@/lib/refresh-tokens");
+      await revokeAllUserRefreshTokens(user.id);
+    } catch (revokeErr) {
+      logger.warn({ revokeErr }, "Failed to revoke refresh tokens during password change");
+    }
 
     try {
       await prisma.auditLog.create({
         data: {
           action: "PASSWORD_CHANGED",
           performedBy: session.email || session.username || "USER",
-          details: JSON.stringify({
+          details: formatAuditDetails({
             userId: user.id,
             email: user.email,
             role: user.role,

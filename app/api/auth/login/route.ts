@@ -5,6 +5,11 @@ import { Role } from "@/lib/types";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { loginSchema } from "@/lib/validations";
+import {
+  isAccountLocked,
+  recordFailedAttempt,
+  resetFailedAttempts,
+} from "@/lib/account-lockout";
 
 export async function POST(req: NextRequest) {
   const clientIp = getClientIp(req);
@@ -39,6 +44,21 @@ export async function POST(req: NextRequest) {
     const cleanIdentifier = identifier.trim().toLowerCase();
     const cleanPassword = password.trim();
 
+    // Account lockout check (Item 11)
+    const lockStatus = isAccountLocked(cleanIdentifier);
+    if (lockStatus.locked) {
+      const waitMinutes = Math.ceil(lockStatus.remainingMs / 60000);
+      logger.warn({ identifier: cleanIdentifier, ip: clientIp }, "Attempt on locked account blocked");
+      return NextResponse.json(
+        {
+          error: `This account is temporarily locked due to 5 consecutive failed login attempts. Please wait ${waitMinutes} minute(s) before trying again or contact administration.`,
+          isLocked: true,
+          remainingMinutes: waitMinutes,
+        },
+        { status: 423 }
+      );
+    }
+
     logger.info({ identifier: cleanIdentifier, ip: clientIp }, "Login attempt initiated");
 
     const user = await prisma.user.findFirst({
@@ -64,20 +84,30 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
+      const attempt = recordFailedAttempt(cleanIdentifier, clientIp);
       logger.warn({ identifier: cleanIdentifier, ip: clientIp }, "Login failed: user not found");
       return NextResponse.json(
-        { error: `Invalid credentials for "${identifier}". Please verify your account details.` },
-        { status: 401 }
+        {
+          error: attempt.locked
+            ? "Account has been locked for 15 minutes due to repeated failed attempts."
+            : `Invalid credentials. (${attempt.remainingAttempts} attempt(s) remaining)`,
+        },
+        { status: attempt.locked ? 423 : 401 }
       );
     }
 
     const isPasswordValid = await comparePassword(cleanPassword, user.passwordHash);
 
     if (!isPasswordValid) {
+      const attempt = recordFailedAttempt(cleanIdentifier, clientIp);
       logger.warn({ userId: user.id, identifier: cleanIdentifier, ip: clientIp }, "Login failed: invalid password");
       return NextResponse.json(
-        { error: "Invalid credentials. Please verify your password." },
-        { status: 401 }
+        {
+          error: attempt.locked
+            ? "Account has been locked for 15 minutes due to repeated failed attempts."
+            : `Invalid credentials. (${attempt.remainingAttempts} attempt(s) remaining)`,
+        },
+        { status: attempt.locked ? 423 : 401 }
       );
     }
 
@@ -88,6 +118,9 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       );
     }
+
+    // Reset failed attempts upon successful login
+    resetFailedAttempts(cleanIdentifier);
 
     const payload = {
       userId: user.id,

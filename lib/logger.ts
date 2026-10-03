@@ -9,6 +9,26 @@ export const logger = pino({
     env: process.env.NODE_ENV || "development",
   },
   timestamp: pino.stdTimeFunctions.isoTime,
+  redact: {
+    paths: [
+      "password",
+      "passwordHash",
+      "newPassword",
+      "confirmPassword",
+      "currentPassword",
+      "token",
+      "refreshToken",
+      "jwt",
+      "secret",
+      "authorization",
+      "cookie",
+      "headers.authorization",
+      "headers.cookie",
+      "body.password",
+      "*.password",
+    ],
+    censor: "[REDACTED]",
+  },
 });
 
 export function createChildLogger(moduleName: string, extraContext: Record<string, unknown> = {}) {

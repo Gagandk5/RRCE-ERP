@@ -3,6 +3,8 @@ import { getSessionFromRequest, hashPassword, signToken, AUTH_COOKIE_CONFIG } fr
 import prisma from "@/lib/prisma";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { validatePassword } from "@/lib/password-policy";
+import { formatAuditDetails } from "@/lib/audit-sanitizer";
 
 export async function POST(req: NextRequest) {
   const clientIp = getClientIp(req);
@@ -25,9 +27,21 @@ export async function POST(req: NextRequest) {
   try {
     const { newPassword, confirmPassword } = await req.json();
 
-    if (!newPassword || newPassword.length < 6) {
+    if (!newPassword) {
       return NextResponse.json(
-        { error: "New password must be at least 6 characters long." },
+        { error: "New password is required." },
+        { status: 400 }
+      );
+    }
+
+    // Password strength check (Item 12)
+    const policyResult = validatePassword(newPassword);
+    if (!policyResult.valid) {
+      return NextResponse.json(
+        {
+          error: policyResult.errors[0],
+          details: policyResult.errors,
+        },
         { status: 400 }
       );
     }
@@ -47,14 +61,24 @@ export async function POST(req: NextRequest) {
         data: {
           passwordHash: newHash,
           isPasswordResetRequired: false,
+          tokenVersion: { increment: 1 },
         },
       });
 
+      // Invalidate all existing refresh tokens (Item 19)
+      try {
+        const { revokeAllUserRefreshTokens } = await import("@/lib/refresh-tokens");
+        await revokeAllUserRefreshTokens(session.userId);
+      } catch (revokeErr) {
+        logger.warn({ revokeErr }, "Failed to revoke refresh tokens during password reset");
+      }
+
+      // Sanitized audit log recording (Item 13)
       await prisma.auditLog.create({
         data: {
           action: "PASSWORD_RESET",
           performedBy: session.username,
-          details: JSON.stringify({
+          details: formatAuditDetails({
             userId: session.userId,
             action: "Forced first-login password reset completed",
             timestamp: new Date().toISOString(),

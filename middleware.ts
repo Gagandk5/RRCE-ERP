@@ -34,8 +34,31 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isProduction = process.env.NODE_ENV === "production";
 
-  // 1. Verify CSRF for mutating API requests
+  // 0. API Versioning Rewrite: /api/v1/* -> /api/*
+  if (pathname.startsWith("/api/v1/")) {
+    const unversionedPath = pathname.replace(/^\/api\/v1/, "/api");
+    const rewriteUrl = new URL(unversionedPath + req.nextUrl.search, req.url);
+    const rewriteRes = NextResponse.rewrite(rewriteUrl);
+    rewriteRes.headers.set("X-API-Version", "1.0");
+    return applySecurityHeaders(rewriteRes);
+  }
+
+  // 1. Request body size limit check (DoS prevention)
   if (pathname.startsWith("/api/")) {
+    const contentLength = req.headers.get("content-length");
+    if (contentLength) {
+      const bytes = parseInt(contentLength, 10);
+      const isUpload = pathname.startsWith("/api/assignments") || pathname.startsWith("/api/auth/profile-photo");
+      const maxBytes = isUpload ? 10 * 1024 * 1024 : 1 * 1024 * 1024; // 10MB for uploads, 1MB for API JSON
+      if (bytes > maxBytes) {
+        const errRes = NextResponse.json(
+          { error: `Payload too large. Request body exceeds ${isUpload ? "10MB" : "1MB"} limit.` },
+          { status: 413 }
+        );
+        return applySecurityHeaders(errRes);
+      }
+    }
+
     const csrfCheck = verifyCsrf(req);
     if (!csrfCheck.valid) {
       const errRes = NextResponse.json(
