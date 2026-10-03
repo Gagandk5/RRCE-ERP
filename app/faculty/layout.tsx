@@ -13,7 +13,6 @@ import {
   Users,
 } from "lucide-react";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
-import BottomNav from "@/components/BottomNav";
 
 export default function FacultyLayout({
   children,
@@ -190,7 +189,6 @@ export default function FacultyLayout({
       </aside>
 
       {/* 2. MOBILE TOP BAR (< lg) */}
-      {pathname !== "/faculty" && (
       <header className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-zinc-200/80 px-4 h-14 flex items-center justify-between">
         <Link href="/faculty" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded bg-white p-0.5 border border-zinc-200 shadow-2xs flex items-center justify-center">
@@ -223,7 +221,6 @@ export default function FacultyLayout({
           </button>
         </div>
       </header>
-      )}
 
       {/* 3. MAIN CONTENT VIEWPORT */}
       <main className="lg:pl-64 min-h-screen bg-slate-50 flex-1 w-full overflow-x-hidden pb-16 lg:pb-8">
@@ -231,7 +228,28 @@ export default function FacultyLayout({
       </main>
 
       {/* 4. MOBILE BOTTOM FLOATING NAVIGATION BAR */}
-      <BottomNav role="FACULTY" />
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-zinc-200/80 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex justify-around items-center shadow-lg">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex flex-col items-center gap-1 min-w-[60px] min-h-[44px] justify-center text-[10px] font-semibold transition-all touch-manipulation ${
+                item.active
+                  ? "text-zinc-950 scale-105"
+                  : "text-zinc-400 hover:text-zinc-600"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span className="truncate max-w-[70px]">{item.name.split(" ")[0]}</span>
+              {item.active && (
+                <span className="w-1 h-1 rounded-full bg-zinc-950 mt-0.5" />
+              )}
+            </Link>
+          );
+        })}
+      </nav>
 
       {/* 5. CHANGE PASSWORD MODAL */}
       <ChangePasswordModal
