@@ -1,5 +1,4 @@
-import { jwtVerify } from "jose/jwt/verify";
-import { SignJWT } from "jose/jwt/sign";
+import { jwtVerify, SignJWT } from "jose";
 import { JWTPayload, Role } from "./types";
 
 const JWT_SECRET = process.env.JWT_SECRET || "rrce_fallback_jwt_secret_key_2025_prod";
