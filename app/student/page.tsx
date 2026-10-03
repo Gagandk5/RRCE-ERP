@@ -34,7 +34,7 @@ export default function StudentOverviewPage() {
   async function loadStudentData() {
     setLoading(true);
     try {
-      const meRes = await fetch("/api/auth/me");
+      const meRes = await fetch("/api/auth/me", { cache: "no-store" });
       let currentUser: any = null;
       if (meRes.ok) {
         const d = await meRes.json();
@@ -59,16 +59,32 @@ export default function StudentOverviewPage() {
         return;
       }
 
-      const stRes = await fetch("/api/students?dept=BCA");
+      const stRes = await fetch("/api/students?dept=BCA", { cache: "no-store" });
       if (stRes.ok) {
         const sData = await stRes.json();
         const roster = sData.students || [];
 
         const targetUsn = (currentUser?.usn || currentUser?.username || "").toLowerCase().trim();
-        const match = roster.find((s: any) => (s.usn || "").toLowerCase().trim() === targetUsn) || roster[0];
-        setStudent(match);
-        if (match?.invoices?.length > 0) {
-          setInvoice(match.invoices[0]);
+        const match = roster.find((s: any) => (s.usn || "").toLowerCase().trim() === targetUsn);
+        if (match) {
+          setStudent(match);
+          if (match?.invoices?.length > 0) {
+            setInvoice(match.invoices[0]);
+          }
+        } else if (currentUser) {
+          const fallbackStudent = {
+            usn: currentUser.usn || currentUser.username,
+            quota: "KCET",
+            usnSequence: currentUser.usnSequence || 1,
+            dateOfBirth: currentUser.dob || currentUser.dateOfBirth,
+            user: {
+              firstName: currentUser.firstName,
+              lastName: currentUser.lastName,
+              phone: currentUser.phone,
+              email: currentUser.email,
+            },
+          };
+          setStudent(fallbackStudent);
         }
       }
     } catch (e) {
@@ -79,17 +95,17 @@ export default function StudentOverviewPage() {
   }
 
   function formatDateOfBirth(rawDob: any): string {
-    if (!rawDob) return "14 Dec 2007";
+    if (!rawDob) return loading ? "..." : "—";
     try {
       const date = typeof rawDob === "string" ? new Date(rawDob) : rawDob;
-      if (isNaN(date.getTime())) return "14 Dec 2007";
+      if (isNaN(date.getTime())) return "—";
       return new Intl.DateTimeFormat("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
       }).format(date);
     } catch {
-      return "14 Dec 2007";
+      return "—";
     }
   }
 
@@ -116,7 +132,7 @@ export default function StudentOverviewPage() {
           <ProfileAvatar sizeClassName="h-12 w-12 sm:h-16 sm:w-16 shrink-0" />
           <div>
             <h1 className="text-lg sm:text-xl font-semibold text-zinc-900 tracking-tight">
-              Good morning, {student?.user?.firstName || "Gagan"}
+              Good morning, {student?.user?.firstName || (loading ? "..." : "Student")}
             </h1>
             <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
               BCA • 3rd Semester (Sec A) · Batch of 2025–26
@@ -126,13 +142,13 @@ export default function StudentOverviewPage() {
 
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <span className="font-mono text-[11px] sm:text-xs bg-zinc-100 text-zinc-700 px-2.5 sm:px-3 py-1 rounded-full">
-            {student?.usn || "1RR25BC007"}
+            {student?.usn || (loading ? "Loading..." : "—")}
           </span>
           <span className="text-[11px] sm:text-xs bg-zinc-100 text-zinc-700 px-2.5 sm:px-3 py-1 rounded-full">
             Quota: {student?.quota || "KCET"}
           </span>
           <span className="font-mono text-[11px] sm:text-xs bg-zinc-100 text-zinc-700 px-2.5 sm:px-3 py-1 rounded-full">
-            Roll: #{String(student?.usnSequence || 7).padStart(3, "0")}
+            Roll: #{String(student?.usnSequence || (loading ? "..." : "001")).padStart(3, "0")}
           </span>
           <span className="text-[11px] sm:text-xs bg-zinc-100 text-zinc-700 px-2.5 sm:px-3 py-1 rounded-full">
             DOB: {formatDateOfBirth(student?.dateOfBirth)}

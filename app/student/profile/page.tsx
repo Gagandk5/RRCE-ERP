@@ -14,7 +14,7 @@ export default function StudentProfilePage() {
   async function loadProfileData() {
     setLoading(true);
     try {
-      const meRes = await fetch("/api/auth/me");
+      const meRes = await fetch("/api/auth/me", { cache: "no-store" });
       let currentUser: any = null;
       if (meRes.ok) {
         const d = await meRes.json();
@@ -35,14 +35,29 @@ export default function StudentProfilePage() {
         return;
       }
 
-      const stRes = await fetch("/api/students?dept=BCA");
+      const stRes = await fetch("/api/students?dept=BCA", { cache: "no-store" });
       if (stRes.ok) {
         const sData = await stRes.json();
         const roster = sData.students || [];
 
         const targetUsn = (currentUser?.usn || currentUser?.username || "").toLowerCase().trim();
-        const match = roster.find((s: any) => (s.usn || "").toLowerCase().trim() === targetUsn) || roster[0];
-        setStudent(match);
+        const match = roster.find((s: any) => (s.usn || "").toLowerCase().trim() === targetUsn);
+        if (match) {
+          setStudent(match);
+        } else if (currentUser) {
+          setStudent({
+            usn: currentUser.usn || currentUser.username,
+            quota: "KCET",
+            usnSequence: currentUser.usnSequence || 1,
+            dateOfBirth: currentUser.dob || currentUser.dateOfBirth,
+            user: {
+              firstName: currentUser.firstName,
+              lastName: currentUser.lastName,
+              phone: currentUser.phone,
+              email: currentUser.email,
+            },
+          });
+        }
       }
     } catch (e) {
       console.error("Failed to load profile:", e);
@@ -52,17 +67,17 @@ export default function StudentProfilePage() {
   }
 
   function formatDateOfBirth(rawDob: any): string {
-    if (!rawDob) return "14 Dec 2007";
+    if (!rawDob) return loading ? "..." : "—";
     try {
       const date = typeof rawDob === "string" ? new Date(rawDob) : rawDob;
-      if (isNaN(date.getTime())) return "14 Dec 2007";
+      if (isNaN(date.getTime())) return "—";
       return new Intl.DateTimeFormat("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
       }).format(date);
     } catch {
-      return "14 Dec 2007";
+      return "—";
     }
   }
 
@@ -97,12 +112,16 @@ export default function StudentProfilePage() {
           <div className="p-4 space-y-3 font-mono">
             <div className="flex justify-between border-b border-zinc-100 pb-2">
               <span className="text-zinc-500 font-sans">Full Name:</span>
-              <strong className="text-zinc-900 font-sans">{student?.user?.firstName || "Gagan"} {student?.user?.lastName || "D K"}</strong>
+              <strong className="text-zinc-900 font-sans">
+                {student?.user?.firstName
+                  ? `${student.user.firstName} ${student.user.lastName || ""}`.trim()
+                  : loading ? "..." : "Student"}
+              </strong>
             </div>
 
             <div className="flex justify-between border-b border-zinc-100 pb-2">
               <span className="text-zinc-500 font-sans">University Seat Number (USN):</span>
-              <strong className="text-zinc-900 font-bold">{student?.usn || "1RR25BC007"}</strong>
+              <strong className="text-zinc-900 font-bold">{student?.usn || (loading ? "..." : "—")}</strong>
             </div>
 
             <div className="flex justify-between border-b border-zinc-100 pb-2">
@@ -117,7 +136,9 @@ export default function StudentProfilePage() {
 
             <div className="flex justify-between border-b border-zinc-100 pb-2">
               <span className="text-zinc-500 font-sans">Roll Sequence Number:</span>
-              <strong className="text-zinc-900 font-bold">#{String(student?.usnSequence || 7).padStart(3, "0")}</strong>
+              <strong className="text-zinc-900 font-bold">
+                {student?.usnSequence ? `#${String(student.usnSequence).padStart(3, "0")}` : (loading ? "..." : "—")}
+              </strong>
             </div>
 
             <div className="flex justify-between border-b border-zinc-100 pb-2">
@@ -127,12 +148,12 @@ export default function StudentProfilePage() {
 
             <div className="flex justify-between border-b border-zinc-100 pb-2">
               <span className="text-zinc-500 font-sans">Mobile Contact:</span>
-              <strong className="text-zinc-900 font-medium">{student?.user?.phone || "+91 8971115212"}</strong>
+              <strong className="text-zinc-900 font-medium">{student?.user?.phone || (loading ? "..." : "—")}</strong>
             </div>
 
             <div className="flex justify-between">
               <span className="text-zinc-500 font-sans">Registered Email:</span>
-              <strong className="text-zinc-900 font-medium font-sans">{student?.user?.email || "1rr25bc007@rrce.org"}</strong>
+              <strong className="text-zinc-900 font-medium font-sans">{student?.user?.email || (loading ? "..." : "—")}</strong>
             </div>
           </div>
         </div>

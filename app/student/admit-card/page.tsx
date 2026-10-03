@@ -1,19 +1,46 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Download, Printer, ShieldCheck, FileText, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function StudentAdmitCardPage() {
-  const [examDetails] = useState({
-    studentName: "Gagan D K",
-    usn: "1RR25BC007",
-    branch: "Bachelor of Computer Applications (BCA)",
-    semester: "3rd Semester",
+  const [student, setStudent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        if (res.ok) {
+          const d = await res.json();
+          setStudent(d.user);
+        }
+      } catch (e) {
+        console.error("Admit card load error:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  const studentName = student?.firstName
+    ? `${student.firstName} ${student.lastName || ""}`.trim()
+    : student?.studentProfile?.user?.firstName
+    ? `${student.studentProfile.user.firstName} ${student.studentProfile.user.lastName || ""}`.trim()
+    : loading
+    ? "..."
+    : "Candidate Student";
+
+  const studentUsn =
+    student?.studentProfile?.usn || student?.usn || (loading ? "..." : "—");
+
+  const examDetails = {
     examSession: "Odd Semester VTU Examinations - Nov/Dec 2026",
     examCenter: "RajaRajeswari College of Engineering (Center Code: 1RR)",
     hallNumber: "LH-304 (Main Academic Block, 3rd Floor)",
     status: "APPROVED",
-  });
+  };
 
   const [schedule] = useState([
     { code: "BCA301", title: "Database Management Systems", date: "2026-11-16", time: "09:30 AM - 12:30 PM", invigilatorSign: "Verified" },
@@ -74,15 +101,17 @@ export default function StudentAdmitCardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-xs">
           <div className="rounded-lg border border-zinc-100 bg-zinc-50/60 p-3 space-y-1">
             <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Candidate Name</span>
-            <span className="font-semibold text-zinc-900 text-sm">{examDetails.studentName}</span>
+            <span className="font-semibold text-zinc-900 text-sm">{studentName}</span>
           </div>
           <div className="rounded-lg border border-zinc-100 bg-zinc-50/60 p-3 space-y-1">
             <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">University Seat Number (USN)</span>
-            <span className="font-mono font-semibold text-zinc-900 text-sm">{examDetails.usn}</span>
+            <span className="font-mono font-semibold text-zinc-900 text-sm">{studentUsn}</span>
           </div>
           <div className="rounded-lg border border-zinc-100 bg-zinc-50/60 p-3 space-y-1">
             <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Program / Branch</span>
-            <span className="font-medium text-zinc-800">{examDetails.branch}</span>
+            <span className="font-medium text-zinc-800">
+              {student?.studentProfile?.department?.name || "Bachelor of Computer Applications (BCA)"}
+            </span>
           </div>
           <div className="rounded-lg border border-zinc-100 bg-zinc-50/60 p-3 space-y-1">
             <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Exam Session</span>

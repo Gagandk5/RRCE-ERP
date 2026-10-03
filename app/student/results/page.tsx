@@ -1,9 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Award, CheckCircle2, TrendingUp, BarChart3 } from "lucide-react";
 
 export default function StudentResultsPage() {
+  const [studentUsn, setStudentUsn] = useState<string>("");
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        if (res.ok) {
+          const d = await res.json();
+          const usn = d.user?.studentProfile?.usn || d.user?.usn || "";
+          setStudentUsn(usn);
+        }
+      } catch (e) {
+        console.error("Results load error:", e);
+      }
+    }
+    loadData();
+  }, []);
+
   const [semesters] = useState([
     { sem: "Semester 3 (Current)", sgpa: "8.75", credits: 24, status: "PASSED WITH DISTINCTION", date: "Sep 2026" },
     { sem: "Semester 2", sgpa: "8.95", credits: 22, status: "PASSED WITH DISTINCTION", date: "Jun 2026" },
@@ -95,7 +113,7 @@ export default function StudentResultsPage() {
             <p className="text-xs text-zinc-500 mt-0.5">Breakdown of Internal (CIE) and Semester End (SEE) marks</p>
           </div>
           <span className="self-start sm:self-auto text-xs font-mono text-zinc-500 bg-zinc-100 border border-zinc-200 px-2.5 py-1 rounded">
-            USN: 1RR25BC007
+            {studentUsn ? `USN: ${studentUsn}` : "USN: Active"}
           </span>
         </div>
 

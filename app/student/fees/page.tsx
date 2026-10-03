@@ -19,7 +19,7 @@ export default function StudentFeesPage() {
   async function loadFeeData() {
     setLoading(true);
     try {
-      const meRes = await fetch("/api/auth/me");
+      const meRes = await fetch("/api/auth/me", { cache: "no-store" });
       if (meRes.ok) {
         const d = await meRes.json();
         if (d.user?.studentProfile?.invoices?.length > 0) {

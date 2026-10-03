@@ -77,7 +77,7 @@ export default function StudentLayout({
 
   async function loadSession() {
     try {
-      const meRes = await fetch("/api/auth/me");
+      const meRes = await fetch("/api/auth/me", { cache: "no-store" });
       let currentUser: any = null;
       if (meRes.ok) {
         const d = await meRes.json();
@@ -97,14 +97,26 @@ export default function StudentLayout({
         return;
       }
 
-      const stRes = await fetch("/api/students?dept=BCA");
+      const stRes = await fetch("/api/students?dept=BCA", { cache: "no-store" });
       if (stRes.ok) {
         const sData = await stRes.json();
         const roster = sData.students || [];
 
         const targetUsn = (currentUser?.usn || currentUser?.username || "").toLowerCase().trim();
-        const match = roster.find((s: any) => (s.usn || "").toLowerCase().trim() === targetUsn) || roster[0];
-        setStudent(match);
+        const match = roster.find((s: any) => (s.usn || "").toLowerCase().trim() === targetUsn);
+        if (match) {
+          setStudent(match);
+        } else if (currentUser) {
+          setStudent({
+            usn: currentUser.usn || currentUser.username,
+            user: {
+              firstName: currentUser.firstName,
+              lastName: currentUser.lastName,
+              phone: currentUser.phone,
+              email: currentUser.email,
+            },
+          });
+        }
       }
     } catch (e) {
       console.error("Failed to load layout student session:", e);
@@ -236,10 +248,12 @@ export default function StudentLayout({
             <ProfileAvatar sizeClassName="h-8 w-8 sm:h-9 sm:w-9" />
             <div className="text-left hidden sm:block">
               <span className="text-xs font-semibold text-zinc-900 block leading-tight">
-                {student?.user?.firstName || "Gagan"} {student?.user?.lastName || "D K"}
+                {student?.user?.firstName
+                  ? `${student.user.firstName} ${student.user.lastName || ""}`.trim()
+                  : "Student"}
               </span>
               <span className="text-[11px] text-zinc-400 block leading-tight mt-0.5 font-mono">
-                Student • {student?.usn || "1RR25BC007"}
+                Student • {student?.usn || "Active"}
               </span>
             </div>
           </div>

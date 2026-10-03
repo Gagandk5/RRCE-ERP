@@ -348,7 +348,29 @@ function SSOTerminalContent() {
                   </span>
                 </button>
 
-                {/* 2. Student Gagan D K */}
+                {/* 2. Student Amith T */}
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("student", "1RR25BC001", "rrce2025")}
+                  className="w-full text-left p-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300 transition-all flex items-center justify-between group"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-900 group-hover:text-emerald-700">Student Amith T</span>
+                      <span className="text-[10px] px-1.5 py-0.2 bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded font-semibold">
+                        Student
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                      1RR25BC001 • BCA 3rd Sem (Roll #1)
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400 group-hover:text-slate-700">
+                    Fill →
+                  </span>
+                </button>
+
+                {/* 3. Student Gagan D K */}
                 <button
                   type="button"
                   onClick={() => handleQuickFill("student", "1RR25BC007", "rrce2025")}

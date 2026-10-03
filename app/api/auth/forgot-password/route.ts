@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 
     if (!usn || typeof usn !== "string" || !usn.trim()) {
       return NextResponse.json(
-        { error: "Please enter your USN, First Name, or Sequence Number (e.g. 1RR25BC007, Gagan, or 7)." },
+        { error: "Please enter your USN, First Name, or Sequence Number (e.g. 1RR25BC001, Amith, or 1)." },
         { status: 400 }
       );
     }
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       } else {
         return NextResponse.json(
           {
-            error: `Student record "${cleanInput}" not found in RRCE Academic Registry. Please check your USN (e.g. 1RR25BC007 or Gagan).`,
+            error: `Student record "${cleanInput}" not found in RRCE Academic Registry. Please check your USN (e.g. 1RR25BC001 or Amith).`,
           },
           { status: 404 }
         );
