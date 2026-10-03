@@ -1,50 +1,60 @@
 import prisma from "./prisma";
 import { hashPassword } from "./auth";
 import { generateDefaultPassword, generateUSN } from "./utils";
-import { DEPARTMENTS, STAFF_ACCOUNTS, BCA_2025_STUDENTS } from "../prisma/seed-data";
+import { DEPARTMENTS, STAFF_ACCOUNTS, BCA_2025_STUDENTS, getSeedPassword } from "../prisma/seed-data";
+
+const SUBJECT_CATALOG = [
+  { code: "B25BCA301", name: "Digital Principles & Computer Organization", semester: 3, section: "A" },
+  { code: "B25BCA302", name: "OOP in C++ & Lab", semester: 3, section: "A" },
+  { code: "B25BCA303", name: "Operating System Concepts", semester: 3, section: "A" },
+  { code: "B25BCA304", name: "RDBMS & Lab", semester: 3, section: "A" },
+  { code: "B25BCA305", name: "Software Engineering", semester: 3, section: "A" },
+  { code: "B25BCA306", name: "Reasoning & Aptitude", semester: 3, section: "A" },
+  { code: "B25BCAL307", name: "OOP C++ Lab", semester: 3, section: "A" },
+];
+
+const FACULTY_COURSE_MAPPINGS = [
+  { email: "jaishankar.m@rrce.org", code: "B25BCA301" },
+  { email: "shreya.s@rrce.org", code: "B25BCA302" },
+  { email: "thilagavallii.s@rrce.org", code: "B25BCA303" },
+  { email: "pushpalatha.g@rrce.org", code: "B25BCA304" },
+  { email: "deeraj.c@rrce.org", code: "B25BCA305" },
+  { email: "darshan.p@rrce.org", code: "B25BCA306" },
+  { email: "muruganandham.sk@rrce.org", code: "B25BCAL307" },
+];
 
 export async function runDatabaseSeed() {
-  console.log("Starting RRCE ERP Database Seed with Real BCA 3rd Sem Class Roster...");
+  console.log("Starting RRCE ERP database seed with real course assignments...");
 
-  // 1. Wipe old attendance, invoices, and student profiles to ensure clean real roster insertion
-  try {
-    await prisma.sessionAttendanceRecord.deleteMany({});
-    await prisma.attendanceSession.deleteMany({});
-    await prisma.invoice.deleteMany({});
-    await prisma.student.deleteMany({});
-    await prisma.user.deleteMany({
-      where: { role: "STUDENT" },
-    });
-  } catch (cleanErr) {
-    console.warn("Pre-seed cleanup warning:", cleanErr);
-  }
+  await prisma.attendanceAuditLog.deleteMany({});
+  await prisma.sessionAttendanceRecord.deleteMany({});
+  await prisma.attendanceSession.deleteMany({});
+  await prisma.attendanceRecord.deleteMany({});
+  await prisma.facultyCourseAssignment.deleteMany({});
+  await prisma.timetableSlot.deleteMany({});
+  await prisma.invoice.deleteMany({});
+  await prisma.student.deleteMany({});
+  await prisma.user.deleteMany({
+    where: {
+      OR: [{ role: "STUDENT" }, { role: "FACULTY" }, { role: "HOD" }, { role: "PRINCIPAL" }, { role: "ADMISSIONS" }],
+    },
+  });
+  await prisma.subject.deleteMany({});
+  await prisma.department.deleteMany({});
 
-  // 2. Department setup
   const deptMap = new Map<string, string>();
-
   for (const dept of DEPARTMENTS) {
-    const record = await prisma.department.upsert({
-      where: { code: dept.code },
-      update: { name: dept.name, usnCode: dept.usnCode },
-      create: {
-        code: dept.code,
-        name: dept.name,
-        usnCode: dept.usnCode,
-      },
+    const record = await prisma.department.create({
+      data: { code: dept.code, name: dept.name, usnCode: dept.usnCode },
     });
     deptMap.set(dept.code, record.id);
   }
 
-  // 3. Staff Accounts setup
   const staffMap = new Map<string, string>();
-
   for (const staff of STAFF_ACCOUNTS) {
-    const passwordHash = await hashPassword(staff.defaultPassword);
-    const deptId = staff.deptCode ? deptMap.get(staff.deptCode) : undefined;
-
-    const user = await prisma.user.upsert({
-      where: { email: staff.email },
-      update: {
+    const passwordHash = await hashPassword(staff.defaultPassword || getSeedPassword());
+    const user = await prisma.user.create({
+      data: {
         username: staff.username,
         email: staff.email,
         passwordHash,
@@ -52,424 +62,205 @@ export async function runDatabaseSeed() {
         lastName: staff.lastName,
         phone: staff.phone,
         role: staff.role,
-        departmentId: deptId,
-      },
-      create: {
-        username: staff.username,
-        email: staff.email,
-        passwordHash,
-        role: staff.role,
-        firstName: staff.firstName,
-        lastName: staff.lastName,
-        phone: staff.phone,
-        departmentId: deptId,
+        departmentId: staff.deptCode ? deptMap.get(staff.deptCode) : null,
         isActive: true,
         isPasswordResetRequired: false,
       },
     });
-    staffMap.set(staff.username, user.id);
+    staffMap.set(staff.email, user.id);
   }
 
-  // 4. Ingest 54 Real BCA 3rd Sem 2nd Year Students
   const bcaDeptId = deptMap.get("BCA")!;
-  const seededStudentIds: string[] = [];
+  for (const subject of SUBJECT_CATALOG) {
+    await prisma.subject.upsert({
+      where: {
+        code_departmentId_semester_section: {
+          code: subject.code,
+          departmentId: bcaDeptId,
+          semester: subject.semester,
+          section: subject.section,
+        },
+      },
+      update: { name: subject.name, isActive: true },
+      create: {
+        code: subject.code,
+        name: subject.name,
+        departmentId: bcaDeptId,
+        semester: subject.semester,
+        section: subject.section,
+        isActive: true,
+      },
+    });
+  }
 
-  for (const s of BCA_2025_STUDENTS) {
-    const seqStr = String(s.sequence).padStart(3, "0");
-    const usn = generateUSN("1RR", "25", "BC", s.sequence);
+  for (const mapping of FACULTY_COURSE_MAPPINGS) {
+    const facultyId = staffMap.get(mapping.email);
+    if (!facultyId) continue;
+    const subjectRecord = await prisma.subject.findFirst({
+      where: {
+        code: mapping.code,
+        departmentId: bcaDeptId,
+      },
+    });
+    if (!subjectRecord) continue;
+
+    await prisma.facultyCourseAssignment.upsert({
+      where: { facultyId_subjectId: { facultyId, subjectId: subjectRecord.id } },
+      update: { isActive: true, departmentId: bcaDeptId, semester: subjectRecord.semester, section: subjectRecord.section },
+      create: {
+        facultyId,
+        subjectId: subjectRecord.id,
+        departmentId: bcaDeptId,
+        semester: subjectRecord.semester,
+        section: subjectRecord.section,
+        isActive: true,
+      },
+    });
+  }
+
+  const studentIds: string[] = [];
+  for (const student of BCA_2025_STUDENTS) {
+    const usn = generateUSN("1RR", "25", "BC", student.sequence);
     const username = usn.toLowerCase();
     const email = `${username}@student.rrce.org`;
-    const defaultPassword = generateDefaultPassword(s.firstName, s.dob);
-    const passwordHash = await hashPassword(defaultPassword);
+    const passwordHash = await hashPassword(generateDefaultPassword(student.firstName, student.dob));
 
-    const studentUser = await prisma.user.create({
-      data: {
+    const userRecord = await prisma.user.upsert({
+      where: { email },
+      update: {
+        username,
+        passwordHash,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        phone: student.phone,
+        departmentId: bcaDeptId,
+        isActive: true,
+      },
+      create: {
         username,
         email,
         passwordHash,
         role: "STUDENT",
-        firstName: s.firstName,
-        lastName: s.lastName,
-        phone: s.phone,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        phone: student.phone,
         departmentId: bcaDeptId,
         isActive: true,
-        isPasswordResetRequired: false,
       },
     });
 
-    const studentProfile = await prisma.student.create({
-      data: {
-        userId: studentUser.id,
+    const studentRecord = await prisma.student.upsert({
+      where: { userId: userRecord.id },
+      update: {
         usn,
         usnCollegeCode: "1RR",
         usnYear: "25",
         usnBranch: "BC",
-        usnSequence: s.sequence,
-        dateOfBirth: new Date(s.dob),
-        currentSemester: 3, // Real BCA 3rd Sem 2nd Year
-        quota: s.quota,
+        usnSequence: student.sequence,
+        dateOfBirth: new Date(student.dob),
+        currentSemester: 3,
+        section: "A",
+        quota: student.quota,
+        departmentId: bcaDeptId,
+      },
+      create: {
+        userId: userRecord.id,
+        usn,
+        usnCollegeCode: "1RR",
+        usnYear: "25",
+        usnBranch: "BC",
+        usnSequence: student.sequence,
+        dateOfBirth: new Date(student.dob),
+        currentSemester: 3,
+        section: "A",
+        quota: student.quota,
         departmentId: bcaDeptId,
       },
     });
 
-    seededStudentIds.push(studentProfile.id);
+    studentIds.push(studentRecord.id);
 
-    const invoiceNumber = `INV-2025-BC${seqStr}`;
-    const isPaidInFull = s.sequence % 3 === 0;
-    const isPartiallyPaid = s.sequence % 3 === 1;
-    const paidAmount = isPaidInFull ? 85000 : isPartiallyPaid ? 50000 : 0;
-    const status = isPaidInFull ? "PAID" : isPartiallyPaid ? "PENDING" : "OVERDUE";
-
-    await prisma.invoice.create({
-      data: {
-        invoiceNumber,
-        studentId: studentProfile.id,
+    const invoiceNumber = `INV-2025-BC${String(student.sequence).padStart(3, "0")}`;
+    const isPartiallyPaid = student.sequence % 3 === 1;
+    const isPaidInFull = student.sequence % 3 === 0;
+    await prisma.invoice.upsert({
+      where: { invoiceNumber },
+      update: {
+        studentId: studentRecord.id,
         totalAmount: 85000,
-        paidAmount,
-        status,
-        title: "Annual Tuition Fee 2025-26 (BCA 3rd Sem)",
+        paidAmount: isPaidInFull ? 85000 : isPartiallyPaid ? 50000 : 0,
+        status: isPaidInFull ? "PAID" : isPartiallyPaid ? "PENDING" : "OVERDUE",
         dueDate: new Date("2025-10-31"),
+      },
+      create: {
+        invoiceNumber,
+        studentId: studentRecord.id,
+        totalAmount: 85000,
+        paidAmount: isPaidInFull ? 85000 : isPartiallyPaid ? 50000 : 0,
+        status: isPaidInFull ? "PAID" : isPartiallyPaid ? "PENDING" : "OVERDUE",
+        dueDate: new Date("2025-10-31"),
+        title: "Annual Tuition Fee 2025-26 (BCA 3rd Sem)",
       },
     });
   }
 
-  const jaishankarId = staffMap.get("jaishankar.m@rrce.org")!;
-  const shreyaId = staffMap.get("shreya.s@rrce.org")!;
-  const thilagavalliiId = staffMap.get("thilagavallii.s@rrce.org")!;
-  const pushpalathaId = staffMap.get("pushpalatha.g@rrce.org")!;
-  const deerajId = staffMap.get("deeraj.c@rrce.org")!;
-  const darshanId = staffMap.get("darshan.p@rrce.org")!;
-  const muruganandhamId = staffMap.get("muruganandham.sk@rrce.org")!;
+  const today = new Date();
+  const recentPast = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
 
-  const timetableData = [
-    // MON
-    {
-      dayOfWeek: "MON",
-      startTime: "09:00",
-      endTime: "10:00",
-      subject: "Digital Principles and Computer Organization (B25BCA301)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: jaishankarId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "MON",
-      startTime: "10:00",
-      endTime: "11:00",
-      subject: "Object Oriented Programming in C++ (B25BCA302)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: shreyaId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "MON",
-      startTime: "11:15",
-      endTime: "12:15",
-      subject: "Operating System Concepts (B25BCA303)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: thilagavalliiId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "MON",
-      startTime: "14:00",
-      endTime: "15:00",
-      subject: "Relational Data Base Management System (B25BCA304)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: pushpalathaId,
-      roomNumber: "LH-201",
-    },
-    // TUE
-    {
-      dayOfWeek: "TUE",
-      startTime: "09:00",
-      endTime: "10:00",
-      subject: "Software Engineering (B25BCA305)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: deerajId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "TUE",
-      startTime: "10:00",
-      endTime: "11:00",
-      subject: "Reasoning and Aptitude (B25BCA306)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: darshanId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "TUE",
-      startTime: "11:15",
-      endTime: "12:15",
-      subject: "Digital Principles and Computer Organization (B25BCA301)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: jaishankarId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "TUE",
-      startTime: "14:00",
-      endTime: "16:00",
-      subject: "Object Oriented Programming in C++ Lab (B25BCAL307)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: shreyaId,
-      roomNumber: "LAB-2",
-    },
-    // WED
-    {
-      dayOfWeek: "WED",
-      startTime: "09:00",
-      endTime: "10:00",
-      subject: "Operating System Concepts (B25BCA303)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: thilagavalliiId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "WED",
-      startTime: "10:00",
-      endTime: "11:00",
-      subject: "Relational Data Base Management System (B25BCA304)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: pushpalathaId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "WED",
-      startTime: "11:15",
-      endTime: "12:15",
-      subject: "Digital Principles and Computer Organization (B25BCA301)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: jaishankarId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "WED",
-      startTime: "14:00",
-      endTime: "16:00",
-      subject: "Relational Data Base Management System Lab (B25BCAL308)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: pushpalathaId,
-      roomNumber: "LAB-3",
-    },
-    // THU
-    {
-      dayOfWeek: "THU",
-      startTime: "09:00",
-      endTime: "10:00",
-      subject: "Object Oriented Programming in C++ (B25BCA302)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: shreyaId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "THU",
-      startTime: "10:00",
-      endTime: "11:00",
-      subject: "Software Engineering (B25BCA305)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: deerajId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "THU",
-      startTime: "11:15",
-      endTime: "12:15",
-      subject: "Operating System Concepts (B25BCA303)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: thilagavalliiId,
-      roomNumber: "LH-201",
-    },
-    // FRI
-    {
-      dayOfWeek: "FRI",
-      startTime: "09:00",
-      endTime: "10:00",
-      subject: "Digital Principles and Computer Organization (B25BCA301)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: jaishankarId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "FRI",
-      startTime: "10:00",
-      endTime: "11:00",
-      subject: "Relational Data Base Management System (B25BCA304)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: pushpalathaId,
-      roomNumber: "LH-201",
-    },
-    {
-      dayOfWeek: "FRI",
-      startTime: "11:15",
-      endTime: "12:15",
-      subject: "Reasoning and Aptitude (B25BCA306)",
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      facultyId: darshanId,
-      roomNumber: "LH-201",
-    },
-  ];
-
-  for (const slot of timetableData) {
-    const existing = await prisma.timetableSlot.findFirst({
+  const courseSeed = await prisma.subject.findFirst({ where: { code: "B25BCA301", departmentId: bcaDeptId } });
+  if (courseSeed) {
+    const session = await prisma.attendanceSession.upsert({
       where: {
-        dayOfWeek: slot.dayOfWeek,
-        startTime: slot.startTime,
-        departmentId: slot.departmentId,
-        semester: slot.semester,
-        section: slot.section,
+        facultyId_subjectId_semester_section_date: {
+          facultyId: staffMap.get("jaishankar.m@rrce.org")!,
+          subjectId: courseSeed.id,
+          semester: 3,
+          section: "A",
+          date: recentPast,
+        },
+      },
+      update: {},
+      create: {
+        subjectId: courseSeed.id,
+        subject: `${courseSeed.name} (${courseSeed.code})`,
+        facultyId: staffMap.get("jaishankar.m@rrce.org")!,
+        departmentId: bcaDeptId,
+        semester: 3,
+        section: "A",
+        date: recentPast,
+        createdAt: recentPast,
+        lockedAt: new Date(recentPast.getTime() + 24 * 60 * 60 * 1000),
+        isLockedOverride: false,
       },
     });
 
-    if (!existing) {
-      await prisma.timetableSlot.create({
-        data: slot,
+    for (const studentId of studentIds.slice(0, 8)) {
+      await prisma.sessionAttendanceRecord.upsert({
+        where: { sessionId_studentId: { sessionId: session.id, studentId } },
+        update: { status: "PRESENT" },
+        create: { sessionId: session.id, studentId, status: "PRESENT" },
       });
     }
   }
 
-  // Attendance sessions setup for real roster
-  const lockedDate = new Date(Date.now() - 72 * 60 * 60 * 1000);
-  const activeDate = new Date();
-
-  // 1. Locked past session for historical records
-  const lockedSession = await prisma.attendanceSession.create({
-    data: {
-      subject: "Digital Principles and Computer Organization (B25BCA301)",
-      facultyId: jaishankarId,
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      date: lockedDate,
-      createdAt: lockedDate,
-      lockedAt: new Date(lockedDate.getTime() + 24 * 60 * 60 * 1000),
-      isLockedOverride: false,
-    },
-  });
-
-  for (let i = 0; i < seededStudentIds.length; i++) {
-    const studentId = seededStudentIds[i];
-    const isAbsent = i === 4 || i === 9;
-    const isLate = i === 12;
-    await prisma.sessionAttendanceRecord.create({
-      data: {
-        sessionId: lockedSession.id,
-        studentId,
-        status: isAbsent ? "ABSENT" : isLate ? "LATE" : "PRESENT",
-      },
-    });
-  }
-
-  // 2. Active current session for Prof. Jaishankar M (B25BCA301)
-  const jaishankarSession = await prisma.attendanceSession.create({
-    data: {
-      subject: "Digital Principles and Computer Organization (B25BCA301)",
-      facultyId: jaishankarId,
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      date: activeDate,
-      createdAt: activeDate,
-      lockedAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      isLockedOverride: false,
-    },
-  });
-
-  for (let i = 0; i < seededStudentIds.length; i++) {
-    const studentId = seededStudentIds[i];
-    const isAbsent = i === 3 || i === 19 || i === 44;
-    const isLate = i === 7;
-    await prisma.sessionAttendanceRecord.create({
-      data: {
-        sessionId: jaishankarSession.id,
-        studentId,
-        status: isAbsent ? "ABSENT" : isLate ? "LATE" : "PRESENT",
-      },
-    });
-  }
-
-  // 3. Active session for Prof. Shreya S (B25BCA302)
-  const shreyaSession = await prisma.attendanceSession.create({
-    data: {
-      subject: "Object Oriented Programming in C++ (B25BCA302)",
-      facultyId: shreyaId,
-      departmentId: bcaDeptId,
-      semester: 3,
-      section: "A",
-      date: activeDate,
-      createdAt: activeDate,
-      lockedAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      isLockedOverride: false,
-    },
-  });
-
-  for (let i = 0; i < seededStudentIds.length; i++) {
-    const studentId = seededStudentIds[i];
-    const isAbsent = i === 8 || i === 23;
-    await prisma.sessionAttendanceRecord.create({
-      data: {
-        sessionId: shreyaSession.id,
-        studentId,
-        status: isAbsent ? "ABSENT" : "PRESENT",
-      },
-    });
-  }
-
   await prisma.auditLog.create({
     data: {
-      action: "REAL_CLASS_ROSTER_INGESTION",
-      performedBy: "SYSTEM_SEED",
+      action: "SEED_INITIAL_DATA",
+      performedBy: "SYSTEM",
       details: JSON.stringify({
         departmentsSeeded: DEPARTMENTS.length,
         staffSeeded: STAFF_ACCOUNTS.length,
-        realBca3rdSemStudentsSeeded: BCA_2025_STUDENTS.length,
-        timestamp: new Date().toISOString(),
+        studentSeeded: BCA_2025_STUDENTS.length,
+        courseAssignments: FACULTY_COURSE_MAPPINGS.length,
       }),
     },
   });
 
-  console.log("RRCE ERP Real BCA 3rd Sem Seeding completed successfully!");
   return {
     success: true,
     departmentsCount: DEPARTMENTS.length,
     staffCount: STAFF_ACCOUNTS.length,
     studentsCount: BCA_2025_STUDENTS.length,
+    courseAssignmentsCount: FACULTY_COURSE_MAPPINGS.length,
   };
 }

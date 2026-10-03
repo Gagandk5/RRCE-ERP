@@ -14,7 +14,11 @@ export interface RawStaff {
   deptCode?: string;
   designation?: string;
   primarySubject?: string;
-  defaultPassword: string;
+  defaultPassword?: string;
+}
+
+export function getSeedPassword(): string {
+  return process.env.SEED_FACULTY_PASSWORD || process.env.RRCE_SEED_PASSWORD || "rrce2025";
 }
 
 export interface RawStudent {
@@ -47,7 +51,7 @@ export const OFFICIAL_BCA_FACULTY: RawStaff[] = [
     role: "FACULTY",
     deptCode: "BCA",
     designation: "Assistant Professor",
-    defaultPassword: "rrce2025",
+    defaultPassword: getSeedPassword(),
     primarySubject: "Digital Principles and Computer Organization (B25BCA301)",
   },
   {
@@ -59,7 +63,7 @@ export const OFFICIAL_BCA_FACULTY: RawStaff[] = [
     role: "FACULTY",
     deptCode: "BCA",
     designation: "Assistant Professor",
-    defaultPassword: "rrce2025",
+    defaultPassword: getSeedPassword(),
     primarySubject: "Object Oriented Programming in C++ (B25BCA302)",
   },
   {
@@ -71,7 +75,7 @@ export const OFFICIAL_BCA_FACULTY: RawStaff[] = [
     role: "FACULTY",
     deptCode: "BCA",
     designation: "Assistant Professor",
-    defaultPassword: "rrce2025",
+    defaultPassword: getSeedPassword(),
     primarySubject: "Operating System Concepts (B25BCA303)",
   },
   {
@@ -83,7 +87,7 @@ export const OFFICIAL_BCA_FACULTY: RawStaff[] = [
     role: "FACULTY",
     deptCode: "BCA",
     designation: "Associate Professor",
-    defaultPassword: "rrce2025",
+    defaultPassword: getSeedPassword(),
     primarySubject: "Relational Data Base Management System (B25BCA304)",
   },
   {
@@ -95,7 +99,7 @@ export const OFFICIAL_BCA_FACULTY: RawStaff[] = [
     role: "FACULTY",
     deptCode: "BCA",
     designation: "Assistant Professor",
-    defaultPassword: "rrce2025",
+    defaultPassword: getSeedPassword(),
     primarySubject: "Software Engineering (B25BCA305)",
   },
   {
@@ -107,7 +111,7 @@ export const OFFICIAL_BCA_FACULTY: RawStaff[] = [
     role: "FACULTY",
     deptCode: "BCA",
     designation: "Assistant Professor",
-    defaultPassword: "rrce2025",
+    defaultPassword: getSeedPassword(),
     primarySubject: "Reasoning and Aptitude (B25BCA306)",
   },
   {
@@ -119,7 +123,7 @@ export const OFFICIAL_BCA_FACULTY: RawStaff[] = [
     role: "FACULTY",
     deptCode: "BCA",
     designation: "Associate Professor",
-    defaultPassword: "rrce2025",
+    defaultPassword: getSeedPassword(),
     primarySubject: "Object Oriented Programming in C++ Lab (B25BCAL307)",
   },
   {
@@ -131,7 +135,7 @@ export const OFFICIAL_BCA_FACULTY: RawStaff[] = [
     role: "HOD",
     deptCode: "BCA",
     designation: "Professor & Head",
-    defaultPassword: "rrce2025",
+    defaultPassword: getSeedPassword(),
     primarySubject: "Department Administration",
   },
 ];
@@ -144,7 +148,7 @@ export const STAFF_ACCOUNTS: RawStaff[] = [
     firstName: "Ramesh",
     lastName: "Kumar",
     phone: "+91 9845012345",
-    defaultPassword: "rrce2025",
+    defaultPassword: getSeedPassword(),
   },
   {
     email: "admissions@rrce.org",
@@ -153,7 +157,7 @@ export const STAFF_ACCOUNTS: RawStaff[] = [
     firstName: "Suresh",
     lastName: "Reddy",
     phone: "+91 9845023456",
-    defaultPassword: "rrce2025",
+    defaultPassword: getSeedPassword(),
   },
   ...OFFICIAL_BCA_FACULTY,
 ];

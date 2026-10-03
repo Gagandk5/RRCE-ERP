@@ -46,50 +46,46 @@ export async function POST(req: NextRequest) {
       console.warn("Database lookup error in change-password:", err);
     }
 
-    if (user) {
-      const isCurrentValid = await comparePassword(currentPassword, user.passwordHash);
-      if (!isCurrentValid && currentPassword !== "rrce2025") {
-        return NextResponse.json(
-          { error: "The current password you entered is incorrect." },
-          { status: 400 }
-        );
-      }
+    if (!user) {
+      return NextResponse.json(
+        { error: "User account could not be found for this session." },
+        { status: 404 }
+      );
+    }
 
-      const newPasswordHash = await hashPassword(newPassword);
+    const isCurrentValid = await comparePassword(currentPassword, user.passwordHash);
+    if (!isCurrentValid) {
+      return NextResponse.json(
+        { error: "The current password you entered is incorrect." },
+        { status: 400 }
+      );
+    }
 
-      await prisma.user.update({
-        where: { id: user.id },
+    const newPasswordHash = await hashPassword(newPassword);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: newPasswordHash,
+        isPasswordResetRequired: false,
+      },
+    });
+
+    try {
+      await prisma.auditLog.create({
         data: {
-          passwordHash: newPasswordHash,
-          isPasswordResetRequired: false,
+          action: "PASSWORD_CHANGED",
+          performedBy: session.email || session.username || "FACULTY",
+          details: JSON.stringify({
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            timestamp: new Date().toISOString(),
+          }),
         },
       });
-
-      // Record entry in AuditLog
-      try {
-        await prisma.auditLog.create({
-          data: {
-            action: "PASSWORD_CHANGED",
-            performedBy: session.email || session.username || "FACULTY",
-            details: JSON.stringify({
-              userId: user.id,
-              email: user.email,
-              role: user.role,
-              timestamp: new Date().toISOString(),
-            }),
-          },
-        });
-      } catch (auditErr) {
-        console.warn("AuditLog recording warning:", auditErr);
-      }
-    } else {
-      // Fallback for mock session
-      if (currentPassword !== "rrce2025" && currentPassword !== "admin123") {
-        return NextResponse.json(
-          { error: "The current password you entered is incorrect." },
-          { status: 400 }
-        );
-      }
+    } catch (auditErr) {
+      console.warn("AuditLog recording warning:", auditErr);
     }
 
     return NextResponse.json({

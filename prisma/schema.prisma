@@ -49,24 +49,25 @@ enum SubmissionStatus {
 }
 
 model Department {
-  id                 String              @id @default(uuid())
-  code               String              @unique // e.g. "BCA", "CSE", "AIML"
-  name               String              // e.g. "Bachelor of Computer Applications"
-  usnCode            String              @unique // e.g. "BC", "CS", "AI"
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  id                 String                    @id @default(uuid())
+  code               String                    @unique // e.g. "BCA", "CSE", "AIML"
+  name               String                    // e.g. "Bachelor of Computer Applications"
+  usnCode            String                    @unique // e.g. "BC", "CS", "AI"
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
 
   users              User[]
   students           Student[]
   subjects           Subject[]
   attendanceSessions AttendanceSession[]
   timetableSlots     TimetableSlot[]
+  facultyAssignments FacultyCourseAssignment[]
 }
 
 model User {
-  id                     String             @id @default(uuid())
-  email                  String             @unique
-  username               String             @unique
+  id                     String                    @id @default(uuid())
+  email                  String                    @unique
+  username               String                    @unique
   passwordHash           String
   role                   Role
   firstName              String
@@ -74,16 +75,18 @@ model User {
   phone                  String?
   photoUrl               String?
   departmentId           String?
-  department             Department?        @relation(fields: [departmentId], references: [id])
-  isActive               Boolean            @default(true)
-  isPasswordResetRequired Boolean            @default(false)
-  createdAt              DateTime           @default(now())
-  updatedAt              DateTime           @updatedAt
+  department             Department?               @relation(fields: [departmentId], references: [id])
+  isActive               Boolean                   @default(true)
+  isPasswordResetRequired Boolean                   @default(false)
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
 
   studentProfile         Student?
   facultySessions        AttendanceSession[]
+  facultyAssignments     FacultyCourseAssignment[]
   timetableSlots         TimetableSlot[]
   submissions            Submission[]
+  attendanceAudits      AttendanceAuditLog[]
 }
 
 model Student {
@@ -106,24 +109,29 @@ model Student {
 
   attendanceRecords        AttendanceRecord[]
   sessionAttendanceRecords SessionAttendanceRecord[]
-  invoices          Invoice[]
+  attendanceAudits         AttendanceAuditLog[]
+  invoices                 Invoice[]
 
   @@index([usnSequence])
   @@index([departmentId, currentSemester])
 }
 
 model Subject {
-  id           String       @id @default(uuid())
-  code         String
-  name         String
-  departmentId String
-  department   Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  semester     Int
-  section      String       @default("A")
-  assignments  Assignment[]
-  attendanceRecords AttendanceRecord[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id                 String                    @id @default(uuid())
+  code               String
+  name               String
+  departmentId       String
+  department         Department                @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  semester           Int
+  section            String                    @default("A")
+  isActive           Boolean                   @default(true)
+  assignments        Assignment[]
+  attendanceRecords  AttendanceRecord[]
+  attendanceSessions AttendanceSession[]
+  attendanceLogs     AttendanceAuditLog[]
+  facultyAssignments FacultyCourseAssignment[]
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
 
   @@unique([code, departmentId, semester, section])
   @@index([departmentId, semester, section])
@@ -164,8 +172,29 @@ model Submission {
   @@index([studentId, status])
 }
 
+model FacultyCourseAssignment {
+  id           String    @id @default(uuid())
+  facultyId    String
+  faculty      User      @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  subjectId    String
+  subject      Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  semester     Int
+  section      String    @default("A")
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([facultyId, subjectId])
+  @@index([facultyId, isActive])
+  @@index([departmentId, semester, section])
+}
+
 model AttendanceSession {
   id               String             @id @default(uuid())
+  subjectId        String?
+  subjectRef       Subject?           @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   subject          String
   facultyId        String
   faculty          User               @relation(fields: [facultyId], references: [id])
@@ -181,7 +210,9 @@ model AttendanceSession {
   updatedAt        DateTime           @updatedAt
 
   records          SessionAttendanceRecord[]
+  auditLogs        AttendanceAuditLog[]
 
+  @@unique([facultyId, subjectId, semester, section, date])
   @@index([facultyId, date])
   @@index([departmentId, semester, section])
 }
@@ -218,6 +249,25 @@ model AttendanceRecord {
   @@index([subjectId, date])
 
   @@map("DailyAttendanceRecord")
+}
+
+model AttendanceAuditLog {
+  id             String            @id @default(uuid())
+  sessionId      String?
+  session        AttendanceSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  studentId      String
+  student        Student?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  courseId       String?
+  course         Subject?          @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  facultyId      String?
+  faculty        User?             @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  previousStatus SessionAttendanceStatus?
+  newStatus      SessionAttendanceStatus?
+  changedAt      DateTime          @default(now())
+  reason         String?
+
+  @@index([studentId, changedAt])
+  @@index([courseId, changedAt])
 }
 
 model Invoice {

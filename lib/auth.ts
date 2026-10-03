@@ -63,18 +63,55 @@ export async function getCurrentUser() {
   if (!session?.userId) return null;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: session.userId },
+    const user = await resolveSessionUser(session);
+    return user;
+  } catch {
+    return null;
+  }
+}
+
+export async function resolveSessionUser(session: Pick<JWTPayload, "userId" | "email" | "username"> | null) {
+  if (!session) return null;
+
+  const basicInclude = {
+    department: true,
+    studentProfile: {
       include: {
         department: true,
-        studentProfile: {
-          include: {
-            department: true,
-            invoices: true,
-          },
-        },
+        invoices: true,
       },
-    });
+    },
+  } as const;
+
+  const byId = await prisma.user.findUnique({
+    where: { id: session.userId },
+    include: basicInclude,
+  });
+
+  if (byId) {
+    return byId;
+  }
+
+  const identityFilters = [
+    ...(session.email ? [{ email: { equals: session.email, mode: "insensitive" as const } }] : []),
+    ...(session.username ? [{ username: { equals: session.username, mode: "insensitive" as const } }] : []),
+  ];
+
+  const byIdentity = await prisma.user.findFirst({
+    where: {
+      OR: identityFilters,
+    },
+    include: basicInclude,
+  });
+
+  return byIdentity ?? null;
+}
+
+export async function getCurrentUserWithSession(session: Pick<JWTPayload, "userId" | "email" | "username"> | null) {
+  if (!session) return null;
+
+  try {
+    const user = await resolveSessionUser(session);
     return user;
   } catch {
     return null;

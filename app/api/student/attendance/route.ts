@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { computeAttendancePercentage, countsAsPresent } from "@/lib/attendance";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -32,10 +33,16 @@ export async function GET(request: NextRequest) {
 			);
 		}
 
-		const records = await prisma.attendanceRecord.findMany({
+		const sessionRecords = await prisma.sessionAttendanceRecord.findMany({
 			where: { studentId: student.id },
-			include: { subject: { select: { code: true, name: true } } },
-			orderBy: [{ date: "desc" }, { subject: { code: "asc" } }],
+			include: {
+				session: {
+					include: {
+						subjectRef: { select: { id: true, code: true, name: true } },
+					},
+				},
+			},
+			orderBy: [{ session: { date: "desc" } }, { createdAt: "desc" }],
 		});
 
 		const subjectTotals = new Map<string, {
@@ -44,33 +51,35 @@ export async function GET(request: NextRequest) {
 			held: number;
 			attended: number;
 			absent: number;
-			excused: number;
+			late: number;
 		}>();
 
-		for (const record of records) {
-			const key = record.subjectId;
-			const totals = subjectTotals.get(key) ?? {
-				code: record.subject.code,
-				name: record.subject.name,
+		for (const record of sessionRecords) {
+			const subjectId = record.session.subjectId || record.session.subjectRef?.id || `${record.session.departmentId}:${record.session.semester}:${record.session.section}:${record.session.subject}`;
+			const subjectKey = String(subjectId);
+			const totals = subjectTotals.get(subjectKey) ?? {
+				code: record.session.subjectRef?.code || record.session.subject || "UNKNOWN",
+				name: record.session.subjectRef?.name || record.session.subject || "Unknown subject",
 				held: 0,
 				attended: 0,
 				absent: 0,
-				excused: 0,
+				late: 0,
 			};
 			totals.held += 1;
-			if (record.status === "PRESENT") totals.attended += 1;
 			if (record.status === "ABSENT") totals.absent += 1;
-			if (record.status === "EXCUSED") totals.excused += 1;
-			subjectTotals.set(key, totals);
+			if (record.status === "LATE") totals.late += 1;
+			if (countsAsPresent(record.status)) totals.attended += 1;
+			subjectTotals.set(subjectKey, totals);
 		}
 
 		const subjects = Array.from(subjectTotals.values()).map((totals) => ({
 			...totals,
-			percentage: totals.held ? Number(((totals.attended / totals.held) * 100).toFixed(1)) : 0,
+			percentage: computeAttendancePercentage(totals.attended, totals.held),
 		}));
-		const totalHeld = subjects.reduce((total, item) => total + item.held, 0);
-		const totalAttended = subjects.reduce((total, item) => total + item.attended, 0);
+		const totalHeld = sessionRecords.length;
+		const totalAttended = sessionRecords.filter((record) => countsAsPresent(record.status)).length;
 
+<<<<<<< Updated upstream
 		return NextResponse.json(
 			{
 				records: records.map((record) => ({
@@ -89,6 +98,22 @@ export async function GET(request: NextRequest) {
 				},
 			}
 		);
+=======
+		return NextResponse.json({
+			records: sessionRecords.map((record) => ({
+				id: record.id,
+				date: record.session.date.toISOString().slice(0, 10),
+				status: record.status,
+				subject: {
+					code: record.session.subjectRef?.code || record.session.subject || "UNKNOWN",
+					name: record.session.subjectRef?.name || record.session.subject || "Unknown subject",
+				},
+			})),
+			subjects,
+			totalHeld,
+			totalAttended,
+		});
+>>>>>>> Stashed changes
 	} catch (error) {
 		console.error("Student attendance load failed:", error);
 		return NextResponse.json(

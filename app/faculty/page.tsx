@@ -293,7 +293,7 @@ export default function FacultyPortal() {
               Faculty Desk • Prof. {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "Jaishankar M"}
             </h1>
             <p className="text-xs text-slate-400 font-mono">
-              Department of Basic Sciences & Mathematics • RRCE
+              Department of Mathematics • RRCE
             </p>
           </div>
         </div>

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSession } from "@/lib/auth";
+import { getSession, resolveSessionUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { checkAttendanceLockout } from "@/lib/utils";
 
@@ -16,9 +16,13 @@ export type AttendanceSubmission = {
 export async function submitAttendance(data: AttendanceSubmission) {
 	const session = await getSession();
 	if (!session) return { success: false, error: "Sign in to submit attendance." };
+	const resolvedUser = await resolveSessionUser(session);
+	if (!resolvedUser) return { success: false, error: "Session expired. Please sign in again." };
 	if (!["FACULTY", "HOD", "PRINCIPAL"].includes(session.role)) {
 		return { success: false, error: "Faculty access is required." };
 	}
+	const effectiveUserId = resolvedUser.id;
+	const effectiveDepartmentId = resolvedUser.departmentId ?? session.departmentId ?? null;
 	if (!data.subjectId || !/^\d{4}-\d{2}-\d{2}$/.test(data.date) || !Array.isArray(data.records) || !data.records.length) {
 		return { success: false, error: "Choose a subject and date and mark the roster." };
 	}
@@ -31,34 +35,38 @@ export async function submitAttendance(data: AttendanceSubmission) {
 	try {
 		const subject = await prisma.subject.findUnique({
 			where: { id: data.subjectId },
+			include: { department: true },
 		});
 		if (!subject) return { success: false, error: "Subject not found." };
 
-		const assignment = await prisma.timetableSlot.findFirst({
-			where: {
-				facultyId: session.role === "FACULTY" ? session.userId : undefined,
-				departmentId: subject.departmentId,
-				semester: subject.semester,
-				section: subject.section,
-				subject: { contains: subject.code, mode: "insensitive" },
-			},
+		const assignment = await prisma.facultyCourseAssignment.findFirst({
+			where:
+				session.role === "FACULTY"
+					? { subjectId: subject.id, facultyId: effectiveUserId, isActive: true }
+					: session.role === "HOD"
+						? { subjectId: subject.id, departmentId: effectiveDepartmentId!, isActive: true }
+						: { subjectId: subject.id, isActive: true },
 		});
-		if (!assignment) return { success: false, error: "You are not assigned to this subject." };
+		if (!assignment && session.role !== "PRINCIPAL") {
+			return { success: false, error: "You are not assigned to this course." };
+		}
 		if (session.role === "HOD" && session.departmentId !== subject.departmentId) {
 			return { success: false, error: "You can only update attendance for your department." };
 		}
 
-		// 24-Hour Lockout check
 		const startOfDay = new Date(`${data.date}T00:00:00.000Z`);
 		const endOfDay = new Date(`${data.date}T23:59:59.999Z`);
+		const existingSessionWhere: any = {
+			subjectId: subject.id,
+			date: { gte: startOfDay, lte: endOfDay },
+		};
+		if (session.role === "FACULTY") {
+			existingSessionWhere.facultyId = effectiveUserId;
+		} else if (session.role === "HOD") {
+			existingSessionWhere.departmentId = effectiveDepartmentId;
+		}
 		const existingSession = await prisma.attendanceSession.findFirst({
-			where: {
-				departmentId: subject.departmentId,
-				semester: subject.semester,
-				section: subject.section,
-				subject: { contains: subject.code, mode: "insensitive" },
-				date: { gte: startOfDay, lte: endOfDay },
-			},
+			where: existingSessionWhere,
 		});
 
 		if (existingSession) {
@@ -66,7 +74,7 @@ export async function submitAttendance(data: AttendanceSubmission) {
 				createdAt: existingSession.createdAt,
 				isLockedOverride: existingSession.isLockedOverride,
 			});
-			if (lockout.isLocked) {
+			if (lockout.isLocked && session.role !== "HOD" && session.role !== "PRINCIPAL") {
 				return {
 					success: false,
 					error: "Attendance session is locked. 24 hours have elapsed since creation. Requires HOD or Principal override to edit.",
@@ -76,7 +84,7 @@ export async function submitAttendance(data: AttendanceSubmission) {
 		} else {
 			const now = Date.now();
 			const elapsed = now - date.getTime();
-			if (elapsed > 36 * 60 * 60 * 1000) {
+			if (elapsed > 36 * 60 * 60 * 1000 && session.role !== "HOD" && session.role !== "PRINCIPAL") {
 				return {
 					success: false,
 					error: "Cannot create attendance records for dates older than 24 hours without HOD unlock.",
@@ -106,13 +114,13 @@ export async function submitAttendance(data: AttendanceSubmission) {
 			return { success: false, error: "The submission includes a student outside this class." };
 		}
 
-		// Ensure AttendanceSession exists
 		let sessionRecord = existingSession;
 		if (!sessionRecord) {
 			sessionRecord = await prisma.attendanceSession.create({
 				data: {
+					subjectId: subject.id,
 					subject: `${subject.name} (${subject.code})`,
-					facultyId: session.userId,
+					facultyId: assignment?.facultyId ?? effectiveUserId,
 					departmentId: subject.departmentId,
 					semester: subject.semester,
 					section: subject.section,
@@ -124,9 +132,31 @@ export async function submitAttendance(data: AttendanceSubmission) {
 			});
 		}
 
-		await prisma.$transaction([
-			// Daily attendance records
-			...data.records.map((record) =>
+		const modelPromises: any[] = [];
+		for (const record of data.records) {
+			const previousRecord = await prisma.sessionAttendanceRecord.findUnique({
+				where: {
+					sessionId_studentId: {
+						sessionId: sessionRecord.id,
+						studentId: record.studentId,
+					},
+				},
+			});
+
+			modelPromises.push(
+				prisma.sessionAttendanceRecord.upsert({
+					where: {
+						sessionId_studentId: {
+							sessionId: sessionRecord.id,
+							studentId: record.studentId,
+						},
+					},
+					update: { status: record.status as any },
+					create: { sessionId: sessionRecord.id, studentId: record.studentId, status: record.status as any },
+				})
+			);
+
+			modelPromises.push(
 				prisma.attendanceRecord.upsert({
 					where: {
 						studentId_subjectId_date: {
@@ -136,32 +166,28 @@ export async function submitAttendance(data: AttendanceSubmission) {
 						},
 					},
 					update: { status: record.status as any },
-					create: {
-						studentId: record.studentId,
-						subjectId: subject.id,
-						date,
-						status: record.status as any,
-					},
+					create: { studentId: record.studentId, subjectId: subject.id, date, status: record.status as any },
 				})
-			),
-			// Session attendance records
-			...data.records.map((record) =>
-				prisma.sessionAttendanceRecord.upsert({
-					where: {
-						sessionId_studentId: {
-							sessionId: sessionRecord!.id,
+			);
+
+			if (previousRecord && previousRecord.status !== record.status) {
+				modelPromises.push(
+					prisma.attendanceAuditLog.create({
+						data: {
+							sessionId: sessionRecord.id,
 							studentId: record.studentId,
+							courseId: subject.id,
+							facultyId: effectiveUserId,
+							previousStatus: previousRecord.status,
+							newStatus: record.status as any,
+							reason: "Faculty attendance update",
 						},
-					},
-					update: { status: record.status as any },
-					create: {
-						sessionId: sessionRecord!.id,
-						studentId: record.studentId,
-						status: record.status as any,
-					},
-				})
-			),
-		]);
+					})
+				);
+			}
+		}
+
+		await prisma.$transaction(modelPromises);
 
 		revalidatePath("/faculty");
 		revalidatePath("/faculty/attendance");

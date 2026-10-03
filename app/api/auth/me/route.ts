@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+<<<<<<< Updated upstream
 import { getSessionFromRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { BCA_2025_STUDENTS } from "@/prisma/seed-data";
@@ -6,6 +7,9 @@ import { generateUSN } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+=======
+import { getSessionFromRequest, resolveSessionUser } from "@/lib/auth";
+>>>>>>> Stashed changes
 
 export async function GET(req: NextRequest) {
   const session = getSessionFromRequest(req);
@@ -22,6 +26,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+<<<<<<< Updated upstream
     let user = await prisma.user.findUnique({
       where: { id: session.userId },
       include: {
@@ -51,6 +56,25 @@ export async function GET(req: NextRequest) {
               invoices: true,
             },
           },
+=======
+    const user = await resolveSessionUser(session);
+
+    if (user) {
+      const resolvedUser = user as any;
+      return NextResponse.json({
+        authenticated: true,
+        user: {
+          id: resolvedUser.id,
+          email: resolvedUser.email,
+          username: resolvedUser.username,
+          role: resolvedUser.role,
+          firstName: resolvedUser.firstName,
+          lastName: resolvedUser.lastName,
+          phone: resolvedUser.phone,
+          isPasswordResetRequired: resolvedUser.isPasswordResetRequired,
+          department: resolvedUser.department,
+          studentProfile: resolvedUser.studentProfile,
+>>>>>>> Stashed changes
         },
       });
     }
@@ -85,6 +109,7 @@ export async function GET(req: NextRequest) {
     console.warn("DB fetch failed in /api/auth/me, returning session data:", error);
   }
 
+<<<<<<< Updated upstream
   // Fallback: If DB is unreachable or student is in-memory, synthesize student profile from BCA_2025_STUDENTS
   if (session.role === "STUDENT" && session.usn) {
     const sMatch = BCA_2025_STUDENTS.find(
@@ -150,4 +175,7 @@ export async function GET(req: NextRequest) {
       },
     }
   );
+=======
+  return NextResponse.json({ authenticated: false, user: null }, { status: 401 });
+>>>>>>> Stashed changes
 }
