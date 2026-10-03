@@ -15,20 +15,20 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { studentId, usn: inputUsn, firstName, lastName, phone, dob, quota } = body;
+    const { studentId, usn: inputUsn, firstName, lastName, phone, dob, quota, photoUrl } = body;
 
-    if ((!inputUsn && !studentId) || !firstName || !dob) {
+    if (!inputUsn && !studentId) {
       return NextResponse.json(
-        { error: "USN or Student ID, First Name, and Date of Birth (DOB) are required." },
+        { error: "USN or Student ID is required." },
         { status: 400 }
       );
     }
 
     let usn = inputUsn;
-
-    // 1. Calculate new formula password automatically based on updated DOB and First Name
-    const newFormulaPassword = generateDefaultPassword(firstName, dob);
-    const newPasswordHash = await hashPassword(newFormulaPassword);
+    let newFormulaPassword = "";
+    if (firstName && dob) {
+      newFormulaPassword = generateDefaultPassword(firstName, dob);
+    }
 
     let updatedStudent = null;
     let dbConnected = true;
@@ -49,23 +49,31 @@ export async function POST(req: NextRequest) {
 
       if (studentRecord) {
         usn = studentRecord.usn;
+        const targetFirstName = firstName || studentRecord.user.firstName;
+        const targetDob = dob ? new Date(dob) : studentRecord.dateOfBirth;
+        newFormulaPassword = generateDefaultPassword(targetFirstName, targetDob);
+        const newPasswordHash = await hashPassword(newFormulaPassword);
+
         updatedStudent = await prisma.$transaction(async (tx) => {
+          const userUpdateData: any = {};
+          if (firstName) userUpdateData.firstName = firstName;
+          if (lastName !== undefined) userUpdateData.lastName = lastName;
+          if (phone !== undefined) userUpdateData.phone = phone;
+          if (photoUrl !== undefined) userUpdateData.photoUrl = photoUrl;
+          if (dob) userUpdateData.passwordHash = newPasswordHash;
+
           await tx.user.update({
             where: { id: studentRecord.userId },
-            data: {
-              firstName,
-              lastName: lastName || "",
-              phone,
-              passwordHash: newPasswordHash,
-            },
+            data: userUpdateData,
           });
+
+          const studentUpdateData: any = {};
+          if (dob) studentUpdateData.dateOfBirth = new Date(dob);
+          if (quota) studentUpdateData.quota = quota;
 
           const st = await tx.student.update({
             where: { id: studentRecord.id },
-            data: {
-              dateOfBirth: new Date(dob),
-              quota: quota || studentRecord.quota,
-            },
+            data: studentUpdateData,
             include: { user: true, department: true, invoices: true },
           });
 
@@ -106,10 +114,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const displayName = firstName || updatedStudent?.user?.firstName || usn || "Student";
+    const updateMsg = dob
+      ? `Student ${displayName}'s details updated successfully! Date of Birth set to ${dob}. Formula password automatically recalculated to: ${newFormulaPassword}`
+      : `Student ${displayName}'s profile updated successfully!`;
+
     return NextResponse.json({
       success: true,
       newFormulaPassword,
-      message: `Student ${firstName}'s details updated successfully! Date of Birth set to ${dob}. Formula password automatically recalculated to: ${newFormulaPassword}`,
+      message: updateMsg,
       student: updatedStudent,
       dbConnected,
     });
