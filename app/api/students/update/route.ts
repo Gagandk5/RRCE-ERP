@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionFromRequest, hashPassword } from "@/lib/auth";
-import { generateDefaultPassword } from "@/lib/utils";
+import { generateDefaultPassword, generateUSN } from "@/lib/utils";
 import { BCA_2025_STUDENTS } from "@/prisma/seed-data";
 
 export async function POST(req: NextRequest) {
@@ -30,6 +30,8 @@ export async function POST(req: NextRequest) {
       departmentId,
       isActive,
       photoUrl,
+      reallocReason,
+      feeAdjustment,
     } = body;
 
     // Strict institutional guardrail: Attendance and Marks can NEVER be modified through Admissions
@@ -55,19 +57,22 @@ export async function POST(req: NextRequest) {
 
     let updatedStudent = null;
     let dbConnected = true;
+    let wasReallocated = false;
+    let finalAssignedUsn = inputUsn;
+    let targetDeptCode = "";
 
     try {
       let studentRecord = null;
       if (usn) {
         studentRecord = await prisma.student.findUnique({
           where: { usn },
-          include: { user: true, department: true },
+          include: { user: true, department: true, invoices: true },
         });
       }
       if (!studentRecord && studentId) {
         studentRecord = await prisma.student.findUnique({
           where: { id: studentId },
-          include: { user: true, department: true },
+          include: { user: true, department: true, invoices: true },
         });
       }
 
@@ -86,30 +91,9 @@ export async function POST(req: NextRequest) {
           if (phone !== undefined) userUpdateData.phone = phone;
           if (photoUrl !== undefined) userUpdateData.photoUrl = photoUrl;
           if (isActive !== undefined) userUpdateData.isActive = Boolean(isActive);
-          if (departmentId) userUpdateData.departmentId = departmentId;
           if (dob || firstName) userUpdateData.passwordHash = newPasswordHash;
 
-          const effectiveNewUsn =
-            newUsn && newUsn.trim().toUpperCase() !== studentRecord.usn
-              ? newUsn.trim().toUpperCase()
-              : null;
-
-          if (effectiveNewUsn) {
-            userUpdateData.username = effectiveNewUsn;
-            if (!email && studentRecord.user.email.includes(studentRecord.usn.toLowerCase())) {
-              userUpdateData.email = `${effectiveNewUsn.toLowerCase()}@student.rrce.org`;
-            }
-          }
-
-          await tx.user.update({
-            where: { id: studentRecord.userId },
-            data: userUpdateData,
-          });
-
           const studentUpdateData: any = {};
-          if (effectiveNewUsn) {
-            studentUpdateData.usn = effectiveNewUsn;
-          }
           if (dob) studentUpdateData.dateOfBirth = new Date(dob);
           if (quota) studentUpdateData.quota = quota;
           if (semester !== undefined && !isNaN(Number(semester))) {
@@ -118,9 +102,106 @@ export async function POST(req: NextRequest) {
           if (section !== undefined && section.trim()) {
             studentUpdateData.section = section.trim().toUpperCase();
           }
-          if (departmentId) {
-            studentUpdateData.departmentId = departmentId;
+
+          let effectiveUsn =
+            newUsn && newUsn.trim().toUpperCase() !== studentRecord.usn
+              ? newUsn.trim().toUpperCase()
+              : studentRecord.usn;
+
+          // Check if Branch Reallocation is requested (departmentId differs from existing)
+          if (departmentId && departmentId !== studentRecord.departmentId) {
+            const targetDept = await tx.department.findUnique({
+              where: { id: departmentId },
+            });
+
+            if (targetDept) {
+              wasReallocated = true;
+              targetDeptCode = targetDept.code;
+
+              let nextSequence = studentRecord.usnSequence;
+              // If user did not manually override USN, auto-generate sequential USN in target branch
+              if (!newUsn || newUsn.trim().toUpperCase() === studentRecord.usn) {
+                const maxSeqResult = await tx.student.aggregate({
+                  where: {
+                    departmentId: targetDept.id,
+                    usnYear: studentRecord.usnYear,
+                  },
+                  _max: {
+                    usnSequence: true,
+                  },
+                });
+                nextSequence = (maxSeqResult._max.usnSequence || 0) + 1;
+                effectiveUsn = generateUSN(
+                  studentRecord.usnCollegeCode,
+                  studentRecord.usnYear,
+                  targetDept.usnCode,
+                  nextSequence
+                );
+              }
+
+              studentUpdateData.departmentId = targetDept.id;
+              studentUpdateData.usnBranch = targetDept.usnCode;
+              studentUpdateData.usnSequence = nextSequence;
+              studentUpdateData.usn = effectiveUsn;
+
+              userUpdateData.departmentId = targetDept.id;
+              userUpdateData.username = effectiveUsn;
+              if (!email || email.includes(studentRecord.usn.toLowerCase())) {
+                userUpdateData.email = `${effectiveUsn.toLowerCase()}@student.rrce.org`;
+              }
+
+              // Adjust invoice if differential fee is provided
+              const feeAdj = Number(feeAdjustment || 0);
+              if (studentRecord.invoices && studentRecord.invoices.length > 0 && feeAdj !== 0) {
+                const primaryInvoice = studentRecord.invoices[0];
+                await tx.invoice.update({
+                  where: { id: primaryInvoice.id },
+                  data: {
+                    totalAmount: primaryInvoice.totalAmount + feeAdj,
+                    title: `Annual Tuition Fee 2025-26 (${targetDept.code} Reallocated)`,
+                  },
+                });
+              }
+
+              // Log branch reallocation in audit log
+              await tx.auditLog.create({
+                data: {
+                  action: "BRANCH_REALLOCATION",
+                  performedBy: session.username,
+                  details: JSON.stringify({
+                    studentId: studentRecord.id,
+                    studentName: `${firstName || studentRecord.user.firstName} ${
+                      lastName !== undefined ? lastName : studentRecord.user.lastName
+                    }`,
+                    oldUsn: studentRecord.usn,
+                    newUsn: effectiveUsn,
+                    oldDepartment: studentRecord.department?.code || "ORIGINAL",
+                    newDepartment: targetDept.code,
+                    newSequence: nextSequence,
+                    feeAdjustment: feeAdj,
+                    reason: reallocReason || "Branch reallocation executed via Edit Student Master Desk",
+                    timestamp: new Date().toISOString(),
+                  }),
+                },
+              });
+            }
+          } else {
+            // Standard update without branch change
+            if (effectiveUsn !== studentRecord.usn) {
+              studentUpdateData.usn = effectiveUsn;
+              userUpdateData.username = effectiveUsn;
+              if (!email && studentRecord.user.email.includes(studentRecord.usn.toLowerCase())) {
+                userUpdateData.email = `${effectiveUsn.toLowerCase()}@student.rrce.org`;
+              }
+            }
           }
+
+          finalAssignedUsn = effectiveUsn;
+
+          await tx.user.update({
+            where: { id: studentRecord.userId },
+            data: userUpdateData,
+          });
 
           const st = await tx.student.update({
             where: { id: studentRecord.id },
@@ -134,7 +215,7 @@ export async function POST(req: NextRequest) {
               performedBy: session.username,
               details: JSON.stringify({
                 originalUsn: studentRecord.usn,
-                updatedUsn: effectiveNewUsn || studentRecord.usn,
+                updatedUsn: effectiveUsn,
                 updatedName: `${firstName || studentRecord.user.firstName} ${
                   lastName !== undefined ? lastName : studentRecord.user.lastName
                 }`,
@@ -147,6 +228,7 @@ export async function POST(req: NextRequest) {
                 updatedDepartmentId: departmentId || studentRecord.departmentId,
                 updatedIsActive: isActive !== undefined ? isActive : studentRecord.user.isActive,
                 newFormulaPassword,
+                wasReallocated,
               }),
             },
           });
@@ -176,12 +258,17 @@ export async function POST(req: NextRequest) {
     }
 
     const displayName = firstName || updatedStudent?.user?.firstName || usn || "Student";
-    const updateMsg = dob
+    const updateMsg = wasReallocated
+      ? `Student ${displayName} reallocated to ${targetDeptCode}! New USN: ${finalAssignedUsn}. Default password: ${newFormulaPassword}`
+      : dob
       ? `Student ${displayName}'s master information updated successfully! Default password auto-recalculated to: ${newFormulaPassword}`
       : `Student ${displayName}'s master information updated successfully!`;
 
     return NextResponse.json({
       success: true,
+      wasReallocated,
+      targetDeptCode,
+      newUsn: finalAssignedUsn,
       newFormulaPassword,
       message: updateMsg,
       student: updatedStudent,
