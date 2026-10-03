@@ -19,6 +19,7 @@ import {
   GraduationCap,
   Lock,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
 
 export default function AdmissionsPortal() {
@@ -62,6 +63,10 @@ export default function AdmissionsPortal() {
     feeAdjustment: "0",
   });
   const [updatingStudent, setUpdatingStudent] = useState(false);
+
+  // Delete Student Modal State
+  const [deleteConfirmStudent, setDeleteConfirmStudent] = useState<any>(null);
+  const [deletingStudent, setDeletingStudent] = useState(false);
 
   // Photo Preview & Upload Modal State
   const [photoModalStudent, setPhotoModalStudent] = useState<any>(null);
@@ -320,6 +325,42 @@ export default function AdmissionsPortal() {
     }
   }
 
+  async function handleDeleteStudent() {
+    if (!deleteConfirmStudent) return;
+    setDeletingStudent(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/students?id=${deleteConfirmStudent.id}&usn=${deleteConfirmStudent.usn}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (typeof window !== "undefined" && deleteConfirmStudent.usn) {
+          window.localStorage.removeItem(
+            `rrce-erp-profile-image-${deleteConfirmStudent.usn.toLowerCase().trim()}`
+          );
+        }
+
+        setMessage({
+          type: "success",
+          text: `Student ${deleteConfirmStudent.user?.firstName || deleteConfirmStudent.usn} (${deleteConfirmStudent.usn}) was permanently removed from records.`,
+        });
+
+        setDeleteConfirmStudent(null);
+        setIsEditModalOpen(false);
+        await fetchData();
+      } else {
+        setMessage({ type: "error", text: data.error || "Failed to delete student record." });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Network error during student deletion." });
+    } finally {
+      setDeletingStudent(false);
+    }
+  }
+
   const filteredStudents = students.filter((s) => {
     const term = search.toLowerCase();
     const fullName = `${s.user?.firstName || ""} ${s.user?.lastName || ""}`.toLowerCase();
@@ -513,13 +554,24 @@ export default function AdmissionsPortal() {
                     </td>
 
                     <td className="py-2 px-3 text-right">
-                      <button
-                        onClick={() => openEditModal(st)}
-                        className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 hover:text-blue-700 border border-slate-200 rounded-md font-semibold text-[11px] inline-flex items-center gap-1.5 transition-colors shadow-2xs"
-                      >
-                        <Edit className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Edit Details</span>
-                      </button>
+                      <div className="inline-flex items-center gap-1.5 justify-end">
+                        <button
+                          onClick={() => openEditModal(st)}
+                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 hover:text-blue-700 border border-slate-200 rounded-md font-semibold text-[11px] inline-flex items-center gap-1.5 transition-colors shadow-2xs"
+                        >
+                          <Edit className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Edit Details</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setDeleteConfirmStudent(st)}
+                          title={`Delete record for ${st.usn}`}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-md transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -951,23 +1003,91 @@ export default function AdmissionsPortal() {
                 </p>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-md font-semibold"
+                  onClick={() => setDeleteConfirmStudent(editStudent)}
+                  className="px-3 py-1.5 text-rose-600 hover:text-rose-800 hover:bg-rose-50 border border-rose-200 rounded-md font-semibold text-xs flex items-center gap-1.5 transition-colors"
                 >
-                  Cancel
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Student Record</span>
                 </button>
-                <button
-                  type="submit"
-                  disabled={updatingStudent}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold disabled:opacity-50 transition-colors flex items-center gap-2 shadow-xs"
-                >
-                  {updatingStudent ? "Saving Changes..." : "Save & Update Information"}
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-md font-semibold text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updatingStudent}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold text-xs disabled:opacity-50 transition-colors flex items-center gap-2 shadow-xs"
+                  >
+                    {updatingStudent ? "Saving Changes..." : "Save & Update Information"}
+                  </button>
+                </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE STUDENT CONFIRMATION MODAL */}
+      {deleteConfirmStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-xl max-w-md w-full shadow-2xl border border-rose-200 p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-rose-100">
+              <div className="flex items-center gap-2.5 text-rose-700 font-bold text-sm">
+                <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <span>Delete Student Record</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmStudent(null)}
+                className="text-slate-400 hover:text-slate-600 font-bold p-1 rounded-md"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-3 bg-rose-50/70 border border-rose-200 rounded-lg text-rose-950 space-y-2 text-xs">
+              <p className="font-semibold text-rose-900">
+                Are you sure you want to permanently delete this student record?
+              </p>
+              <div className="font-mono text-[11px] bg-white p-2.5 rounded border border-rose-200 text-slate-800 space-y-1">
+                <div><strong>USN:</strong> {deleteConfirmStudent.usn}</div>
+                <div><strong>Name:</strong> {deleteConfirmStudent.user?.firstName} {deleteConfirmStudent.user?.lastName}</div>
+                <div><strong>Dept:</strong> {deleteConfirmStudent.department?.code || selectedDept} • Sem {deleteConfirmStudent.currentSemester || 3} Sec {deleteConfirmStudent.section || "A"}</div>
+              </div>
+              <p className="text-[11px] text-rose-700 leading-relaxed">
+                ⚠️ This action is irreversible. It will permanently remove their admission entry, login account, invoice ledger, and associated records.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                disabled={deletingStudent}
+                onClick={() => setDeleteConfirmStudent(null)}
+                className="px-3.5 py-2 text-slate-600 hover:bg-slate-100 rounded-md font-semibold text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deletingStudent}
+                onClick={handleDeleteStudent}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-md font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{deletingStudent ? "Deleting..." : "Permanently Delete"}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

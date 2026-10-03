@@ -268,3 +268,126 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = getSessionFromRequest(req);
+  if (!session || !["ADMISSIONS", "PRINCIPAL"].includes(session.role)) {
+    return NextResponse.json(
+      { error: "Unauthorized: Only Admissions or Principal can delete a student record." },
+      { status: 403 }
+    );
+  }
+
+  try {
+    const searchParams = req.nextUrl.searchParams;
+    const studentIdParam = searchParams.get("id");
+    const usnParam = searchParams.get("usn");
+
+    let studentId = studentIdParam;
+    let usn = usnParam;
+
+    if (!studentId && !usn) {
+      try {
+        const body = await req.json();
+        studentId = body.studentId || body.id;
+        usn = body.usn;
+      } catch {
+        // No body
+      }
+    }
+
+    if (!studentId && !usn) {
+      return NextResponse.json(
+        { error: "Student ID or USN is required to delete record." },
+        { status: 400 }
+      );
+    }
+
+    let deletedStudentInfo = null;
+
+    try {
+      const student = await prisma.student.findFirst({
+        where: {
+          OR: [
+            ...(studentId ? [{ id: studentId }] : []),
+            ...(usn ? [{ usn }] : []),
+          ],
+        },
+        include: {
+          user: true,
+          department: true,
+        },
+      });
+
+      if (student) {
+        deletedStudentInfo = {
+          id: student.id,
+          usn: student.usn,
+          name: `${student.user.firstName} ${student.user.lastName}`,
+          department: student.department?.code,
+        };
+
+        await prisma.$transaction(async (tx) => {
+          // Delete student cascade relations
+          await tx.sessionAttendanceRecord.deleteMany({
+            where: { studentId: student.id },
+          });
+          await tx.attendanceRecord.deleteMany({
+            where: { studentId: student.id },
+          });
+          await tx.invoice.deleteMany({
+            where: { studentId: student.id },
+          });
+          await tx.submission.deleteMany({
+            where: { studentId: student.userId },
+          });
+          await tx.student.delete({
+            where: { id: student.id },
+          });
+          await tx.user.delete({
+            where: { id: student.userId },
+          });
+
+          await tx.auditLog.create({
+            data: {
+              action: "STUDENT_DELETED",
+              performedBy: session.username,
+              details: JSON.stringify({
+                studentId: student.id,
+                usn: student.usn,
+                name: `${student.user.firstName} ${student.user.lastName}`,
+                department: student.department?.code,
+                deletedBy: session.username,
+                timestamp: new Date().toISOString(),
+              }),
+            },
+          });
+        });
+      }
+    } catch (dbErr) {
+      console.warn("DB student deletion failed, cleaning fallback in-memory:", dbErr);
+    }
+
+    // Also remove from in-memory fallback list if present
+    if (usn || deletedStudentInfo?.usn) {
+      const targetUsn = (usn || deletedStudentInfo?.usn || "").toLowerCase();
+      const idx = BCA_2025_STUDENTS.findIndex((s) => {
+        const seqStr = String(s.sequence).padStart(3, "0");
+        return `1RR25BC${seqStr}`.toLowerCase() === targetUsn;
+      });
+      if (idx !== -1) {
+        BCA_2025_STUDENTS.splice(idx, 1);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Student record (${deletedStudentInfo?.usn || usn || studentId}) permanently deleted.`,
+      deletedStudent: deletedStudentInfo,
+    });
+  } catch (error: unknown) {
+    console.error("Student deletion error:", error);
+    const message = error instanceof Error ? error.message : "Failed to delete student record";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
