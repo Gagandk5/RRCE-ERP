@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest, hashPassword, signToken, AUTH_COOKIE_CONFIG } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
+  const clientIp = getClientIp(req);
+  const rl = checkRateLimit(clientIp, {
+    limit: 5,
+    windowMs: 60 * 1000,
+    keyPrefix: "auth_reset_pwd",
+  });
+
+  if (!rl.success) {
+    logger.warn({ ip: clientIp }, "Rate limit exceeded on /api/auth/reset-password");
+    return rateLimitResponse(rl.limit, rl.resetMs);
+  }
+
   const session = getSessionFromRequest(req);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 });
@@ -48,7 +62,7 @@ export async function POST(req: NextRequest) {
         },
       });
     } catch (dbErr) {
-      console.warn("DB password reset update warning:", dbErr);
+      logger.warn({ err: dbErr }, "DB password reset update warning");
     }
 
     const updatedPayload = {
@@ -66,7 +80,7 @@ export async function POST(req: NextRequest) {
     response.cookies.set(AUTH_COOKIE_CONFIG.name, token, AUTH_COOKIE_CONFIG.options);
     return response;
   } catch (error: unknown) {
-    console.error("Password reset error:", error);
+    logger.error({ error }, "Password reset error");
     const message = error instanceof Error ? error.message : "Password reset failed";
     return NextResponse.json({ error: message }, { status: 500 });
   }

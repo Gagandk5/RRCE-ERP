@@ -62,9 +62,9 @@ export async function POST(req: NextRequest) {
       phone = dbStudent.user.phone || "+91 8971115212";
       passwordFormula = generateDefaultPassword(dbStudent.user.firstName, dbStudent.dateOfBirth);
       usnFormatted = dbStudent.usn;
-      dobFormatted = typeof dbStudent.dateOfBirth === "string"
-        ? dbStudent.dateOfBirth.slice(0, 10)
-        : new Date(dbStudent.dateOfBirth).toISOString().slice(0, 10);
+      dobFormatted = dbStudent.dateOfBirth instanceof Date
+        ? dbStudent.dateOfBirth.toISOString().slice(0, 10)
+        : String(dbStudent.dateOfBirth).slice(0, 10);
     } else {
       const match = BCA_2025_STUDENTS.find((s) => {
         const studentUsn = generateUSN("1RR", "25", "BC", s.sequence).toUpperCase();
