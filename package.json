@@ -9,7 +9,7 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "tsx scripts/seed-neon.ts"
+    "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.0",
