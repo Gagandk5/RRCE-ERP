@@ -1,24 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionFromRequest, comparePassword, hashPassword } from "@/lib/auth";
-import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
-import { validatePassword } from "@/lib/password-policy";
-import { formatAuditDetails } from "@/lib/audit-sanitizer";
 
 export async function POST(req: NextRequest) {
-  const clientIp = getClientIp(req);
-  const rl = checkRateLimit(clientIp, {
-    limit: 5,
-    windowMs: 60 * 1000,
-    keyPrefix: "auth_change_pwd",
-  });
-
-  if (!rl.success) {
-    logger.warn({ ip: clientIp }, "Rate limit exceeded on /api/auth/change-password");
-    return rateLimitResponse(rl.limit, rl.resetMs);
-  }
-
   try {
     const session = getSessionFromRequest(req);
     if (!session || !session.userId) {
@@ -38,14 +22,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Password strength check (Item 12)
-    const policyResult = validatePassword(newPassword);
-    if (!policyResult.valid) {
+    if (newPassword.length < 6) {
       return NextResponse.json(
-        {
-          error: policyResult.errors[0],
-          details: policyResult.errors,
-        },
+        { error: "New password must be at least 6 characters in length." },
         { status: 400 }
       );
     }
@@ -64,7 +43,7 @@ export async function POST(req: NextRequest) {
         where: { id: session.userId },
       });
     } catch (err) {
-      logger.warn({ err }, "Database lookup error in change-password");
+      console.warn("Database lookup error in change-password:", err);
     }
 
     if (!user) {
@@ -76,7 +55,6 @@ export async function POST(req: NextRequest) {
 
     const isCurrentValid = await comparePassword(currentPassword, user.passwordHash);
     if (!isCurrentValid) {
-      logger.warn({ userId: user.id }, "Failed password change: current password incorrect");
       return NextResponse.json(
         { error: "The current password you entered is incorrect." },
         { status: 400 }
@@ -90,24 +68,15 @@ export async function POST(req: NextRequest) {
       data: {
         passwordHash: newPasswordHash,
         isPasswordResetRequired: false,
-        tokenVersion: { increment: 1 },
       },
     });
-
-    // Invalidate all existing refresh tokens across all sessions (Item 19)
-    try {
-      const { revokeAllUserRefreshTokens } = await import("@/lib/refresh-tokens");
-      await revokeAllUserRefreshTokens(user.id);
-    } catch (revokeErr) {
-      logger.warn({ revokeErr }, "Failed to revoke refresh tokens during password change");
-    }
 
     try {
       await prisma.auditLog.create({
         data: {
           action: "PASSWORD_CHANGED",
-          performedBy: session.email || session.username || "USER",
-          details: formatAuditDetails({
+          performedBy: session.email || session.username || "FACULTY",
+          details: JSON.stringify({
             userId: user.id,
             email: user.email,
             role: user.role,
@@ -116,17 +85,15 @@ export async function POST(req: NextRequest) {
         },
       });
     } catch (auditErr) {
-      logger.warn({ auditErr }, "AuditLog recording warning");
+      console.warn("AuditLog recording warning:", auditErr);
     }
-
-    logger.info({ userId: user.id }, "Password changed successfully");
 
     return NextResponse.json({
       success: true,
       message: "Password updated successfully.",
     });
   } catch (error: unknown) {
-    logger.error({ error }, "Change password route error");
+    console.error("Change password route error:", error);
     const msg = error instanceof Error ? error.message : "Internal error changing password.";
     return NextResponse.json({ error: msg }, { status: 500 });
   }

@@ -291,15 +291,14 @@ export default function AdmissionsPortal() {
     setMessage(null);
 
     try {
-      const { usn: formUsn, ...restEditForm } = editForm;
       const res = await fetch("/api/students/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId: editStudent.id,
           usn: editStudent.usn,
-          newUsn: formUsn.trim().toUpperCase() !== editStudent.usn ? formUsn.trim().toUpperCase() : undefined,
-          ...restEditForm,
+          newUsn: editForm.usn.trim().toUpperCase() !== editStudent.usn ? editForm.usn.trim().toUpperCase() : undefined,
+          ...editForm,
         }),
       });
 
