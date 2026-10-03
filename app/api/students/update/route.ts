@@ -15,7 +15,30 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { studentId, usn: inputUsn, firstName, lastName, phone, dob, quota, photoUrl } = body;
+    const {
+      studentId,
+      usn: inputUsn,
+      newUsn,
+      firstName,
+      lastName,
+      email,
+      phone,
+      dob,
+      quota,
+      semester,
+      section,
+      departmentId,
+      isActive,
+      photoUrl,
+    } = body;
+
+    // Strict institutional guardrail: Attendance and Marks can NEVER be modified through Admissions
+    if (body.attendance !== undefined || body.marks !== undefined || body.cie !== undefined) {
+      return NextResponse.json(
+        { error: "Forbidden: Student attendance records and exam marks cannot be modified via Admissions." },
+        { status: 403 }
+      );
+    }
 
     if (!inputUsn && !studentId) {
       return NextResponse.json(
@@ -38,12 +61,13 @@ export async function POST(req: NextRequest) {
       if (usn) {
         studentRecord = await prisma.student.findUnique({
           where: { usn },
-          include: { user: true },
+          include: { user: true, department: true },
         });
-      } else if (studentId) {
+      }
+      if (!studentRecord && studentId) {
         studentRecord = await prisma.student.findUnique({
           where: { id: studentId },
-          include: { user: true },
+          include: { user: true, department: true },
         });
       }
 
@@ -58,9 +82,24 @@ export async function POST(req: NextRequest) {
           const userUpdateData: any = {};
           if (firstName) userUpdateData.firstName = firstName;
           if (lastName !== undefined) userUpdateData.lastName = lastName;
+          if (email) userUpdateData.email = email;
           if (phone !== undefined) userUpdateData.phone = phone;
           if (photoUrl !== undefined) userUpdateData.photoUrl = photoUrl;
-          if (dob) userUpdateData.passwordHash = newPasswordHash;
+          if (isActive !== undefined) userUpdateData.isActive = Boolean(isActive);
+          if (departmentId) userUpdateData.departmentId = departmentId;
+          if (dob || firstName) userUpdateData.passwordHash = newPasswordHash;
+
+          const effectiveNewUsn =
+            newUsn && newUsn.trim().toUpperCase() !== studentRecord.usn
+              ? newUsn.trim().toUpperCase()
+              : null;
+
+          if (effectiveNewUsn) {
+            userUpdateData.username = effectiveNewUsn;
+            if (!email && studentRecord.user.email.includes(studentRecord.usn.toLowerCase())) {
+              userUpdateData.email = `${effectiveNewUsn.toLowerCase()}@student.rrce.org`;
+            }
+          }
 
           await tx.user.update({
             where: { id: studentRecord.userId },
@@ -68,8 +107,20 @@ export async function POST(req: NextRequest) {
           });
 
           const studentUpdateData: any = {};
+          if (effectiveNewUsn) {
+            studentUpdateData.usn = effectiveNewUsn;
+          }
           if (dob) studentUpdateData.dateOfBirth = new Date(dob);
           if (quota) studentUpdateData.quota = quota;
+          if (semester !== undefined && !isNaN(Number(semester))) {
+            studentUpdateData.currentSemester = Number(semester);
+          }
+          if (section !== undefined && section.trim()) {
+            studentUpdateData.section = section.trim().toUpperCase();
+          }
+          if (departmentId) {
+            studentUpdateData.departmentId = departmentId;
+          }
 
           const st = await tx.student.update({
             where: { id: studentRecord.id },
@@ -79,12 +130,22 @@ export async function POST(req: NextRequest) {
 
           await tx.auditLog.create({
             data: {
-              action: "STUDENT_PROFILE_UPDATED",
+              action: "STUDENT_MASTER_UPDATED",
               performedBy: session.username,
               details: JSON.stringify({
-                usn,
-                updatedName: `${firstName} ${lastName}`,
-                updatedDob: dob,
+                originalUsn: studentRecord.usn,
+                updatedUsn: effectiveNewUsn || studentRecord.usn,
+                updatedName: `${firstName || studentRecord.user.firstName} ${
+                  lastName !== undefined ? lastName : studentRecord.user.lastName
+                }`,
+                updatedEmail: email || studentRecord.user.email,
+                updatedPhone: phone !== undefined ? phone : studentRecord.user.phone,
+                updatedDob: dob || studentRecord.dateOfBirth,
+                updatedSemester: semester ?? studentRecord.currentSemester,
+                updatedSection: section ?? studentRecord.section,
+                updatedQuota: quota || studentRecord.quota,
+                updatedDepartmentId: departmentId || studentRecord.departmentId,
+                updatedIsActive: isActive !== undefined ? isActive : studentRecord.user.isActive,
                 newFormulaPassword,
               }),
             },
@@ -106,18 +167,18 @@ export async function POST(req: NextRequest) {
       });
 
       if (seedMatch) {
-        seedMatch.firstName = firstName;
-        seedMatch.lastName = lastName || "";
-        seedMatch.dob = dob;
-        if (phone) seedMatch.phone = phone;
+        if (firstName) seedMatch.firstName = firstName;
+        if (lastName !== undefined) seedMatch.lastName = lastName;
+        if (dob) seedMatch.dob = dob;
+        if (phone !== undefined) seedMatch.phone = phone;
         if (quota) seedMatch.quota = quota as any;
       }
     }
 
     const displayName = firstName || updatedStudent?.user?.firstName || usn || "Student";
     const updateMsg = dob
-      ? `Student ${displayName}'s details updated successfully! Date of Birth set to ${dob}. Formula password automatically recalculated to: ${newFormulaPassword}`
-      : `Student ${displayName}'s profile updated successfully!`;
+      ? `Student ${displayName}'s master information updated successfully! Default password auto-recalculated to: ${newFormulaPassword}`
+      : `Student ${displayName}'s master information updated successfully!`;
 
     return NextResponse.json({
       success: true,

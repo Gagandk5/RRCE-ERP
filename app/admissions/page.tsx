@@ -16,6 +16,9 @@ import {
   Upload,
   X,
   User,
+  GraduationCap,
+  Lock,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function AdmissionsPortal() {
@@ -48,15 +51,21 @@ export default function AdmissionsPortal() {
   const [feeAdjustment, setFeeAdjustment] = useState("0");
   const [reallocating, setReallocating] = useState(false);
 
-  // Edit Student Details Modal State
+  // Edit Student Master Details Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editStudent, setEditStudent] = useState<any>(null);
   const [editForm, setEditForm] = useState({
     firstName: "",
     lastName: "",
-    dob: "2007-01-01",
+    email: "",
     phone: "",
+    dob: "2007-01-01",
+    usn: "",
+    departmentId: "",
+    semester: 3,
+    section: "A",
     quota: "KCET",
+    isActive: true,
   });
   const [updatingStudent, setUpdatingStudent] = useState(false);
 
@@ -261,9 +270,15 @@ export default function AdmissionsPortal() {
     setEditForm({
       firstName: student.user?.firstName || "",
       lastName: student.user?.lastName || "",
-      dob: dobString,
+      email: student.user?.email || `${student.usn.toLowerCase()}@student.rrce.org`,
       phone: student.user?.phone || "",
+      dob: dobString,
+      usn: student.usn || "",
+      departmentId: student.departmentId || student.department?.id || (departments[0]?.id || ""),
+      semester: student.currentSemester || 3,
+      section: student.section || "A",
       quota: student.quota || "KCET",
+      isActive: student.user?.isActive !== false,
     });
     setIsEditModalOpen(true);
   }
@@ -281,6 +296,7 @@ export default function AdmissionsPortal() {
         body: JSON.stringify({
           studentId: editStudent.id,
           usn: editStudent.usn,
+          newUsn: editForm.usn.trim().toUpperCase() !== editStudent.usn ? editForm.usn.trim().toUpperCase() : undefined,
           ...editForm,
         }),
       });
@@ -289,7 +305,9 @@ export default function AdmissionsPortal() {
       if (res.ok && data.success) {
         setMessage({
           type: "success",
-          text: `Student ${editForm.firstName}'s details updated successfully! Default password auto-recalculated to: ${data.newFormulaPassword}`,
+          text: `Student ${editForm.firstName}'s master information updated successfully! ${
+            data.newFormulaPassword ? `Default formula password: ${data.newFormulaPassword}` : ""
+          }`,
         });
         setIsEditModalOpen(false);
         await fetchData();
@@ -467,7 +485,7 @@ export default function AdmissionsPortal() {
               <tr>
                 <th className="py-2.5 px-3">Seq</th>
                 <th className="py-2.5 px-3 text-center">Photo</th>
-                <th className="py-2.5 px-3">USN</th>
+                <th className="py-2.5 px-3">USN & Class</th>
                 <th className="py-2.5 px-3">Student Name</th>
                 <th className="py-2.5 px-3">Quota</th>
                 <th className="py-2.5 px-3">Date of Birth</th>
@@ -510,8 +528,11 @@ export default function AdmissionsPortal() {
                       </button>
                     </td>
 
-                    <td className="py-2 px-3 font-mono font-bold text-slate-900">
-                      {st.usn}
+                    <td className="py-2 px-3 font-mono">
+                      <div className="font-bold text-slate-900">{st.usn}</div>
+                      <div className="text-[10px] text-slate-400 font-sans font-normal">
+                        Sem {st.currentSemester || 3} • Sec {st.section || "A"}
+                      </div>
                     </td>
 
                     <td className="py-2 px-3">
@@ -541,10 +562,10 @@ export default function AdmissionsPortal() {
                       <div className="inline-flex items-center gap-1.5">
                         <button
                           onClick={() => openEditModal(st)}
-                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 rounded-md font-semibold text-[11px] flex items-center gap-1"
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 rounded-md font-semibold text-[11px] flex items-center gap-1 transition-colors"
                         >
-                          <Edit className="w-3 h-3" />
-                          <span>Edit DOB</span>
+                          <Edit className="w-3 h-3 text-blue-600" />
+                          <span>Edit Details</span>
                         </button>
 
                         <button
@@ -689,74 +710,243 @@ export default function AdmissionsPortal() {
         </div>
       )}
 
-      {/* EDIT STUDENT PROFILE MODAL */}
+      {/* EDIT STUDENT MASTER PROFILE MODAL */}
       {isEditModalOpen && editStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-lg max-w-md w-full shadow-lg border border-slate-200 p-6">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl border border-slate-200 p-6 my-8 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
+                <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-200">
                   <Edit className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">
-                    Edit Student Profile & DOB
+                    Edit Student Master Information
                   </h3>
                   <p className="text-[11px] text-slate-500 font-mono">
-                    USN: {editStudent.usn}
+                    USN: {editStudent.usn} • Roll #{String(editStudent.usnSequence).padStart(3, "0")} • {editStudent.department?.code || selectedDept}
                   </p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 font-bold"
+                className="text-slate-400 hover:text-slate-600 font-bold p-1 rounded-md"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateStudent} className="space-y-3.5">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">First Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={editForm.firstName}
-                    onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                    className="w-full p-2 border border-slate-300 rounded-md"
-                  />
+            {/* Quick Student Badge / Avatar Strip */}
+            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="flex items-center gap-3">
+                <div className="relative w-11 h-11 rounded-full overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                  {getStudentPhoto(editStudent) ? (
+                    <img
+                      src={getStudentPhoto(editStudent)!}
+                      alt={editStudent.user?.firstName || "Student"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="font-mono font-bold text-xs text-slate-600">
+                      {getStudentInitials(editStudent.user?.firstName, editStudent.user?.lastName)}
+                    </span>
+                  )}
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Last Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={editForm.lastName}
-                    onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                    className="w-full p-2 border border-slate-300 rounded-md"
-                  />
+                  <div className="font-bold text-slate-900 text-xs">
+                    {editStudent.user?.firstName} {editStudent.user?.lastName}
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono">
+                    {editForm.email}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPhotoModalStudent(editStudent);
+                }}
+                className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 bg-white border border-blue-200 px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-2xs hover:bg-blue-50 transition-colors"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>Manage Photo</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateStudent} className="space-y-4">
+              {/* SECTION 1: PERSONAL & CONTACT */}
+              <div className="space-y-2">
+                <div className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
+                  <User className="w-3.5 h-3.5" />
+                  <span>Personal & Contact Information</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">First Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.firstName}
+                      onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Last Name</label>
+                    <input
+                      type="text"
+                      value={editForm.lastName}
+                      onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Official Student Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                      className="w-full p-2 border border-slate-300 rounded-md font-mono text-[11px] focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Mobile Contact Phone</label>
+                    <input
+                      type="tel"
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                      placeholder="+91 9108119999"
+                      className="w-full p-2 border border-slate-300 rounded-md font-mono text-[11px] focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block font-bold text-slate-700 mb-1">Date of Birth *</label>
+                    <input
+                      type="date"
+                      required
+                      value={editForm.dob}
+                      onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })}
+                      className="w-full p-2 border border-slate-300 rounded-md font-mono text-xs focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Date of Birth</label>
-                <input
-                  type="date"
-                  required
-                  value={editForm.dob}
-                  onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })}
-                  className="w-full p-2 border border-slate-300 rounded-md font-mono"
-                />
+              {/* SECTION 2: ACADEMIC & ENROLLMENT */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <div className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  <span>Academic & Program Enrollment</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">USN (Seat Number)</label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.usn}
+                      onChange={(e) => setEditForm({ ...editForm, usn: e.target.value.toUpperCase() })}
+                      className="w-full p-2 border border-slate-300 rounded-md font-mono uppercase font-bold focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Department / Branch</label>
+                    <select
+                      value={editForm.departmentId}
+                      onChange={(e) => setEditForm({ ...editForm, departmentId: e.target.value })}
+                      className="w-full p-2 bg-white border border-slate-300 rounded-md font-medium"
+                    >
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.code} - {d.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Current Semester</label>
+                    <select
+                      value={editForm.semester}
+                      onChange={(e) => setEditForm({ ...editForm, semester: parseInt(e.target.value) || 1 })}
+                      className="w-full p-2 bg-white border border-slate-300 rounded-md font-mono font-bold"
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                        <option key={sem} value={sem}>
+                          Semester {sem}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Section</label>
+                    <select
+                      value={editForm.section}
+                      onChange={(e) => setEditForm({ ...editForm, section: e.target.value })}
+                      className="w-full p-2 bg-white border border-slate-300 rounded-md font-mono font-bold"
+                    >
+                      {["A", "B", "C", "D"].map((sec) => (
+                        <option key={sec} value={sec}>
+                          Section {sec}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Admission Quota</label>
+                    <select
+                      value={editForm.quota}
+                      onChange={(e) => setEditForm({ ...editForm, quota: e.target.value })}
+                      className="w-full p-2 bg-white border border-slate-300 rounded-md font-bold"
+                    >
+                      <option value="KCET">KCET</option>
+                      <option value="COMEDK">COMEDK</option>
+                      <option value="MANAGEMENT">MANAGEMENT</option>
+                      <option value="GOV">GOV</option>
+                      <option value="NRI">NRI</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Account Status</label>
+                    <select
+                      value={editForm.isActive ? "active" : "inactive"}
+                      onChange={(e) => setEditForm({ ...editForm, isActive: e.target.value === "active" })}
+                      className="w-full p-2 bg-white border border-slate-300 rounded-md font-semibold"
+                    >
+                      <option value="active">Active (Enrolled)</option>
+                      <option value="inactive">Inactive (Suspended)</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-[11px] text-amber-900 space-y-1">
+              {/* SECTION 3: STRICT GUARDRAILS (ATTENDANCE & MARKS PROTECTED) */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] space-y-1.5">
+                <div className="font-bold flex items-center gap-1.5 text-slate-800">
+                  <Lock className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                  <span>Protected Academic Records (Read-Only)</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-600">
+                  <div className="bg-white p-2 rounded border border-slate-200">
+                    <span className="font-semibold block text-slate-800">Attendance Records</span>
+                    <span className="text-[10px] text-slate-500">Governed exclusively by Faculty Roll-Call & VTU Lockout protocols. Admissions cannot modify attendance.</span>
+                  </div>
+                  <div className="bg-white p-2 rounded border border-slate-200">
+                    <span className="font-semibold block text-slate-800">CIE & Semester Marks</span>
+                    <span className="text-[10px] text-slate-500">Managed exclusively by subject instructors and the Controller of Examinations. Admissions cannot modify marks.</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Password notice */}
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-900 space-y-1">
                 <div className="font-bold flex items-center gap-1.5 text-amber-800">
                   <Key className="w-3.5 h-3.5 shrink-0" />
                   <span>Auto Password Recalculation Notice</span>
                 </div>
                 <p className="leading-relaxed">
-                  Updating Date of Birth or First Name automatically recalculates the student's formula password (<code className="font-mono font-bold">[NAME_3_UPPER][DD][MM][YY]</code>) and updates PostgreSQL password hashes.
+                  Modifying Date of Birth or First Name recalculates the default formula password (<code className="font-mono font-bold">[NAME_3_UPPER][DDMMYY]</code>) and immediately synchronizes login credentials.
                 </p>
               </div>
 
@@ -771,9 +961,9 @@ export default function AdmissionsPortal() {
                 <button
                   type="submit"
                   disabled={updatingStudent}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md font-semibold disabled:opacity-50 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold disabled:opacity-50 transition-colors flex items-center gap-2 shadow-xs"
                 >
-                  {updatingStudent ? "Updating..." : "Save & Update Profile"}
+                  {updatingStudent ? "Saving Changes..." : "Save & Update Information"}
                 </button>
               </div>
             </form>
