@@ -19,6 +19,7 @@ import {
   Bell,
 } from "lucide-react";
 import { ProfileAvatar } from "@/components/ProfileContext";
+import BottomNav from "@/components/BottomNav";
 
 export default function StudentLayout({
   children,
@@ -380,9 +381,10 @@ export default function StudentLayout({
           isSidebarOpen ? "lg:ml-64" : "ml-0"
         }`}
       >
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-5 sm:space-y-6">
+        <main className={`flex-1 w-full mx-auto ${pathname === "/student" ? "p-0" : "p-4 sm:p-6 lg:p-8 max-w-7xl space-y-5 sm:space-y-6"}`}>
           {children}
         </main>
+        <BottomNav role="STUDENT" />
       </div>
     </div>
   );

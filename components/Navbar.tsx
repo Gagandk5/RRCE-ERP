@@ -77,7 +77,7 @@ export default function Navbar() {
   }
 
   // Hide global navbar on root gateway, login page, student workspace, and faculty portal (which owns its own sidebar)
-  if (pathname === "/" || pathname === "/login" || pathname.startsWith("/student") || pathname.startsWith("/faculty")) {
+  if (pathname === "/" || pathname === "/login" || pathname.startsWith("/student") || pathname.startsWith("/faculty") || pathname.startsWith("/hod") || pathname.startsWith("/admissions") || pathname.startsWith("/principal")) {
     return null;
   }
 
