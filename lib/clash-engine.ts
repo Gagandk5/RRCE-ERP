@@ -13,6 +13,25 @@ export interface SlotValidationInput {
   section: string;
 }
 
+export interface TimetableClashSlot {
+  id: string;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  subject: string;
+  facultyId: string;
+  roomNumber: string;
+  departmentId: string;
+  semester: number;
+  section: string;
+}
+
+export interface TimetableClash {
+  type: "FACULTY_CLASH" | "ROOM_CLASH" | "BATCH_CLASH";
+  dayOfWeek: string;
+  message: string;
+}
+
 export function timeOverlaps(
   startA: string,
   endA: string,
@@ -20,6 +39,48 @@ export function timeOverlaps(
   endB: string
 ): boolean {
   return startA < endB && startB < endA;
+}
+
+export function findTimetableClashes(slots: TimetableClashSlot[]): TimetableClash[] {
+  const clashes: TimetableClash[] = [];
+  for (let leftIndex = 0; leftIndex < slots.length; leftIndex += 1) {
+    const left = slots[leftIndex];
+    for (let rightIndex = leftIndex + 1; rightIndex < slots.length; rightIndex += 1) {
+      const right = slots[rightIndex];
+      if (left.dayOfWeek !== right.dayOfWeek ||
+        !timeOverlaps(left.startTime, left.endTime, right.startTime, right.endTime)) {
+        continue;
+      }
+
+      const day = left.dayOfWeek;
+      if (left.facultyId === right.facultyId) {
+        clashes.push({
+          type: "FACULTY_CLASH",
+          dayOfWeek: day,
+          message: `${day}: ${left.subject} and ${right.subject} overlap for the same faculty.`,
+        });
+      }
+      if (left.roomNumber.trim().toUpperCase() === right.roomNumber.trim().toUpperCase()) {
+        clashes.push({
+          type: "ROOM_CLASH",
+          dayOfWeek: day,
+          message: `${day}: Room ${left.roomNumber} is assigned to both ${left.subject} and ${right.subject}.`,
+        });
+      }
+      if (
+        left.departmentId === right.departmentId &&
+        left.semester === right.semester &&
+        left.section.trim().toUpperCase() === right.section.trim().toUpperCase()
+      ) {
+        clashes.push({
+          type: "BATCH_CLASH",
+          dayOfWeek: day,
+          message: `${day}: ${left.subject} and ${right.subject} overlap for ${left.section}.`,
+        });
+      }
+    }
+  }
+  return clashes;
 }
 
 export async function validateTimetableClash(

@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Users,
-  Lock,
-  Unlock,
   CheckCircle2,
   RefreshCw,
   Search,
@@ -21,7 +19,6 @@ export default function HODPortal() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [unlockingId, setUnlockingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"attendance" | "students" | "faculty">("attendance");
 
@@ -60,33 +57,6 @@ export default function HODPortal() {
     }
   }
 
-  async function handleHODUnlock(sessionId: string) {
-    setUnlockingId(sessionId);
-    setMessage(null);
-    try {
-      const res = await fetch("/api/attendance/unlock", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId,
-          reason: "HOD BCA Authorization: Permission granted for attendance record reconciliation.",
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setMessage("HOD Override Granted: Attendance session unlocked! Faculty may now edit records.");
-        await loadHODData();
-      } else {
-        setMessage(data.error || "Failed to unlock session.");
-      }
-    } catch {
-      setMessage("Error sending unlock request.");
-    } finally {
-      setUnlockingId(null);
-    }
-  }
-
   const filteredStudents = students.filter((s) => {
     const term = search.toLowerCase();
     const fullName = `${s.user?.firstName || ""} ${s.user?.lastName || ""}`.toLowerCase();
@@ -106,7 +76,7 @@ export default function HODPortal() {
               HOD Directorate • Department of Computer Applications (BCA)
             </h1>
             <p className="text-xs text-slate-400 font-mono">
-              Dr. Praveen Gowda, HOD • Academic Oversight & Lockout Controls
+              Dr. Praveen Gowda, HOD • Academic Oversight
             </p>
           </div>
         </div>
@@ -158,14 +128,14 @@ export default function HODPortal() {
 
         <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">24h Lockout Status</span>
-            <Lock className="w-4 h-4 text-slate-700" />
+            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Attendance Status</span>
+            <Clock className="w-4 h-4 text-slate-700" />
           </div>
-          <div className="text-xl font-bold text-amber-700 mt-1 font-mono">
-            {sessions.filter((s) => s.lockoutStatus?.isLocked && !s.isLockedOverride).length} Locked
+          <div className="text-xl font-bold text-emerald-700 mt-1 font-mono">
+            Open
           </div>
           <p className="text-[11px] text-slate-500 mt-0.5">
-            Sessions requiring HOD unlock override
+            Attendance can be updated anytime
           </p>
         </div>
 
@@ -194,7 +164,7 @@ export default function HODPortal() {
           }`}
         >
           <Clock className="w-4 h-4" />
-          Attendance Sessions & 24h Lockouts
+          Attendance Sessions & Updates
         </button>
 
         <button
@@ -227,14 +197,14 @@ export default function HODPortal() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
               <h2 className="text-sm font-bold text-slate-900">
-                BCA Attendance Sessions & 24h Lockout Controls
+                BCA Attendance Sessions & Updates
               </h2>
               <p className="text-xs text-slate-500 font-mono">
-                Sessions lock 24 hours after creation. Requires HOD or Principal override to unlock.
+                Attendance for any valid past date can be updated from the faculty roll-call ledger.
               </p>
             </div>
             <span className="text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200 px-2.5 py-1 rounded font-mono">
-              HOD Override Active
+              Ledger-managed
             </span>
           </div>
 
@@ -245,36 +215,17 @@ export default function HODPortal() {
               </p>
             ) : (
               sessions.map((session) => {
-                const isLocked = session.lockoutStatus?.isLocked && !session.isLockedOverride;
                 return (
                   <div
                     key={session.id}
-                    className={`p-3.5 rounded-md border ${
-                      session.isLockedOverride
-                        ? "bg-emerald-50 border-emerald-200"
-                        : isLocked
-                        ? "bg-amber-50 border-amber-200"
-                        : "bg-slate-50 border-slate-200"
-                    }`}
+                    className="rounded-md border border-slate-200 bg-slate-50 p-3.5"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="text-xs font-bold text-slate-900">{session.subject}</h3>
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase border ${
-                              session.isLockedOverride
-                                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                                : isLocked
-                                ? "bg-amber-100 text-amber-900 border-amber-200"
-                                : "bg-blue-100 text-blue-800 border-blue-200"
-                            }`}
-                          >
-                            {session.isLockedOverride
-                              ? "Unlocked (HOD Override Active)"
-                              : isLocked
-                              ? "Locked (24h Exceeded)"
-                              : "Active (Within 24h Window)"}
+                          <span className="rounded border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600">
+                            Historical dates supported
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
@@ -282,27 +233,6 @@ export default function HODPortal() {
                         </p>
                       </div>
 
-                      <div>
-                        {isLocked ? (
-                          <button
-                            onClick={() => handleHODUnlock(session.id)}
-                            disabled={unlockingId === session.id}
-                            className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-3.5 py-1.5 rounded-md transition-colors disabled:opacity-50"
-                          >
-                            <Unlock className="w-3.5 h-3.5" />
-                            <span>{unlockingId === session.id ? "Unlocking..." : "HOD Unlock Override"}</span>
-                          </button>
-                        ) : session.isLockedOverride ? (
-                          <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
-                            <CheckCircle2 className="w-4 h-4" />
-                            Unlocked for Faculty Edit
-                          </span>
-                        ) : (
-                          <span className="text-xs text-slate-700 font-mono font-medium">
-                            {session.lockoutStatus?.formattedRemaining || "Within edit window"}
-                          </span>
-                        )}
-                      </div>
                     </div>
                   </div>
                 );

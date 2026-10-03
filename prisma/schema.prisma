@@ -213,7 +213,7 @@ model AttendanceSession {
   semester         Int
   section          String             @default("A")
   date             DateTime           @default(now())
-  lockedAt         DateTime?          // Set explicitly or evaluated dynamically (24 hours after creation)
+  lockedAt         DateTime?          // Legacy metadata only; attendance edits have no time-based expiry.
   isLockedOverride Boolean            @default(false)
   unlockedBy       String?
   createdAt        DateTime           @default(now())

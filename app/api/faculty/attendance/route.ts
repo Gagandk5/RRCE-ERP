@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest, resolveSessionUser } from "@/lib/auth";
+import { isFutureAttendanceDate } from "@/lib/attendance";
 import prisma from "@/lib/prisma";
 import { computeAttendancePercentage, countsAsPresent } from "@/lib/attendance";
-import { checkAttendanceLockout } from "@/lib/utils";
 
 const ALLOWED_ROLES = ["FACULTY", "HOD", "PRINCIPAL"];
 
@@ -57,6 +57,12 @@ export async function GET(request: NextRequest) {
 		if (!date || !subject) {
 			return NextResponse.json({ error: "Choose a valid assigned subject and date." }, { status: 400 });
 		}
+		if (isFutureAttendanceDate(selectedDate)) {
+			return NextResponse.json(
+				{ error: "Attendance cannot be entered for a future date." },
+				{ status: 400 }
+			);
+		}
 
 		const students = await prisma.student.findMany({
 			where: {
@@ -86,8 +92,20 @@ export async function GET(request: NextRequest) {
 				},
 			},
 		});
+		const dateRecords = await prisma.attendanceRecord.findMany({
+			where: {
+				subjectId,
+				date: { gte: startOfDay, lte: endOfDay },
+			},
+			select: { studentId: true, status: true },
+		});
 
-		const records = sessionRecord?.records ?? [];
+		const mergedRecords = new Map<string, { studentId: string; status: string }>();
+		for (const record of [...(sessionRecord?.records ?? []), ...dateRecords]) {
+			mergedRecords.set(record.studentId, record);
+		}
+
+		const records = Array.from(mergedRecords.values()) as Array<{ studentId: string; status: string }>;
 		const studentIds = students.map((student) => student.id);
 		const historyRecords = await prisma.sessionAttendanceRecord.findMany({
 			where: {
@@ -113,19 +131,10 @@ export async function GET(request: NextRequest) {
 			};
 		});
 
-		let lockoutStatus = null;
-		if (sessionRecord) {
-			lockoutStatus = checkAttendanceLockout({
-				createdAt: sessionRecord.createdAt,
-				isLockedOverride: sessionRecord.isLockedOverride,
-			});
-		}
-
 		return NextResponse.json({
 			subjects,
 			students: studentsWithStats,
 			records,
-			lockoutStatus,
 		});
 	} catch (error) {
 		console.error("Faculty attendance data error:", error);

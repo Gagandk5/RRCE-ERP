@@ -9,16 +9,15 @@ import {
   CheckCheck,
   CircleAlert,
   Clock,
-  Lock,
   RotateCcw,
   Search,
   UserCheck,
   UserX,
   X,
-  AlertTriangle,
   Loader2,
   BookOpen,
 } from "lucide-react";
+import { getAttendanceDateString, isFutureAttendanceDate } from "@/lib/attendance";
 import { submitAttendance, type AttendanceStatus } from "./actions";
 
 type Status = AttendanceStatus;
@@ -43,24 +42,13 @@ type RosterStudent = {
 
 type AttendanceRecordResponse = { studentId: string; status: Status };
 
-type LockoutStatus = {
-  isLocked: boolean;
-  remainingMs: number;
-  formattedRemaining: string;
-};
-
-function localDateString() {
-  const today = new Date();
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-}
-
 export default function FacultyAttendancePage() {
   const [subjects, setSubjects] = useState<FacultySubject[]>([]);
   const [subjectId, setSubjectId] = useState("");
-  const [date, setDate] = useState(localDateString);
+  const [today, setToday] = useState(getAttendanceDateString);
+  const [date, setDate] = useState(getAttendanceDateString);
   const [students, setStudents] = useState<RosterStudent[]>([]);
   const [attendance, setAttendance] = useState<Record<string, Status>>({});
-  const [lockoutStatus, setLockoutStatus] = useState<LockoutStatus | null>(null);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [loadingRoster, setLoadingRoster] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -70,13 +58,30 @@ export default function FacultyAttendancePage() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   useEffect(() => {
+    function refreshToday() {
+      const nextToday = getAttendanceDateString();
+      if (nextToday !== today) {
+        setToday(nextToday);
+        setDate((currentDate) => currentDate === today ? nextToday : currentDate);
+      }
+    }
+
+    const interval = window.setInterval(refreshToday, 30_000);
+    document.addEventListener("visibilitychange", refreshToday);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshToday);
+    };
+  }, [today]);
+
+  useEffect(() => {
     let active = true;
     async function loadSubjects() {
       setLoadingSubjects(true);
       try {
         const response = await fetch("/api/faculty/attendance", { cache: "no-store" });
         const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || "Could not load your scheduled subjects.");
+        if (!response.ok) throw new Error(payload.error || "Could not load your assigned subjects.");
         if (active) {
           setSubjects(payload.subjects || []);
           setSubjectId((current) => current || payload.subjects?.[0]?.id || "");
@@ -97,7 +102,6 @@ export default function FacultyAttendancePage() {
     if (!subjectId || !date) {
       setStudents([]);
       setAttendance({});
-      setLockoutStatus(null);
       return;
     }
 
@@ -129,12 +133,10 @@ export default function FacultyAttendancePage() {
 
         setStudents(roster);
         setAttendance(nextAttendance);
-        setLockoutStatus(payload.lockoutStatus || null);
       } catch (loadError) {
         if (!controller.signal.aborted) {
           setStudents([]);
           setAttendance({});
-          setLockoutStatus(null);
           setError(loadError instanceof Error ? loadError.message : "Could not load this class roster.");
         }
       } finally {
@@ -180,25 +182,26 @@ export default function FacultyAttendancePage() {
   }, [students, search]);
 
   const selectedSubject = subjects.find((subject) => subject.id === subjectId);
-  const isLocked = lockoutStatus?.isLocked || false;
 
   function setStatus(studentId: string, status: Status) {
-    if (isLocked) return;
     setAttendance((current) => ({ ...current, [studentId]: status }));
   }
 
   function markAllPresent() {
-    if (isLocked) return;
     setAttendance(Object.fromEntries(students.map((student) => [student.id, "PRESENT"])));
   }
 
   function resetAll() {
-    if (isLocked) return;
     setAttendance(Object.fromEntries(students.map((student) => [student.id, "PRESENT"])));
   }
 
   async function handleConfirmSubmit() {
-    if (!subjectId || !students.length || isLocked) return;
+    if (!subjectId || !students.length) return;
+    if (isFutureAttendanceDate(date, new Date())) {
+      setError("Attendance cannot be entered for a future date.");
+      setIsConfirmModalOpen(false);
+      return;
+    }
     setSaving(true);
     setError("");
     setToast("");
@@ -230,7 +233,7 @@ export default function FacultyAttendancePage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-7 sm:px-6 lg:px-8">
-      {/* 1. OPERATIONAL HEADER & 24H LOCKOUT HUD */}
+      {/* Attendance ledger header */}
       <header className="flex flex-col gap-4 border-b border-zinc-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Link
@@ -257,29 +260,11 @@ export default function FacultyAttendancePage() {
           </p>
         </div>
 
-        {/* 24-HOUR LOCKOUT STATUS INDICATOR */}
         <div className="flex items-center gap-2 shrink-0">
-          {lockoutStatus && (
-            <div
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-2xs ${
-                isLocked
-                  ? "bg-rose-50 border-rose-200/80 text-rose-700"
-                  : "bg-emerald-50 border-emerald-200/80 text-emerald-800"
-              }`}
-            >
-              {isLocked ? (
-                <>
-                  <Lock className="h-3.5 w-3.5 text-rose-600" />
-                  <span>{lockoutStatus.formattedRemaining}</span>
-                </>
-              ) : (
-                <>
-                  <Clock className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>{lockoutStatus.formattedRemaining}</span>
-                </>
-              )}
-            </div>
-          )}
+          <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-200/80 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 shadow-2xs">
+            <Clock className="h-3.5 w-3.5 text-emerald-600" />
+            <span>Attendance can be updated anytime.</span>
+          </div>
         </div>
       </header>
 
@@ -299,7 +284,7 @@ export default function FacultyAttendancePage() {
               className="w-full appearance-none rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-zinc-900 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
             >
               {loadingSubjects && <option value="">Loading subjects…</option>}
-              {!loadingSubjects && !subjects.length && <option value="">No scheduled subjects</option>}
+              {!loadingSubjects && !subjects.length && <option value="">No assigned subjects</option>}
               {subjects.map((sub) => (
                 <option key={sub.id} value={sub.id}>
                   {sub.code} • {sub.name} (Sem {sub.semester} Sec {sub.section})
@@ -312,17 +297,17 @@ export default function FacultyAttendancePage() {
         {/* DATE PICKER */}
         <div>
           <label className="block text-xs font-semibold text-zinc-700 mb-1.5">
-            Session Date
+            Attendance Date
           </label>
           <div className="relative">
             <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
             <input
               type="date"
               value={date}
-              max={localDateString()}
+              max={today}
               onChange={(e) => setDate(e.target.value)}
               disabled={saving}
-              aria-label="Session Date"
+              aria-label="Attendance Date"
               className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pl-9 pr-3 text-xs font-semibold text-zinc-900 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
             />
           </div>
@@ -333,7 +318,7 @@ export default function FacultyAttendancePage() {
           <button
             type="button"
             onClick={markAllPresent}
-            disabled={!students.length || loadingRoster || saving || isLocked}
+            disabled={!students.length || loadingRoster || saving}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3.5 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 transition-colors shadow-2xs disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation"
           >
             <CheckCheck className="h-4 w-4 text-emerald-600" />
@@ -343,7 +328,7 @@ export default function FacultyAttendancePage() {
           <button
             type="button"
             onClick={resetAll}
-            disabled={!students.length || loadingRoster || saving || isLocked}
+            disabled={!students.length || loadingRoster || saving}
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 transition-colors shadow-2xs disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation"
             title="Reset to Present"
             aria-label="Reset selection to Present"
@@ -361,21 +346,6 @@ export default function FacultyAttendancePage() {
         >
           <CircleAlert className="h-4 w-4 shrink-0" />
           <span>{error}</span>
-        </div>
-      )}
-
-      {/* 24-HOUR LOCKOUT WARNING BANNER */}
-      {isLocked && (
-        <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50/90 p-4 text-xs text-rose-800 shadow-2xs">
-          <AlertTriangle className="h-5 w-5 shrink-0 text-rose-600 mt-0.5" />
-          <div>
-            <span className="font-semibold block leading-tight">
-              24-Hour Lockout Active
-            </span>
-            <p className="mt-0.5 text-rose-700 leading-normal">
-              This attendance session was finalized over 24 hours ago. In accordance with VTU autonomy regulations, edits are strictly prohibited without an administrative unlock granted by the Head of Department (HOD) or Principal.
-            </p>
-          </div>
         </div>
       )}
 
@@ -496,7 +466,7 @@ export default function FacultyAttendancePage() {
                           <button
                             type="button"
                             onClick={() => setStatus(student.id, "PRESENT")}
-                            disabled={isLocked || saving}
+                            disabled={saving}
                             className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all touch-manipulation ${
                               status === "PRESENT"
                                 ? "bg-emerald-600 text-white shadow-xs"
@@ -510,7 +480,7 @@ export default function FacultyAttendancePage() {
                           <button
                             type="button"
                             onClick={() => setStatus(student.id, "ABSENT")}
-                            disabled={isLocked || saving}
+                            disabled={saving}
                             className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all touch-manipulation ${
                               status === "ABSENT"
                                 ? "bg-rose-600 text-white shadow-xs"
@@ -524,7 +494,7 @@ export default function FacultyAttendancePage() {
                           <button
                             type="button"
                             onClick={() => setStatus(student.id, "LATE")}
-                            disabled={isLocked || saving}
+                            disabled={saving}
                             className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all touch-manipulation ${
                               status === "LATE"
                                 ? "bg-amber-500 text-white shadow-xs"
@@ -606,18 +576,18 @@ export default function FacultyAttendancePage() {
             <button
               type="button"
               onClick={() => setIsConfirmModalOpen(true)}
-              disabled={saving || loadingRoster || !students.length || !subjectId || isLocked}
+              disabled={saving || loadingRoster || !students.length || !subjectId}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-zinc-950 px-5 text-xs font-bold text-white hover:bg-zinc-800 transition-all shadow-sm disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation"
             >
               {saving ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Saving Ledger…</span>
+                  <span>Saving Attendance…</span>
                 </>
               ) : (
                 <>
                   <Check className="h-4 w-4" />
-                  <span>Submit Attendance Session</span>
+                  <span>Submit Attendance</span>
                 </>
               )}
             </button>
@@ -710,12 +680,11 @@ export default function FacultyAttendancePage() {
               </div>
             )}
 
-            {/* VTU 24-HOUR NOTICE */}
-            <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200 text-[11px] text-zinc-600 leading-relaxed">
-              <strong className="text-zinc-900 font-semibold block mb-0.5">
-                VTU Autonomy Compliance Notice:
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-800 leading-relaxed">
+              <strong className="text-emerald-900 font-semibold block mb-0.5">
+                Attendance update policy:
               </strong>
-              Submitting this record will lock modifications after 24 hours. After the 24-hour lockout threshold, changes will require formal Department HOD clearance.
+              Attendance can be revised for any valid date from this same ledger.
             </div>
 
             {/* MODAL ACTIONS */}

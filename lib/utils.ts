@@ -58,48 +58,6 @@ export function generateUSN(
 }
 
 /**
- * Checks if an attendance session is locked by the 24-hour lockout rule.
- */
-export function checkAttendanceLockout(session: {
-  createdAt: Date | string;
-  isLockedOverride?: boolean;
-}): {
-  isLocked: boolean;
-  remainingMs: number;
-  formattedRemaining: string;
-} {
-  if (session.isLockedOverride) {
-    return {
-      isLocked: false,
-      remainingMs: Infinity,
-      formattedRemaining: "Unlocked (Override Active)",
-    };
-  }
-
-  const createdTime = new Date(session.createdAt).getTime();
-  const lockTime = createdTime + 24 * 60 * 60 * 1000;
-  const now = Date.now();
-  const remainingMs = lockTime - now;
-
-  if (remainingMs <= 0) {
-    return {
-      isLocked: true,
-      remainingMs: 0,
-      formattedRemaining: "Locked (24-hour limit exceeded)",
-    };
-  }
-
-  const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-  const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-
-  return {
-    isLocked: false,
-    remainingMs,
-    formattedRemaining: `${hours}h ${minutes}m left to edit`,
-  };
-}
-
-/**
  * Format Indian Rupees
  */
 export function formatINR(amount: number): string {

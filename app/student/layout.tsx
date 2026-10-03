@@ -17,8 +17,17 @@ import {
   Menu,
   X,
   Bell,
+  AlertTriangle,
 } from "lucide-react";
 import { ProfileAvatar } from "@/components/ProfileContext";
+
+type LowAttendanceAlert = {
+  subjectId: string;
+  code: string;
+  name: string;
+  percentage: number;
+  threshold: number;
+};
 
 export default function StudentLayout({
   children,
@@ -29,6 +38,7 @@ export default function StudentLayout({
   const router = useRouter();
   const [student, setStudent] = useState<any>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [lowAttendanceAlerts, setLowAttendanceAlerts] = useState<LowAttendanceAlert[]>([]);
 
   // Notification state
   const [notifications, setNotifications] = useState([
@@ -56,7 +66,7 @@ export default function StudentLayout({
   ]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [expandedNotificationId, setExpandedNotificationId] = useState<number | null>(null);
-  const hasUnreadNotifications = notifications.some((n) => !n.isRead);
+  const hasUnreadNotifications = notifications.some((n) => !n.isRead) || lowAttendanceAlerts.length > 0;
 
   const examLinks = [
     { name: "Internal Marks", href: "/student/marks" },
@@ -73,6 +83,34 @@ export default function StudentLayout({
 
   useEffect(() => {
     loadSession();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    async function loadAttendanceAlerts() {
+      try {
+        const response = await fetch("/api/student/attendance", { cache: "no-store" });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Could not load attendance alerts.");
+        if (active) setLowAttendanceAlerts(payload.alerts || []);
+      } catch (error) {
+        console.error("Failed to refresh student attendance alerts:", error);
+      }
+    }
+
+    const refreshOnFocus = () => {
+      if (document.visibilityState === "visible") void loadAttendanceAlerts();
+    };
+    void loadAttendanceAlerts();
+    const refreshTimer = window.setInterval(refreshOnFocus, 10_000);
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", refreshOnFocus);
+    return () => {
+      active = false;
+      window.clearInterval(refreshTimer);
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
+    };
   }, []);
 
   async function loadSession() {
@@ -203,10 +241,33 @@ export default function StudentLayout({
                 <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3">
                   <h2 className="text-sm font-semibold text-zinc-900">Notifications</h2>
                   <span className="text-[11px] font-medium text-zinc-500">
-                    {notifications.filter((n) => !n.isRead).length} unread
+                    {notifications.filter((n) => !n.isRead).length + lowAttendanceAlerts.length} unread
                   </span>
                 </div>
                 <div className="max-h-[min(70vh,28rem)] overflow-y-auto">
+                  {lowAttendanceAlerts.length > 0 && (
+                    <div className="border-b border-rose-100 bg-rose-50/70">
+                      <p className="px-4 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wider text-rose-700">
+                        Low attendance · below 85%
+                      </p>
+                      {lowAttendanceAlerts.map((alert) => (
+                        <Link
+                          key={alert.subjectId}
+                          href="/student/attendance"
+                          onClick={() => setIsNotificationsOpen(false)}
+                          className="flex items-start gap-2.5 border-b border-rose-100 px-4 py-3 text-left last:border-b-0 hover:bg-rose-100/70"
+                        >
+                          <AlertTriangle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                          <span>
+                            <span className="block text-xs font-semibold text-rose-900">{alert.name}</span>
+                            <span className="mt-1 block text-xs text-rose-800">
+                              Attendance: {alert.percentage.toFixed(1)}% · below required {alert.threshold}%
+                            </span>
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                   {notifications.map((n) => {
                     const isExpanded = expandedNotificationId === n.id;
                     return (

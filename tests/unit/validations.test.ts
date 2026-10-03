@@ -3,7 +3,6 @@ import {
   loginSchema,
   changePasswordSchema,
   studentEnrollSchema,
-  attendanceUnlockSchema,
 } from "@/lib/validations";
 
 describe("lib/validations - Zod API Request Schemas", () => {
@@ -43,19 +42,5 @@ describe("lib/validations - Zod API Request Schemas", () => {
       semester: 3,
     });
     expect(valid.success).toBe(true);
-  });
-
-  it("should require reason for attendance lockout override", () => {
-    const valid = attendanceUnlockSchema.safeParse({
-      sessionId: "session-123",
-      reason: "Network downtime delayed submission",
-    });
-    expect(valid.success).toBe(true);
-
-    const invalid = attendanceUnlockSchema.safeParse({
-      sessionId: "session-123",
-      reason: "", // too short
-    });
-    expect(invalid.success).toBe(false);
   });
 });

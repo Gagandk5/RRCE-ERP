@@ -20,10 +20,10 @@ Built as a **Full-Stack Next.js 15 App Router** application with **React 19**, *
 ## ⚡ Core Business Invariants & Rules
 
 1. **5 Role Portals**:
-   - `/principal`: Executive institutional oversight, fee collection analytics, department KPIs, 24-hour lockout override, and live audit logs.
+   - `/principal`: Executive institutional oversight, fee collection analytics, department KPIs, and live audit logs.
    - `/admissions`: Student intake, USN roll-call sequencing, and **Atomic Branch Reallocation**.
-   - `/hod`: Department roster (ordered strictly by `usnSequence ASC`), faculty allocation, and **1-Click 24-Hour Attendance Lockout Override**.
-   - `/faculty`: Weekly schedule with **3-Layer Clash Engine** and digital roll-call marker (ordered by `usnSequence ASC`).
+   - `/hod`: Department roster (ordered strictly by `usnSequence ASC`) and faculty allocation.
+   - `/faculty`: Schedule overview, timetable with **3-Layer Clash Engine**, and the Roll-Call Attendance ledger.
    - `/student`: Digital VTU/RRCE USN Smart ID Card, attendance gauge with VTU 75% minimum threshold warning, and tuition fee receipt simulator.
 
 2. **USN Roll-Call Invariant**:
@@ -35,9 +35,9 @@ Built as a **Full-Stack Next.js 15 App Router** application with **React 19**, *
    - Example: *Amith T*, born *08/07/2007* -> `AMI080707`.
    - **Forced Reset**: Mandatory first-login password reset (`isPasswordResetRequired: true`).
 
-4. **24-Hour Attendance Lockout**:
-   - Attendance sessions freeze exactly 24 hours after creation.
-   - Any editing attempt after 24 hours is rejected unless unlocked via **HOD or Principal Override**, which is permanently recorded in the audit trail.
+4. **Attendance Date Rules**:
+   - Faculty can create or update attendance for today or any previous valid date using the same Roll-Call Attendance ledger.
+   - Future dates are rejected by both the date picker and the server.
 
 5. **3-Layer Clash Engine**:
    - Validates schedule additions against 3 simultaneous conflict layers:
@@ -45,7 +45,14 @@ Built as a **Full-Stack Next.js 15 App Router** application with **React 19**, *
      2. **Room Clash**: The same classroom/lab cannot host two classes at the same time.
      3. **Batch Clash**: The same batch (`department + semester + section`) cannot have two classes simultaneously.
 
-6. **Atomic Branch Reallocation**:
+6. **Faculty Schedule Separation**:
+   - Faculty Home shows only today's assigned classes and calendar status; Roll-Call Attendance remains a separate workflow.
+   - Timetable & Planner contains the faculty's weekly schedule and the academic calendar.
+   - The BCA 2026–27 timetable and co-teaching assignments use the existing `TimetableSlot`, `Subject`, and `FacultyCourseAssignment` tables.
+   - Apply or refresh only this timetable without resetting existing ERP data with `npm run db:seed:bca-timetable`. It requires the BCA department and the listed faculty accounts to exist.
+   - Calendar markers such as “1st Saturday” are not treated as holidays unless the calendar explicitly marks them non-working.
+
+7. **Atomic Branch Reallocation**:
    - Re-allocates a student between departments in a single Prisma interactive `$transaction`:
      - Queries the destination branch's maximum sequence and assigns the next sequence number.
      - Generates the new USN (e.g. `1RR25BC001` -> `1RR25CS045`).
@@ -61,7 +68,7 @@ Require only **2 Environment Variables** in Vercel:
 | Variable | Description | Example |
 | :--- | :--- | :--- |
 | `DATABASE_URL` | PostgreSQL connection string (Supabase, Neon, or Vercel Postgres) | `postgresql://user:pass@ep-xyz.neon.tech/neondb?sslmode=require` |
-| `JWT_SECRET` | Secret key for signing session tokens | `rrce_super_secret_jwt_key_2025` |
+| `JWT_SECRET` | Secret key for signing session tokens | `<generate-a-long-random-secret>` |
 
 ### Web-Triggerable Database Seeding
 After deploying to Vercel, populate the database with all 7 departments, 4 staff accounts, and 54 real BCA students by visiting:

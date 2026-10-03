@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { computeAttendancePercentage, countsAsPresent } from "@/lib/attendance";
+import {
+	LOW_ATTENDANCE_THRESHOLD,
+	computeAttendancePercentage,
+	countsAsPresent,
+	isBelowAttendanceThreshold,
+} from "@/lib/attendance";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -28,7 +33,7 @@ export async function GET(request: NextRequest) {
 		}
 		if (!student) {
 			return NextResponse.json(
-				{ records: [], subjects: [], totalHeld: 0, totalAttended: 0 },
+				{ records: [], subjects: [], alerts: [], totalHeld: 0, totalAttended: 0 },
 				{ headers: { "Cache-Control": "no-store" } }
 			);
 		}
@@ -72,10 +77,26 @@ export async function GET(request: NextRequest) {
 			subjectTotals.set(subjectKey, totals);
 		}
 
-		const subjects = Array.from(subjectTotals.values()).map((totals) => ({
-			...totals,
-			percentage: computeAttendancePercentage(totals.attended, totals.held),
-		}));
+		const subjects = Array.from(subjectTotals, ([subjectId, totals]) => {
+			const percentage = computeAttendancePercentage(totals.attended, totals.held);
+			return {
+				id: subjectId,
+				...totals,
+				percentage,
+				lowAttendance: isBelowAttendanceThreshold(totals.attended, totals.held),
+			};
+		});
+		const alerts = subjects
+			.filter((subject) => subject.lowAttendance)
+			.map((subject) => ({
+				subjectId: subject.id,
+				code: subject.code,
+				name: subject.name,
+				percentage: subject.percentage,
+				threshold: LOW_ATTENDANCE_THRESHOLD,
+				held: subject.held,
+				attended: subject.attended,
+			}));
 		const totalHeld = sessionRecords.length;
 		const totalAttended = sessionRecords.filter((record) => countsAsPresent(record.status)).length;
 
@@ -91,8 +112,9 @@ export async function GET(request: NextRequest) {
 					},
 				})),
 				subjects,
-			totalHeld,
-			totalAttended,
+				alerts,
+				totalHeld,
+				totalAttended,
 			},
 			{
 				headers: {

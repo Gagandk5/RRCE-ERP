@@ -1,129 +1,221 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Calendar,
-  Clock,
-  CheckCircle2,
   AlertTriangle,
-  Lock,
-  Unlock,
-  Plus,
+  CalendarDays,
+  CheckCircle2,
   Layers,
-  Users,
+  Plus,
   ShieldAlert,
-  LogOut,
-  AlertCircle,
-  Search,
+  Users,
 } from "lucide-react";
+import { getAttendanceDateString } from "@/lib/attendance";
+import {
+  ACADEMIC_CALENDAR_EVENTS,
+  ACADEMIC_CALENDAR_SYLLABUS,
+  ACADEMIC_CALENDAR_TITLE,
+  getAcademicCalendarEvents,
+  getAcademicNonWorkingEvents,
+  type AcademicCalendarCategory,
+} from "@/lib/academic-calendar";
+import type { TimetableClash } from "@/lib/clash-engine";
 
-export default function FacultyPortal() {
+type FacultyUser = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  department?: { id: string; code: string; name: string } | null;
+};
+
+type TimetableSlot = {
+  id: string;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  subject: string;
+  departmentId: string;
+  semester: number;
+  section: string;
+  facultyId: string;
+  roomNumber: string;
+  studentCount?: number | null;
+  teachingFaculty?: Array<{ id: string; name: string }>;
+  faculty?: { id?: string; firstName: string; lastName: string };
+  department?: { code: string; name: string };
+};
+
+type Department = { id: string; code: string; name: string };
+type FacultySubject = {
+  id: string;
+  code: string;
+  name: string;
+  departmentCode: string;
+  departmentName: string;
+  semester: number;
+  section: string;
+};
+type PortalTab = "overview" | "schedule" | "risk" | "marks" | "calendar";
+
+const CATEGORY_LABELS: Record<AcademicCalendarCategory, string> = {
+  academic: "Academic event",
+  holiday: "Holiday",
+  assessment: "IA / assessment",
+  examination: "Examination",
+  "calendar-marker": "Calendar marker",
+  "working-day": "Working day",
+  "non-working-day": "Non-working day",
+};
+
+const CATEGORY_STYLES: Record<AcademicCalendarCategory, string> = {
+  academic: "border-blue-200 bg-blue-50 text-blue-800",
+  holiday: "border-rose-200 bg-rose-50 text-rose-800",
+  assessment: "border-violet-200 bg-violet-50 text-violet-800",
+  examination: "border-amber-200 bg-amber-50 text-amber-800",
+  "calendar-marker": "border-zinc-200 bg-zinc-100 text-zinc-700",
+  "working-day": "border-emerald-200 bg-emerald-50 text-emerald-800",
+  "non-working-day": "border-rose-200 bg-rose-50 text-rose-800",
+};
+
+const DAYS = [
+  { code: "MON", label: "Monday" },
+  { code: "TUE", label: "Tuesday" },
+  { code: "WED", label: "Wednesday" },
+  { code: "THU", label: "Thursday" },
+  { code: "FRI", label: "Friday" },
+  { code: "SAT", label: "Saturday" },
+];
+
+function timeLabel(value: string) {
+  const [hour, minute] = value.split(":").map(Number);
+  return new Intl.DateTimeFormat("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(2020, 0, 1, hour, minute)));
+}
+
+function weekdayInCollegeTimezone(date: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    timeZone: "Asia/Kolkata",
+  }).format(date).toUpperCase();
+}
+
+function FacultyPortalContent() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<"rollcall" | "schedule" | "risk">("rollcall");
-  const [students, setStudents] = useState<any[]>([]);
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [timetableSlots, setTimetableSlots] = useState<any[]>([]);
-  const [departments, setDepartments] = useState<any[]>([]);
-  const [selectedSessionId, setSelectedSessionId] = useState<string>("");
-  const [attendanceMap, setAttendanceMap] = useState<Record<string, "PRESENT" | "ABSENT" | "LATE">>({});
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const activeTab: PortalTab =
+    requestedTab === "schedule" || requestedTab === "risk" || requestedTab === "marks" || requestedTab === "calendar"
+      ? requestedTab
+      : "overview";
+  const [currentUser, setCurrentUser] = useState<FacultyUser | null>(null);
+  const [slots, setSlots] = useState<TimetableSlot[]>([]);
+  const [clashes, setClashes] = useState<TimetableClash[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [assignedSubjects, setAssignedSubjects] = useState<FacultySubject[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState("");
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" | "warning" } | null>(null);
-
+  const [pageError, setPageError] = useState("");
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [now, setNow] = useState(() => new Date());
+  const [calendarMonth, setCalendarMonth] = useState(() => getAttendanceDateString().slice(0, 7));
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({
     dayOfWeek: "MON",
     startTime: "09:00",
     endTime: "10:00",
-    subject: "Digital Principles and Computer Organization (B25BCA301)",
+    subject: "",
+    subjectId: "",
     departmentId: "",
     semester: 3,
     section: "A",
     facultyId: "",
-    roomNumber: "LH-201",
+    roomNumber: "",
   });
   const [clashResult, setClashResult] = useState<any>(null);
   const [checkingClash, setCheckingClash] = useState(false);
   const [schedulingSlot, setSchedulingSlot] = useState(false);
 
   useEffect(() => {
-    loadFacultyData();
+    const timer = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(timer);
   }, []);
 
-  async function loadFacultyData() {
-    setLoading(true);
-    try {
-      const meRes = await fetch("/api/auth/me");
-      let loggedInUser: any = null;
-      if (meRes.ok) {
-        const meData = await meRes.json();
-        if (meData.authenticated && meData.user) {
-          loggedInUser = meData.user;
-          setCurrentUser(loggedInUser);
+  useEffect(() => {
+    let active = true;
+
+    async function loadFacultyData() {
+      setLoading(true);
+      setPageError("");
+      try {
+        const [meResponse, departmentResponse, timetableResponse, attendanceResponse] = await Promise.all([
+          fetch("/api/auth/me", { cache: "no-store" }),
+          fetch("/api/departments", { cache: "no-store" }),
+          fetch("/api/timetable", { cache: "no-store" }),
+          fetch("/api/faculty/attendance", { cache: "no-store" }),
+        ]);
+        const mePayload = await meResponse.json();
+        if (!meResponse.ok || !mePayload.authenticated || !mePayload.user) {
+          throw new Error(mePayload.error || "Could not load your faculty profile.");
         }
-      }
-
-      const dRes = await fetch("/api/departments");
-      let deptList: any[] = [];
-      if (dRes.ok) {
-        const d = await dRes.json();
-        deptList = d.departments || [];
-        setDepartments(deptList);
-      }
-
-      const bcaDept = deptList.find((d: any) => d.code === "BCA") || deptList[0];
-      setScheduleForm((prev) => ({
-        ...prev,
-        departmentId: prev.departmentId || bcaDept?.id || "",
-        facultyId: prev.facultyId || loggedInUser?.id || "",
-      }));
-
-      const stRes = await fetch("/api/students?dept=BCA");
-      if (stRes.ok) {
-        const stData = await stRes.json();
-        const roster = stData.students || [];
-        setStudents(roster);
-
-        const initMap: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {};
-        roster.forEach((s: any) => {
-          initMap[s.id] = "PRESENT";
-        });
-        setAttendanceMap(initMap);
-      }
-
-      const sessRes = await fetch("/api/attendance/session?dept=BCA");
-      if (sessRes.ok) {
-        const sessData = await sessRes.json();
-        const sessList = sessData.sessions || [];
-        setSessions(sessList);
-        if (sessList.length > 0) {
-          setSelectedSessionId(sessList[0].id);
+        const departmentPayload = await departmentResponse.json();
+        if (!departmentResponse.ok) {
+          throw new Error(departmentPayload.error || "Could not load departments.");
         }
+        const timetablePayload = await timetableResponse.json();
+        if (!timetableResponse.ok) {
+          throw new Error(timetablePayload.error || "Could not load your timetable.");
+        }
+        const attendancePayload = await attendanceResponse.json();
+        if (!attendanceResponse.ok) {
+          throw new Error(attendancePayload.error || "Could not load your assigned subjects.");
+        }
+        if (!active) return;
+        const faculty: FacultyUser = mePayload.user;
+        setCurrentUser(faculty);
+        setDepartments(departmentPayload.departments || []);
+        setSlots(timetablePayload.slots || []);
+        setClashes(timetablePayload.conflicts || []);
+        setAssignedSubjects(attendancePayload.subjects || []);
+        setScheduleForm((previous) => ({
+          ...previous,
+          departmentId: faculty.department?.id || previous.departmentId,
+          subjectId: previous.subjectId || attendancePayload.subjects?.[0]?.id || "",
+          subject: previous.subject || (attendancePayload.subjects?.[0]
+            ? `${attendancePayload.subjects[0].name} (${attendancePayload.subjects[0].code})`
+            : ""),
+          semester: previous.subjectId ? previous.semester : attendancePayload.subjects?.[0]?.semester || previous.semester,
+          section: previous.subjectId ? previous.section : attendancePayload.subjects?.[0]?.section || previous.section,
+          facultyId: faculty.id,
+        }));
+      } catch (loadError) {
+        if (active) {
+          setPageError(loadError instanceof Error ? loadError.message : "Could not load faculty data.");
+        }
+      } finally {
+        if (active) setLoading(false);
       }
-
-      const ttRes = await fetch("/api/timetable?dept=BCA");
-      if (ttRes.ok) {
-        const ttData = await ttRes.json();
-        setTimetableSlots(ttData.slots || []);
-      }
-    } catch (e) {
-      console.error("Failed to load faculty portal data:", e);
-    } finally {
-      setLoading(false);
     }
-  }
+
+    void loadFacultyData();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function handleLogout() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
+      router.push("/login?portal=faculty");
       router.refresh();
-    } catch (e) {
-      console.error("Logout failed:", e);
+    } catch (logoutError) {
+      console.error("Logout error:", logoutError);
+      setMessage({ type: "error", text: "Could not sign out. Please try again." });
     }
   }
 
@@ -131,796 +223,608 @@ export default function FacultyPortal() {
     setCheckingClash(true);
     setClashResult(null);
     try {
-      const res = await fetch("/api/timetable/validate", {
+      const response = await fetch("/api/timetable/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedForm),
       });
-      const data = await res.json();
-      setClashResult(data);
-    } catch (e) {
-      console.error("Clash validation error:", e);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not validate the timetable slot.");
+      setClashResult(result);
+    } catch (validationError) {
+      setMessage({
+        type: "error",
+        text: validationError instanceof Error ? validationError.message : "Could not validate the timetable slot.",
+      });
     } finally {
       setCheckingClash(false);
     }
   }
 
-  async function handleScheduleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleScheduleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setSchedulingSlot(true);
     setMessage(null);
-
     try {
-      const res = await fetch("/api/timetable", {
+      const response = await fetch("/api/timetable", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(scheduleForm),
       });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setMessage({
-          type: "success",
-          text: "Class slot scheduled successfully. Conflict checks verified across Faculty, Room, and Batch.",
-        });
-        setIsScheduleModalOpen(false);
-        await loadFacultyData();
-      } else {
-        setMessage({
-          type: "error",
-          text: data.error || (data.clashes ? data.clashes[0]?.message : "Scheduling failed."),
-        });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || result.clashes?.[0]?.message || "Scheduling failed.");
       }
-    } catch {
-      setMessage({ type: "error", text: "Failed to communicate with timetable server." });
+      setMessage({ type: "success", text: "Class slot scheduled successfully." });
+      setIsScheduleModalOpen(false);
+      const timetableResponse = await fetch("/api/timetable", { cache: "no-store" });
+      const timetablePayload = await timetableResponse.json();
+      if (!timetableResponse.ok) {
+        throw new Error(timetablePayload.error || "The slot was saved but the timetable could not be refreshed.");
+      }
+      setSlots(timetablePayload.slots || []);
+      setClashes(timetablePayload.conflicts || []);
+    } catch (scheduleError) {
+      setMessage({
+        type: "error",
+        text: scheduleError instanceof Error ? scheduleError.message : "Could not schedule this class slot.",
+      });
     } finally {
       setSchedulingSlot(false);
     }
   }
 
-  function toggleStatus(studentId: string, status: "PRESENT" | "ABSENT" | "LATE") {
-    setAttendanceMap((prev) => ({
-      ...prev,
-      [studentId]: status,
-    }));
-  }
-
-  function markAll(status: "PRESENT" | "ABSENT") {
-    const updated: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {};
-    students.forEach((s) => {
-      updated[s.id] = status;
+  const todayCode = weekdayInCollegeTimezone(now);
+  const todayDate = getAttendanceDateString(now);
+  const scheduledToday = slots
+    .filter((slot) => slot.dayOfWeek === todayCode)
+    .sort((left, right) => left.startTime.localeCompare(right.startTime));
+  const todaysCalendarEvents = getAcademicCalendarEvents(todayDate);
+  const nonWorkingEvents = getAcademicNonWorkingEvents(todayDate);
+  const isNonWorkingDay = todayCode === "SUN" || nonWorkingEvents.length > 0;
+  const todaysClasses = isNonWorkingDay ? [] : scheduledToday;
+  const activeBatch = scheduledToday[0] || slots.find((slot) => slot.section === "A") || slots[0] || null;
+  const departmentName = currentUser?.department?.name || currentUser?.department?.code || "Department not set";
+  const fullName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "Faculty";
+  const currentTimeParts = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: "Asia/Kolkata",
+  }).formatToParts(now);
+  const currentMinute = Number(currentTimeParts.find((part) => part.type === "hour")?.value || 0) * 60 +
+    Number(currentTimeParts.find((part) => part.type === "minute")?.value || 0);
+  const nextClassId = todaysClasses.find((slot) => {
+    const [hour, minute] = slot.startTime.split(":").map(Number);
+    return currentMinute < hour * 60 + minute;
+  })?.id;
+  const normalizeSubject = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  function getCourseInfo(slot: TimetableSlot) {
+    const assignedSubject = assignedSubjects.find((course) => {
+      const normalized = normalizeSubject(slot.subject);
+      return normalized.includes(normalizeSubject(course.code)) ||
+        normalized.includes(normalizeSubject(course.name));
     });
-    setAttendanceMap(updated);
+    const code = assignedSubject?.code || slot.subject.match(/B25BCAL?\d+/)?.[0] || "";
+    const name = assignedSubject?.name || slot.subject.replace(/\s*\([^)]*\)\s*$/, "");
+    return { code, name };
+  }
+  function classStatus(slot: TimetableSlot) {
+    const [startHour, startMinute] = slot.startTime.split(":").map(Number);
+    const [endHour, endMinute] = slot.endTime.split(":").map(Number);
+    const start = startHour * 60 + startMinute;
+    const end = endHour * 60 + endMinute;
+    if (currentMinute >= start && currentMinute < end) return "Current";
+    if (currentMinute >= end) return "Completed";
+    return slot.id === nextClassId ? "Next" : "Upcoming";
+  }
+  const calendarMonths = Array.from(
+    new Set(ACADEMIC_CALENDAR_EVENTS.flatMap((event) => [
+      event.startDate.slice(0, 7),
+      ...(event.endDate ? [event.endDate.slice(0, 7)] : []),
+    ]))
+  ).sort();
+  const eventsForSelectedMonth = ACADEMIC_CALENDAR_EVENTS
+    .filter((event) => {
+      const endMonth = (event.endDate || event.startDate).slice(0, 7);
+      return event.startDate.slice(0, 7) <= calendarMonth && endMonth >= calendarMonth;
+    })
+    .sort((left, right) => left.startDate.localeCompare(right.startDate));
+
+  function calendarDateLabel(date: string) {
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(new Date(`${date}T00:00:00.000Z`));
   }
 
-  async function handleSaveAttendance() {
-    if (!selectedSessionId) return;
-    setSaving(true);
-    setMessage(null);
-
-    const records = Object.entries(attendanceMap).map(([studentId, status]) => ({
-      studentId,
-      status,
-    }));
-
-    try {
-      const res = await fetch("/api/attendance/session", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: selectedSessionId,
-          records,
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setMessage({
-          type: "success",
-          text: `Attendance saved successfully for ${records.length} students.`,
-        });
-        await loadFacultyData();
-      } else {
-        setMessage({
-          type: "error",
-          text: data.error || "Failed to record attendance.",
-        });
-      }
-    } catch {
-      setMessage({ type: "error", text: "Network error while saving attendance." });
-    } finally {
-      setSaving(false);
-    }
+  function calendarRangeLabel(startDate: string, endDate?: string) {
+    if (!endDate || endDate === startDate) return calendarDateLabel(startDate);
+    return `${calendarDateLabel(startDate)} – ${calendarDateLabel(endDate)}`;
   }
-
-  const currentSession = sessions.find((s) => s.id === selectedSessionId) || sessions[0];
-  const isSessionLocked = currentSession?.lockoutStatus?.isLocked && !currentSession?.isLockedOverride;
-
-  const presentCount = Object.values(attendanceMap).filter((s) => s === "PRESENT").length;
-  const absentCount = Object.values(attendanceMap).filter((s) => s === "ABSENT").length;
-  const lateCount = Object.values(attendanceMap).filter((s) => s === "LATE").length;
-
-  const filteredStudents = students.filter((s) => {
-    const term = search.toLowerCase();
-    const fullName = `${s.user?.firstName || ""} ${s.user?.lastName || ""}`.toLowerCase();
-    return s.usn.toLowerCase().includes(term) || fullName.includes(term);
-  });
-
-  const userSlots = timetableSlots.filter((slot: any) => {
-    if (!currentUser?.id) return true;
-    return slot.facultyId === currentUser.id || slot.faculty?.email === currentUser.email;
-  });
-
-  const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-  const currentDayCode = dayNames[new Date().getDay()] || "MON";
-  const todayUserSlots = userSlots.filter((s: any) => s.dayOfWeek === (currentDayCode === "SUN" ? "MON" : currentDayCode));
-  const activeSlots = todayUserSlots.length > 0 ? todayUserSlots : userSlots;
-
-  const teacherClassesToday = activeSlots.length > 0
-    ? activeSlots.map((s: any, idx: number) => ({
-        time: `${s.startTime} - ${s.endTime}`,
-        subject: s.subject,
-        batch: `${s.department?.code || "BCA"} Sem ${s.semester} (Sec ${s.section})`,
-        room: s.roomNumber,
-        status: idx === 0 ? "ACTIVE_NOW" : "SCHEDULED",
-      }))
-    : [
-        {
-          time: "09:00 - 10:00",
-          subject: "Digital Principles and Computer Organization (B25BCA301)",
-          batch: "BCA Sem 3 (Sec A)",
-          room: "LH-201",
-          status: "ACTIVE_NOW",
-        },
-      ];
-
-  const lowAttendanceStudents = [
+  const mentorshipStudents = [
     { name: "Deepika C S", usn: "1RR25BC005", attendance: "68%", missingClasses: 2 },
     { name: "Shamanth T D", usn: "1RR25BC039", attendance: "70%", missingClasses: 1 },
     { name: "Srujan S", usn: "1RR25BC046", attendance: "72%", missingClasses: 1 },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6 text-xs">
-      {/* GROUNDED HEADER BAR */}
-      <div className="bg-slate-900 text-white rounded-lg p-5 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded bg-white p-1 flex items-center justify-center shrink-0 border border-slate-700">
-            <img src="/images.svg" alt="RRCE Emblem" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-white tracking-tight">
-              Faculty Desk • Prof. {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "Jaishankar M"}
-            </h1>
-            <p className="text-xs text-slate-400 font-mono">
-              Department of Mathematics • RRCE
-            </p>
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 text-xs sm:px-6 lg:px-8">
+      <header className="flex flex-col gap-4 rounded-lg border border-slate-800 bg-slate-900 p-5 text-white sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">RRCE ERP · Faculty Portal</p>
+          <h1 className="mt-1 text-lg font-bold tracking-tight">{fullName}</h1>
+          <p className="mt-1 text-xs text-slate-300">{departmentName}</p>
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[11px]">
+            <span className="font-semibold text-slate-300">
+              {assignedSubjects.length === 1 ? "Assigned Subject:" : "Assigned Subjects:"}
+            </span>
+            {loading ? (
+              <span className="text-slate-400">Loading assignments…</span>
+            ) : assignedSubjects.length ? (
+              <span className="text-slate-200">
+                {assignedSubjects.map((subject) => subject.name).join(" · ")}
+              </span>
+            ) : (
+              <span className="text-slate-400">No active subjects assigned</span>
+            )}
           </div>
         </div>
-
-        <div className="flex items-center gap-2.5">
-          <Link
-            href="/faculty/attendance"
-            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-md transition-colors"
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Daily Attendance</span>
-          </Link>
-          <button
-            onClick={() => setIsScheduleModalOpen(true)}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-md transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Schedule Class Slot</span>
-          </button>
-        </div>
-      </div>
+        <button
+          onClick={handleLogout}
+          className="self-start rounded-md border border-slate-600 px-3.5 py-2 font-semibold text-slate-100 transition-colors hover:bg-slate-800 sm:self-auto"
+        >
+          Sign Out
+        </button>
+      </header>
 
       {message && (
         <div
-          className={`p-3.5 rounded-md border font-medium flex items-center justify-between ${
+          role="status"
+          className={`flex items-center justify-between rounded-md border p-3.5 font-medium ${
             message.type === "success"
-              ? "bg-emerald-50 text-emerald-900 border-emerald-200"
-              : message.type === "warning"
-              ? "bg-amber-50 text-amber-900 border-amber-200"
-              : "bg-rose-50 text-rose-900 border-rose-200"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+              : "border-rose-200 bg-rose-50 text-rose-900"
           }`}
         >
           <span className="flex items-center gap-2">
-            {message.type === "success" ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            ) : (
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-            )}
+            {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
             {message.text}
           </span>
-          <button onClick={() => setMessage(null)} className="font-bold opacity-70 hover:opacity-100">✕</button>
+          <button onClick={() => setMessage(null)} aria-label="Dismiss message" className="px-2 font-bold">×</button>
         </div>
       )}
 
-      {/* COMPACT METRIC CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Today's Classes</span>
-            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[10px]">
-              {teacherClassesToday.length} {teacherClassesToday.length === 1 ? "Lecture" : "Lectures"}
-            </span>
-          </div>
-          <div className="text-xl font-bold text-slate-900 mt-1">
-            {teacherClassesToday[0]?.room || "LH-201"}{" "}
-            <span className="text-xs font-normal text-slate-400">Next Lecture</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-0.5 font-mono truncate">
-            {teacherClassesToday[0]
-              ? `${teacherClassesToday[0].time} • ${teacherClassesToday[0].subject}`
-              : "09:00 - 10:00 • Digital Principles and Computer Organization (B25BCA301)"}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Active Batch</span>
-            <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px]">
-              54 Enrolled
-            </span>
-          </div>
-          <div className="text-xl font-bold text-slate-900 mt-1">
-            BCA Sem 3 (Sec A)
-          </div>
-          <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
-            USN Sequence: 001 - 057
-          </p>
-        </div>
-
-        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">24h Edit Window</span>
-            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">
-              Active
-            </span>
-          </div>
-          <div className="text-xl font-bold text-slate-900 mt-1">
-            Editable
-          </div>
-          <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
-            24-Hour Edit Window Open
-          </p>
-        </div>
-
-        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Clash Engine</span>
-            <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px]">
-              3-Layer Active
-            </span>
-          </div>
-          <div className="text-xl font-bold text-slate-900 mt-1">
-            0 Conflicts
-          </div>
-          <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
-            Faculty • Room • Batch Verified
-          </p>
-        </div>
-      </div>
-
-      {/* NAVIGATION TABS */}
-      <div className="flex border-b border-slate-200 gap-6 font-bold">
-        <button
-          onClick={() => setActiveTab("rollcall")}
-          className={`pb-2.5 transition-colors flex items-center gap-2 ${
-            activeTab === "rollcall"
-              ? "text-slate-900 border-b-2 border-slate-900"
-              : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <Users className="w-4 h-4 text-slate-600" />
-          Mark Attendance (BCA 3rd Sem)
-        </button>
-
-        <button
-          onClick={() => setActiveTab("schedule")}
-          className={`pb-2.5 transition-colors flex items-center gap-2 ${
-            activeTab === "schedule"
-              ? "text-slate-900 border-b-2 border-slate-900"
-              : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <Calendar className="w-4 h-4 text-slate-600" />
-          Teaching Schedule & Timetable
-        </button>
-
-        <button
-          onClick={() => setActiveTab("risk")}
-          className={`pb-2.5 transition-colors flex items-center gap-2 ${
-            activeTab === "risk"
-              ? "text-slate-900 border-b-2 border-slate-900"
-              : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <AlertCircle className="w-4 h-4 text-slate-600" />
-          Attendance Warnings ({lowAttendanceStudents.length} Students)
-        </button>
-      </div>
-
-      {/* TAB 1: ATTENDANCE MARKER */}
-      {activeTab === "rollcall" && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <label className="font-bold text-slate-700 shrink-0">
-                Session:
-              </label>
-              <select
-                value={selectedSessionId}
-                onChange={(e) => setSelectedSessionId(e.target.value)}
-                className="font-semibold py-1.5 px-3 bg-slate-50 border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 focus:outline-none"
-              >
-                {sessions.length === 0 ? (
-                  <option value="">No Active Sessions</option>
-                ) : (
-                  sessions.map((sess) => (
-                    <option key={sess.id} value={sess.id}>
-                      {sess.subject} ({new Date(sess.date).toLocaleDateString("en-GB")})
-                    </option>
-                  ))
-                )}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {currentSession && (
-                <div
-                  className={`px-3 py-1 rounded-md border font-bold flex items-center gap-2 ${
-                    currentSession.isLockedOverride
-                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                      : isSessionLocked
-                      ? "bg-rose-50 text-rose-800 border-rose-200"
-                      : "bg-blue-50 text-blue-800 border-blue-200"
-                  }`}
-                >
-                  {isSessionLocked ? (
-                    <>
-                      <Lock className="w-3.5 h-3.5 text-rose-600" />
-                      <span>24-Hour Lockout Active</span>
-                    </>
-                  ) : currentSession.isLockedOverride ? (
-                    <>
-                      <Unlock className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Unlocked via Override</span>
-                    </>
-                  ) : (
-                    <>
-                      <Clock className="w-3.5 h-3.5 text-blue-600" />
-                      <span>{currentSession.lockoutStatus?.formattedRemaining || "Active"}</span>
-                    </>
-                  )}
-                </div>
-              )}
-
-              <button
-                onClick={handleSaveAttendance}
-                disabled={saving || isSessionLocked}
-                className="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-md disabled:opacity-50 transition-colors flex items-center gap-1.5 shadow-sm"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{saving ? "Saving..." : "Submit Attendance"}</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-            <div className="flex items-center gap-4">
-              <span className="text-slate-600 font-medium">Total: <strong>{students.length}</strong></span>
-              <span className="text-emerald-700 font-bold">Present: {presentCount}</span>
-              <span className="text-rose-700 font-bold">Absent: {absentCount}</span>
-              <span className="text-amber-700 font-bold">Late: {lateCount}</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="relative w-48">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
-                <input
-                  type="text"
-                  placeholder="Filter student..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-8 pr-2 py-1 bg-white border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 focus:outline-none"
-                />
-              </div>
-
-              <button
-                onClick={() => markAll("PRESENT")}
-                disabled={isSessionLocked}
-                className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-md font-bold text-[11px] disabled:opacity-50"
-              >
-                Mark All Present
-              </button>
-              <button
-                onClick={() => markAll("ABSENT")}
-                disabled={isSessionLocked}
-                className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-md font-bold text-[11px] disabled:opacity-50"
-              >
-                Clear All
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-              <span className="font-bold text-slate-700">
-                Official BCA 2025 Roll-Call Roster (Guaranteed usnSequence ASC)
-              </span>
-              <span className="text-[11px] text-slate-500 font-mono">
-                Click P, A, or L
-              </span>
-            </div>
-
-            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200 sticky top-0 z-10 text-[11px]">
-                  <tr>
-                    <th className="py-2.5 px-3">Seq</th>
-                    <th className="py-2.5 px-3">USN</th>
-                    <th className="py-2.5 px-3">Student Name</th>
-                    <th className="py-2.5 px-3 text-center">Status</th>
-                    <th className="py-2.5 px-3 text-right">Ergonomic Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredStudents.map((st) => {
-                    const currentStatus = attendanceMap[st.id] || "PRESENT";
-                    return (
-                      <tr
-                        key={st.id}
-                        className={`transition-colors ${
-                          currentStatus === "ABSENT"
-                            ? "bg-rose-50/60"
-                            : currentStatus === "LATE"
-                            ? "bg-amber-50/60"
-                            : "hover:bg-slate-50"
-                        }`}
-                      >
-                        <td className="py-2.5 px-3 font-mono font-bold text-slate-400">
-                          #{String(st.usnSequence).padStart(3, "0")}
-                        </td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
-                          {st.usn}
-                        </td>
-                        <td className="py-2.5 px-3 font-semibold text-slate-900">
-                          {st.user?.firstName} {st.user?.lastName}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase border ${
-                              currentStatus === "PRESENT"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                : currentStatus === "ABSENT"
-                                ? "bg-rose-50 text-rose-700 border-rose-200"
-                                : "bg-amber-50 text-amber-700 border-amber-200"
-                            }`}
-                          >
-                            {currentStatus}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 text-right">
-                          <div className="inline-flex items-center gap-1">
-                            <button
-                              disabled={isSessionLocked}
-                              onClick={() => toggleStatus(st.id, "PRESENT")}
-                              className={`w-7 h-7 rounded font-bold transition-colors disabled:opacity-40 ${
-                                currentStatus === "PRESENT"
-                                  ? "bg-slate-900 text-white"
-                                  : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
-                              }`}
-                            >
-                              P
-                            </button>
-                            <button
-                              disabled={isSessionLocked}
-                              onClick={() => toggleStatus(st.id, "ABSENT")}
-                              className={`w-7 h-7 rounded font-bold transition-colors disabled:opacity-40 ${
-                                currentStatus === "ABSENT"
-                                  ? "bg-rose-600 text-white"
-                                  : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
-                              }`}
-                            >
-                              A
-                            </button>
-                            <button
-                              disabled={isSessionLocked}
-                              onClick={() => toggleStatus(st.id, "LATE")}
-                              className={`w-7 h-7 rounded font-bold transition-colors disabled:opacity-40 ${
-                                currentStatus === "LATE"
-                                  ? "bg-amber-600 text-white"
-                                  : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
-                              }`}
-                            >
-                              L
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      {pageError && (
+        <div role="alert" className="rounded-md border border-rose-200 bg-rose-50 p-3.5 text-rose-800">
+          {pageError}
         </div>
       )}
 
-      {/* TAB 2: SCHEDULE */}
-      {activeTab === "schedule" && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+      {activeTab === "overview" && (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm md:col-span-2">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
-                <h2 className="text-sm font-bold text-slate-900">
-                  Today's Teaching Schedule ({["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date().getDay()]})
-                </h2>
-                <p className="text-xs text-slate-500 font-mono">
-                  3-Layer Clash Engine Verified (Faculty • Room • Batch)
+                <h2 className="font-bold text-slate-900">Today&apos;s Classes</h2>
+                <p className="mt-1 text-slate-500">
+                  {new Intl.DateTimeFormat("en-IN", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    timeZone: "Asia/Kolkata",
+                  }).format(now)}
                 </p>
+                {nonWorkingEvents.length > 0 ? (
+                  <p className="mt-2 font-semibold text-rose-700">
+                    Non-working day · {nonWorkingEvents.map((event) => event.title).join(" · ")}
+                  </p>
+                ) : todayCode === "SUN" ? (
+                  <p className="mt-2 font-semibold text-rose-700">Non-working day · Sunday</p>
+                ) : todaysCalendarEvents.length > 0 ? (
+                  <p className="mt-2 text-slate-600">
+                    Calendar: {todaysCalendarEvents.map((event) => event.title).join(" · ")}
+                  </p>
+                ) : null}
               </div>
+              <span className="rounded bg-blue-50 px-2 py-1 font-bold text-blue-800">
+                {todaysClasses.length} {todaysClasses.length === 1 ? "Lecture" : "Lectures"}
+              </span>
+            </div>
+            {loading ? (
+              <p className="py-6 text-center text-slate-500">Loading your schedule…</p>
+            ) : todaysClasses.length ? (
+              <ul className="divide-y divide-slate-100">
+                {todaysClasses.map((slot) => (
+                  <li key={slot.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-slate-900">{getCourseInfo(slot).name}</p>
+                        <span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-600">
+                          {getCourseInfo(slot).code || "Course code unavailable"}
+                        </span>
+                        <span className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-800">
+                          {getCourseInfo(slot).code.startsWith("B25BCAL") ? "Lab" : "Lecture"}
+                        </span>
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                          classStatus(slot) === "Current" ? "bg-emerald-100 text-emerald-800" :
+                          classStatus(slot) === "Next" ? "bg-blue-100 text-blue-800" :
+                          classStatus(slot) === "Completed" ? "bg-slate-100 text-slate-600" :
+                          "bg-slate-100 text-slate-700"
+                        }`}>
+                          {classStatus(slot)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-slate-500">
+                        {slot.department?.code || currentUser?.department?.code || "—"} Sem {slot.semester} · Sec {slot.section}
+                        {" · "}Room {slot.roomNumber}
+                      </p>
+                      <p className="mt-1 text-slate-500">
+                        Faculty: {slot.teachingFaculty?.map(({ name }) => name).join(" & ") || fullName}
+                      </p>
+                      <p className="mt-1 text-[10px] text-slate-400">Topic: Not scheduled</p>
+                    </div>
+                    <p className="shrink-0 font-mono font-semibold text-slate-700">
+                      {timeLabel(slot.startTime)} – {timeLabel(slot.endTime)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="py-8 text-center text-slate-500">
+                {pageError
+                  ? "Your schedule could not be loaded."
+                  : isNonWorkingDay
+                    ? "No regular classes scheduled today."
+                    : "No classes scheduled today."}
+              </p>
+            )}
+          </section>
 
+          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold uppercase tracking-wider text-slate-500">Active Batch</h2>
+              <Users className="h-4 w-4 text-slate-400" />
+            </div>
+            {activeBatch ? (
+              <>
+                <p className="mt-4 text-lg font-bold text-slate-900">
+                  {activeBatch.department?.code || currentUser?.department?.code || "—"} Sem {activeBatch.semester} (Sec {activeBatch.section})
+                </p>
+                <p className="mt-2 text-slate-500">
+                  {activeBatch.studentCount == null ? "Enrollment not mapped" : `${activeBatch.studentCount} enrolled`}
+                  {" · "}{getCourseInfo(activeBatch).name}
+                </p>
+              </>
+            ) : (
+              <p className="mt-4 text-slate-500">No teaching batch is available in the timetable.</p>
+            )}
+          </section>
+
+          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold uppercase tracking-wider text-slate-500">Clash Engine</h2>
+              <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${
+                clashes.length ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"
+              }`}>3-layer checks active</span>
+            </div>
+            <p className="mt-4 text-lg font-bold text-slate-900">{clashes.length} Conflicts</p>
+            <p className="mt-1 text-slate-500">Faculty · Room · Batch</p>
+            {clashes.length > 0 && (
+              <ul className="mt-3 space-y-1.5 text-rose-700">
+                {clashes.slice(0, 3).map((clash, index) => (
+                  <li key={`${clash.type}-${clash.dayOfWeek}-${index}`}>{clash.message}</li>
+                ))}
+              </ul>
+            )}
+            {!loading && clashes.length === 0 && (
+              <p className="mt-3 text-emerald-700">No conflicts found in the published timetable.</p>
+            )}
+          </section>
+        </div>
+      )}
+
+      {activeTab === "schedule" && (
+        <section className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-bold text-slate-900">Timetable &amp; Planner</h2>
+              <p className="mt-1 text-slate-500">Scheduled classes assigned to your faculty profile.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href="/faculty?tab=calendar"
+                className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3.5 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <CalendarDays className="h-4 w-4" />
+                Academic Calendar
+              </Link>
               <button
                 onClick={() => setIsScheduleModalOpen(true)}
-                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-md transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-slate-900 px-3.5 py-2 font-semibold text-white hover:bg-slate-800"
               >
-                <Plus className="w-4 h-4" />
-                <span>Schedule Class Slot</span>
+                <Plus className="h-4 w-4" />
+                Schedule Class Slot
               </button>
             </div>
-
-            <div className="space-y-2.5">
-              {teacherClassesToday.map((c, idx) => (
-                <div
-                  key={idx}
-                  className={`p-3.5 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                    c.status === "ACTIVE_NOW"
-                      ? "bg-blue-50/80 border-blue-200"
-                      : "bg-slate-50 border-slate-200"
-                  }`}
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900">{c.subject}</h3>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                          c.status === "ACTIVE_NOW"
-                            ? "bg-blue-600 text-white"
-                            : "bg-slate-200 text-slate-700"
-                        }`}
-                      >
-                        {c.status === "ACTIVE_NOW" ? "Active Lecture" : c.status}
+          </div>
+          {loading ? (
+            <p className="py-6 text-center text-slate-500">Loading your timetable…</p>
+          ) : slots.length ? (
+            <div className="space-y-2">
+              {slots.map((slot) => (
+                <div key={slot.id} className="flex flex-col gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-slate-900">{getCourseInfo(slot).name}</p>
+                      <span className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-600">
+                        {getCourseInfo(slot).code || "Course code unavailable"}
+                      </span>
+                      <span className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-800">
+                        {getCourseInfo(slot).code.startsWith("B25BCAL") ? "Lab" : "Lecture"}
                       </span>
                     </div>
-                    <p className="text-slate-600 text-xs">
-                      Batch: {c.batch} • Room: <strong>{c.room}</strong>
+                    <p className="mt-1 text-slate-500">
+                      {DAYS.find((day) => day.code === slot.dayOfWeek)?.label || slot.dayOfWeek}
+                      {" · "}{slot.department?.code || currentUser?.department?.code || "—"} Sem {slot.semester} Sec {slot.section}
+                      {" · "}Room {slot.roomNumber}
+                    </p>
+                    <p className="mt-1 text-slate-500">
+                      Faculty: {slot.teachingFaculty?.map(({ name }) => name).join(" & ") || `${slot.faculty?.firstName || ""} ${slot.faculty?.lastName || ""}`.trim() || "Not assigned"}
                     </p>
                   </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-md flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      {c.time}
-                    </span>
-                  </div>
+                  <p className="font-mono font-semibold text-slate-700">
+                    {timeLabel(slot.startTime)} – {timeLabel(slot.endTime)}
+                  </p>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          ) : (
+            <p className="py-8 text-center text-slate-500">No timetable slots are assigned to you.</p>
+          )}
+        </section>
       )}
 
-      {/* TAB 3: ATTENDANCE WARNINGS */}
       {activeTab === "risk" && (
-        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <section className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+            <Users className="h-4 w-4 text-slate-500" />
             <div>
-              <h2 className="text-sm font-bold text-slate-900">
-                Attendance Compliance Alerts (&lt;75%)
-              </h2>
-              <p className="text-xs text-slate-500">
-                Students below the 75% minimum VTU eligibility requirement
-              </p>
+              <h2 className="font-bold text-slate-900">Mentorship &amp; Proctoring</h2>
+              <p className="mt-1 text-slate-500">Attendance support alerts for students needing follow-up.</p>
             </div>
-            <span className="font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md">
-              3 Students Alerted
-            </span>
           </div>
-
           <div className="space-y-2.5">
-            {lowAttendanceStudents.map((st, idx) => (
-              <div key={idx} className="p-3.5 rounded-lg border border-amber-200 bg-amber-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {mentorshipStudents.map((student) => (
+              <div key={student.usn} className="rounded-lg border border-amber-200 bg-amber-50/60 p-3.5">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-slate-900">{st.name}</h3>
-                    <span className="font-mono text-xs font-bold bg-white text-slate-700 px-2 py-0.5 rounded border border-amber-200">
-                      {st.usn}
-                    </span>
-                  </div>
-                  <p className="text-amber-800 mt-1 text-[11px]">
-                    Current Attendance: <strong>{st.attendance}</strong>. Requires <strong>{st.missingClasses} additional sessions</strong> to reach 75%.
+                  <p className="font-bold text-slate-900">{student.name}</p>
+                  <p className="mt-1 text-slate-600">
+                    {student.usn} · Attendance {student.attendance} · {student.missingClasses} classes needed to reach 75%
                   </p>
                 </div>
-
-                <button
-                  onClick={() => alert(`Reminder sent to ${st.name} (${st.usn})`)}
-                  className="px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-md font-semibold text-xs shrink-0 transition-colors"
-                >
-                  Send Student Reminder
-                </button>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* TIMETABLE SCHEDULE MODAL WITH INLINE CLASH ALERTS */}
-      {isScheduleModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-lg max-w-xl w-full shadow-lg border border-slate-200 p-6">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
-                  <Layers className="w-4 h-4" />
+      {activeTab === "marks" && (
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="font-bold text-slate-900">Marks Entry (CIE)</h2>
+          <p className="mt-2 text-slate-500">No marks-entry view is currently configured in the Faculty Portal.</p>
+        </section>
+      )}
+
+      {activeTab === "calendar" && (
+        <section className="space-y-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-bold text-slate-900">Academic Calendar</h2>
+              <p className="mt-1 text-slate-500">{ACADEMIC_CALENDAR_TITLE}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/faculty?tab=schedule"
+                className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3.5 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <CalendarDays className="h-4 w-4" />
+                Weekly Timetable
+              </Link>
+              <label className="font-semibold text-slate-700">
+                Month
+                <select
+                  value={calendarMonth}
+                  onChange={(event) => setCalendarMonth(event.target.value)}
+                  className="ml-2 rounded-md border border-slate-300 bg-white px-3 py-2"
+                >
+                  {calendarMonths.map((month) => (
+                    <option key={month} value={month}>
+                      {new Intl.DateTimeFormat("en-IN", {
+                        month: "long",
+                        year: "numeric",
+                        timeZone: "UTC",
+                      }).format(new Date(`${month}-01T00:00:00.000Z`))}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(CATEGORY_LABELS) as AcademicCalendarCategory[]).map((category) => (
+              <span key={category} className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${CATEGORY_STYLES[category]}`}>
+                {CATEGORY_LABELS[category]}
+              </span>
+            ))}
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[540px] border-collapse text-left">
+              <thead>
+                <tr className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500">
+                  <th className="px-3 py-2.5">Date</th>
+                  <th className="px-3 py-2.5">Calendar / Remarks</th>
+                  <th className="px-3 py-2.5">Type</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {eventsForSelectedMonth.map((event, index) => (
+                  <tr key={`${event.startDate}-${event.title}-${index}`}>
+                    <td className="whitespace-nowrap px-3 py-3 font-mono font-semibold text-slate-700">
+                      {calendarRangeLabel(event.startDate, event.endDate)}
+                    </td>
+                    <td className="px-3 py-3 font-medium text-slate-900">{event.title}</td>
+                    <td className="px-3 py-3">
+                      <span className={`whitespace-nowrap rounded-full border px-2 py-1 text-[10px] font-semibold ${CATEGORY_STYLES[event.category]}`}>
+                        {CATEGORY_LABELS[event.category]}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {!eventsForSelectedMonth.length && (
+                  <tr>
+                    <td colSpan={3} className="px-3 py-8 text-center text-slate-500">
+                      No events are listed for this month in the supplied calendar.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="border-t border-slate-100 pt-4">
+            <h3 className="mb-3 font-bold text-slate-900">IA Syllabus Coverage Deadlines</h3>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {ACADEMIC_CALENDAR_SYLLABUS.map((item) => (
+                <div key={item.name} className="rounded-md border border-violet-200 bg-violet-50 p-3">
+                  <p className="font-bold text-violet-900">{item.name}</p>
+                  <p className="mt-1 text-violet-800">{item.modules}</p>
+                  <p className="mt-1 font-mono text-violet-700">{calendarDateLabel(item.deadline)}</p>
                 </div>
+              ))}
+            </div>
+            <p className="mt-3 text-[11px] text-slate-500">
+              Dates not specified in the source are not inferred. Saturday entries are shown as calendar markers, not assumed to be holidays.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {isScheduleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-lg border border-slate-200 bg-white p-6 shadow-lg">
+            <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-3">
+                <Layers className="h-5 w-5 text-slate-700" />
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Schedule Class Slot
-                  </h3>
-                  <p className="text-[11px] text-slate-500 font-mono">
-                    3-Layer Timetable Clash Validation Engine
-                  </p>
+                  <h3 className="font-bold text-slate-900">Schedule Class Slot</h3>
+                  <p className="text-slate-500">Timetable clash checks cover faculty, room, and batch.</p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsScheduleModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 font-bold"
-              >
-                ✕
-              </button>
+              <button onClick={() => setIsScheduleModalOpen(false)} aria-label="Close" className="px-2 text-lg text-slate-500">×</button>
             </div>
 
-            {clashResult && clashResult.hasClash && (
-              <div className="mb-4 p-3 bg-rose-50 text-rose-900 border border-rose-200 rounded-md text-xs space-y-1.5">
-                <div className="font-bold flex items-center gap-2 text-rose-700">
-                  <ShieldAlert className="w-4 h-4 shrink-0" />
-                  <span>3-Layer Clash Conflict Detected!</span>
-                </div>
-                {clashResult.clashes.map((c: any, idx: number) => (
-                  <p key={idx} className="text-[11px] leading-relaxed pl-5 font-mono">
-                    • <strong>{c.type.replace("_", " ")}:</strong> {c.message}
-                  </p>
+            {clashResult?.hasClash && (
+              <div className="mb-4 space-y-1 rounded-md border border-rose-200 bg-rose-50 p-3 text-rose-800">
+                <p className="flex items-center gap-2 font-bold"><ShieldAlert className="h-4 w-4" />Schedule conflict detected</p>
+                {clashResult.clashes.map((clash: any, index: number) => (
+                  <p key={index}>{clash.message}</p>
                 ))}
               </div>
             )}
-
             {clashResult && !clashResult.hasClash && (
-              <div className="mb-4 p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-md text-xs flex items-center gap-2 font-semibold">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Zero clashes detected. Room, Faculty, and Batch are available.</span>
-              </div>
+              <p className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
+                No timetable clashes detected.
+              </p>
             )}
 
-            <form onSubmit={handleScheduleSubmit} className="space-y-3.5">
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Day of Week</label>
+            <form onSubmit={handleScheduleSubmit} className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <label className="space-y-1 font-semibold text-slate-700">
+                  Day
                   <select
                     value={scheduleForm.dayOfWeek}
-                    onChange={(e) => {
-                      const updated = { ...scheduleForm, dayOfWeek: e.target.value };
+                    onChange={(event) => {
+                      const updated = { ...scheduleForm, dayOfWeek: event.target.value };
                       setScheduleForm(updated);
-                      checkLiveClash(updated);
+                      void checkLiveClash(updated);
                     }}
-                    className="w-full p-2 bg-white border border-slate-300 rounded-md font-bold"
+                    className="w-full rounded border border-slate-300 p-2"
                   >
-                    <option value="MON">Monday</option>
-                    <option value="TUE">Tuesday</option>
-                    <option value="WED">Wednesday</option>
-                    <option value="THU">Thursday</option>
-                    <option value="FRI">Friday</option>
-                    <option value="SAT">Saturday</option>
+                    {DAYS.map((day) => <option key={day.code} value={day.code}>{day.label}</option>)}
                   </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Start Time</label>
-                  <input
-                    type="time"
-                    required
-                    value={scheduleForm.startTime}
-                    onChange={(e) => {
-                      const updated = { ...scheduleForm, startTime: e.target.value };
-                      setScheduleForm(updated);
-                      checkLiveClash(updated);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">End Time</label>
-                  <input
-                    type="time"
-                    required
-                    value={scheduleForm.endTime}
-                    onChange={(e) => {
-                      const updated = { ...scheduleForm, endTime: e.target.value };
-                      setScheduleForm(updated);
-                      checkLiveClash(updated);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md font-mono"
-                  />
-                </div>
+                </label>
+                <label className="space-y-1 font-semibold text-slate-700">
+                  Start
+                  <input required type="time" value={scheduleForm.startTime} onChange={(event) => setScheduleForm({ ...scheduleForm, startTime: event.target.value })} className="w-full rounded border border-slate-300 p-2" />
+                </label>
+                <label className="space-y-1 font-semibold text-slate-700">
+                  End
+                  <input required type="time" value={scheduleForm.endTime} onChange={(event) => setScheduleForm({ ...scheduleForm, endTime: event.target.value })} className="w-full rounded border border-slate-300 p-2" />
+                </label>
               </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Subject Name & Code</label>
-                <input
-                  type="text"
+              <label className="block space-y-1 font-semibold text-slate-700">
+                Assigned Subject
+                <select
                   required
-                  value={scheduleForm.subject}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, subject: e.target.value })}
-                  placeholder="e.g. Digital Principles and Computer Organization (B25BCA301)"
-                  className="w-full p-2 border border-slate-300 rounded-md"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Room Number</label>
-                  <input
-                    type="text"
-                    required
-                    value={scheduleForm.roomNumber}
-                    onChange={(e) => {
-                      const updated = { ...scheduleForm, roomNumber: e.target.value };
-                      setScheduleForm(updated);
-                      checkLiveClash(updated);
-                    }}
-                    placeholder="LH-201 or LAB-3"
-                    className="w-full p-2 border border-slate-300 rounded-md font-mono font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Department</label>
-                  <select
-                    value={scheduleForm.departmentId}
-                    onChange={(e) => {
-                      const updated = { ...scheduleForm, departmentId: e.target.value };
-                      setScheduleForm(updated);
-                      checkLiveClash(updated);
-                    }}
-                    className="w-full p-2 bg-white border border-slate-300 rounded-md"
-                  >
-                    {departments.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.code} - {d.name}
-                      </option>
-                    ))}
+                  value={scheduleForm.subjectId}
+                  onChange={(event) => {
+                    const subject = assignedSubjects.find((item) => item.id === event.target.value);
+                    if (!subject) return;
+                    setScheduleForm({
+                      ...scheduleForm,
+                      subjectId: subject.id,
+                      subject: `${subject.name} (${subject.code})`,
+                      departmentId: departments.find((item) => item.code === subject.departmentCode)?.id || scheduleForm.departmentId,
+                      semester: subject.semester,
+                      section: subject.section,
+                    });
+                    setClashResult(null);
+                  }}
+                  className="w-full rounded border border-slate-300 p-2"
+                >
+                  <option value="">Choose an assigned subject</option>
+                  {assignedSubjects.map((subject) => (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.code} · {subject.name} (Sem {subject.semester}, Sec {subject.section})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1 font-semibold text-slate-700">
+                  Room
+                  <input required value={scheduleForm.roomNumber} onChange={(event) => setScheduleForm({ ...scheduleForm, roomNumber: event.target.value })} className="w-full rounded border border-slate-300 p-2" />
+                </label>
+                <label className="space-y-1 font-semibold text-slate-700">
+                  Department
+                  <select required value={scheduleForm.departmentId} onChange={(event) => setScheduleForm({ ...scheduleForm, departmentId: event.target.value })} className="w-full rounded border border-slate-300 p-2">
+                    <option value="">Choose department</option>
+                    {departments.map((department) => <option key={department.id} value={department.id}>{department.code} – {department.name}</option>)}
                   </select>
-                </div>
+                </label>
               </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsScheduleModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-md font-semibold"
-                >
-                  Cancel
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1 font-semibold text-slate-700">
+                  Semester
+                  <input required type="number" min={1} max={10} value={scheduleForm.semester} onChange={(event) => setScheduleForm({ ...scheduleForm, semester: Number(event.target.value) })} className="w-full rounded border border-slate-300 p-2" />
+                </label>
+                <label className="space-y-1 font-semibold text-slate-700">
+                  Section
+                  <input required value={scheduleForm.section} onChange={(event) => setScheduleForm({ ...scheduleForm, section: event.target.value })} className="w-full rounded border border-slate-300 p-2" />
+                </label>
+              </div>
+              <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+                <button type="button" onClick={() => setIsScheduleModalOpen(false)} className="rounded-md border border-slate-300 px-4 py-2 font-semibold text-slate-700">Cancel</button>
+                <button type="button" disabled={checkingClash || !scheduleForm.departmentId || !scheduleForm.facultyId || !scheduleForm.subjectId} onClick={() => void checkLiveClash(scheduleForm)} className="rounded-md border border-slate-300 px-4 py-2 font-semibold text-slate-700 disabled:opacity-50">
+                  {checkingClash ? "Checking…" : "Check clashes"}
                 </button>
-                <button
-                  type="submit"
-                  disabled={schedulingSlot || clashResult?.hasClash}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold disabled:opacity-50 transition-colors flex items-center gap-2"
-                >
-                  {schedulingSlot ? "Validating..." : "Save Schedule Slot"}
+                <button type="submit" disabled={schedulingSlot || checkingClash || clashResult?.hasClash || !scheduleForm.facultyId || !scheduleForm.subjectId} className="rounded-md bg-slate-900 px-4 py-2 font-semibold text-white disabled:opacity-50">
+                  {schedulingSlot ? "Saving…" : "Save slot"}
                 </button>
               </div>
             </form>
@@ -928,5 +832,13 @@ export default function FacultyPortal() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function FacultyPortal() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Loading Faculty Portal…</div>}>
+      <FacultyPortalContent />
+    </Suspense>
   );
 }

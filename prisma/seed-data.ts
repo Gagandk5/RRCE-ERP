@@ -31,6 +31,67 @@ export interface RawStudent {
   quota: "KCET" | "COMEDK" | "MANAGEMENT";
 }
 
+export const BCA_COURSES = [
+  { code: "B25BCA301", name: "Digital Principles and Computer Organization" },
+  { code: "B25BCA302", name: "Object Oriented Programming in C++" },
+  { code: "B25BCA303", name: "Operating System Concepts" },
+  { code: "B25BCA304", name: "Relational Data Base Management System" },
+  { code: "B25BCA305", name: "Software Engineering" },
+  { code: "B25BCA306", name: "Reasoning and Aptitude" },
+  { code: "B25BCAL307", name: "Object Oriented Programming in C++ Lab" },
+  { code: "B25BCAL308", name: "Relational Data Base Management System Lab" },
+] as const;
+
+export const BCA_FACULTY_ASSIGNMENTS = [
+  { email: "jaishankar.m@rrce.org", courseCode: "B25BCA301" },
+  { email: "shreya.s@rrce.org", courseCode: "B25BCA302" },
+  { email: "thilagavallii.s@rrce.org", courseCode: "B25BCA303" },
+  { email: "pushpalatha.g@rrce.org", courseCode: "B25BCA304" },
+  { email: "deeraj.c@rrce.org", courseCode: "B25BCA305" },
+  { email: "darshan.p@rrce.org", courseCode: "B25BCA306" },
+  { email: "shreya.s@rrce.org", courseCode: "B25BCAL307" },
+  { email: "muruganandham.sk@rrce.org", courseCode: "B25BCAL307" },
+  { email: "pushpalatha.g@rrce.org", courseCode: "B25BCAL308" },
+  { email: "deeraj.c@rrce.org", courseCode: "B25BCAL308" },
+] as const;
+
+export const BCA_2026_2027_TIMETABLE = [
+  { dayOfWeek: "MON", startTime: "08:30", endTime: "09:25", courseCode: "B25BCA306", section: "A" },
+  { dayOfWeek: "MON", startTime: "09:25", endTime: "10:20", courseCode: "B25BCA304", section: "A" },
+  { dayOfWeek: "MON", startTime: "10:40", endTime: "11:35", courseCode: "B25BCA302", section: "A" },
+  { dayOfWeek: "MON", startTime: "11:35", endTime: "12:30", courseCode: "B25BCA303", section: "A" },
+  { dayOfWeek: "MON", startTime: "13:15", endTime: "14:10", courseCode: "B25BCA301", section: "A" },
+  { dayOfWeek: "MON", startTime: "14:10", endTime: "15:05", courseCode: "B25BCA306", section: "A" },
+  { dayOfWeek: "TUE", startTime: "08:30", endTime: "09:25", courseCode: "B25BCA302", section: "A" },
+  { dayOfWeek: "TUE", startTime: "09:25", endTime: "10:20", courseCode: "B25BCA303", section: "A" },
+  { dayOfWeek: "TUE", startTime: "10:40", endTime: "11:35", courseCode: "B25BCA304", section: "A" },
+  { dayOfWeek: "TUE", startTime: "11:35", endTime: "12:30", courseCode: "B25BCA306", section: "A" },
+  { dayOfWeek: "TUE", startTime: "13:15", endTime: "15:05", courseCode: "B25BCAL307", section: "B1" },
+  { dayOfWeek: "TUE", startTime: "13:15", endTime: "15:05", courseCode: "B25BCAL308", section: "B2" },
+  { dayOfWeek: "WED", startTime: "08:30", endTime: "09:25", courseCode: "B25BCA303", section: "A" },
+  { dayOfWeek: "WED", startTime: "09:25", endTime: "10:20", courseCode: "B25BCA305", section: "A" },
+  { dayOfWeek: "WED", startTime: "10:40", endTime: "11:35", courseCode: "B25BCA302", section: "A" },
+  { dayOfWeek: "WED", startTime: "11:35", endTime: "12:30", courseCode: "B25BCA306", section: "A" },
+  { dayOfWeek: "WED", startTime: "13:15", endTime: "14:10", courseCode: "B25BCA301", section: "A" },
+  { dayOfWeek: "WED", startTime: "14:10", endTime: "15:05", courseCode: "B25BCA304", section: "A" },
+  { dayOfWeek: "WED", startTime: "15:05", endTime: "16:00", courseCode: "B25BCA305", section: "A" },
+  { dayOfWeek: "THU", startTime: "08:30", endTime: "09:25", courseCode: "B25BCA301", section: "A" },
+  { dayOfWeek: "THU", startTime: "09:25", endTime: "10:20", courseCode: "B25BCA306", section: "A" },
+  { dayOfWeek: "THU", startTime: "10:40", endTime: "11:35", courseCode: "B25BCA303", section: "A" },
+  { dayOfWeek: "THU", startTime: "11:35", endTime: "12:30", courseCode: "B25BCA302", section: "A" },
+  { dayOfWeek: "THU", startTime: "13:15", endTime: "14:10", courseCode: "B25BCA304", section: "A" },
+  { dayOfWeek: "FRI", startTime: "08:30", endTime: "09:25", courseCode: "B25BCA305", section: "A" },
+  { dayOfWeek: "FRI", startTime: "09:25", endTime: "10:20", courseCode: "B25BCA301", section: "A" },
+  { dayOfWeek: "FRI", startTime: "10:40", endTime: "11:35", courseCode: "B25BCA306", section: "A" },
+  { dayOfWeek: "FRI", startTime: "11:35", endTime: "12:30", courseCode: "B25BCA302", section: "A" },
+  { dayOfWeek: "FRI", startTime: "13:15", endTime: "15:05", courseCode: "B25BCAL307", section: "B2" },
+  { dayOfWeek: "FRI", startTime: "13:15", endTime: "15:05", courseCode: "B25BCAL308", section: "B1" },
+  { dayOfWeek: "SAT", startTime: "08:30", endTime: "09:25", courseCode: "B25BCA304", section: "A" },
+  { dayOfWeek: "SAT", startTime: "09:25", endTime: "10:20", courseCode: "B25BCA303", section: "A" },
+  { dayOfWeek: "SAT", startTime: "10:40", endTime: "11:35", courseCode: "B25BCA305", section: "A" },
+  { dayOfWeek: "SAT", startTime: "11:35", endTime: "12:30", courseCode: "B25BCA301", section: "A" },
+] as const;
+
 export const DEPARTMENTS: RawDepartment[] = [
   { code: "BCA", name: "Bachelor of Computer Applications", usnCode: "BC" },
   { code: "CSE", name: "Computer Science & Engineering", usnCode: "CS" },

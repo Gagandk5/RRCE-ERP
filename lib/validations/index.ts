@@ -72,22 +72,6 @@ export const attendanceSessionCreateSchema = z.object({
   date: z.string().optional(),
 });
 
-export const attendanceRecordBatchSchema = z.object({
-  sessionId: z.string().min(1, "Session ID is required"),
-  records: z.array(
-    z.object({
-      studentId: z.string().min(1),
-      status: z.enum(["PRESENT", "ABSENT", "LATE"]),
-      remarks: z.string().optional(),
-    })
-  ),
-});
-
-export const attendanceUnlockSchema = z.object({
-  sessionId: z.string().min(1, "Session ID is required"),
-  reason: z.string().min(3, "A valid reason (min 3 chars) is required for unlock"),
-});
-
 // ==================== TIMETABLE SCHEMAS ====================
 export const timetableSlotSchema = z.object({
   dayOfWeek: z.enum(["MON", "TUE", "WED", "THU", "FRI", "SAT"]),

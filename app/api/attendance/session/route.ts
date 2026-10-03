@@ -1,205 +1,98 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSessionFromRequest, resolveSessionUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { getSessionFromRequest } from "@/lib/auth";
-import { checkAttendanceLockout } from "@/lib/utils";
 
-export async function GET(req: NextRequest) {
-  const sessionUser = getSessionFromRequest(req);
-  const searchParams = req.nextUrl.searchParams;
-  const facultyId = searchParams.get("facultyId");
-  const deptCode = searchParams.get("dept");
-  const semester = searchParams.get("sem") ? parseInt(searchParams.get("sem")!) : undefined;
+const ALLOWED_ROLES = ["FACULTY", "HOD", "PRINCIPAL"];
+
+export async function GET(request: NextRequest) {
+  const session = getSessionFromRequest(request);
+  if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  if (!ALLOWED_ROLES.includes(session.role)) {
+    return NextResponse.json({ error: "Faculty access required." }, { status: 403 });
+  }
 
   try {
-    let sessions: any[] = [];
-    try {
-      sessions = await prisma.attendanceSession.findMany({
-        where: {
-          facultyId: facultyId || (sessionUser?.role === "FACULTY" ? sessionUser.userId : undefined),
-          department: deptCode ? { code: deptCode } : undefined,
-          semester,
-        },
-        include: {
-          faculty: {
-            select: { firstName: true, lastName: true, email: true },
-          },
-          department: {
-            select: { code: true, name: true },
-          },
-          records: {
-            select: {
-              id: true,
-              studentId: true,
-              status: true,
-              remarks: true,
-              student: {
-                select: {
-                  usn: true,
-                  usnSequence: true,
-                  user: { select: { firstName: true, lastName: true } },
-                },
-              },
-            },
-            orderBy: {
-              student: {
-                usnSequence: "asc",
-              },
-            },
-          },
-        },
-        orderBy: {
-          date: "desc",
-        },
-      });
-    } catch (dbErr) {
-      console.warn("DB attendance sessions query failed, using mock data:", dbErr);
+    const user = await resolveSessionUser(session);
+    if (!user) {
+      return NextResponse.json({ error: "Your session is no longer valid. Please sign in again." }, { status: 401 });
     }
 
-    if (sessions.length === 0) {
-      return NextResponse.json({ sessions: [], isMock: false });
+    const searchParams = request.nextUrl.searchParams;
+    const where: {
+      facultyId?: string;
+      departmentId?: string;
+      semester?: number;
+    } = {};
+    if (session.role === "FACULTY") {
+      where.facultyId = user.id;
+    } else if (session.role === "HOD") {
+      if (!user.departmentId) {
+        return NextResponse.json({ error: "Department assignment is required." }, { status: 403 });
+      }
+      where.departmentId = user.departmentId;
+    } else {
+      const requestedFacultyId = searchParams.get("facultyId");
+      if (requestedFacultyId) where.facultyId = requestedFacultyId;
+      const deptCode = searchParams.get("dept");
+      if (deptCode) {
+        const department = await prisma.department.findUnique({
+          where: { code: deptCode },
+          select: { id: true },
+        });
+        if (!department) return NextResponse.json({ sessions: [], isMock: false });
+        where.departmentId = department.id;
+      }
     }
 
-    const formatted = sessions.map((sess) => ({
-      ...sess,
-      lockoutStatus: checkAttendanceLockout({
-        createdAt: sess.createdAt,
-        isLockedOverride: sess.isLockedOverride,
-      }),
-    }));
+    const semesterValue = searchParams.get("sem");
+    if (semesterValue) {
+      const semester = Number.parseInt(semesterValue, 10);
+      if (!Number.isInteger(semester) || semester < 1) {
+        return NextResponse.json({ error: "Choose a valid semester." }, { status: 400 });
+      }
+      where.semester = semester;
+    }
 
-    return NextResponse.json({ sessions: formatted, isMock: false });
-  } catch (error: unknown) {
+    const sessions = await prisma.attendanceSession.findMany({
+      where,
+      select: {
+        id: true,
+        subject: true,
+        facultyId: true,
+        semester: true,
+        section: true,
+        date: true,
+        faculty: { select: { firstName: true, lastName: true, email: true } },
+        department: { select: { code: true, name: true } },
+      },
+      orderBy: { date: "desc" },
+    });
+
+    return NextResponse.json({ sessions, isMock: false });
+  } catch (error) {
     console.error("Attendance sessions GET error:", error);
-    const message = error instanceof Error ? error.message : "Failed to load sessions";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Could not load attendance sessions." }, { status: 500 });
   }
 }
 
-export async function POST(req: NextRequest) {
-  const sessionUser = getSessionFromRequest(req);
-  if (!sessionUser || !["FACULTY", "HOD", "PRINCIPAL"].includes(sessionUser.role)) {
-    return NextResponse.json({ error: "Unauthorized: Faculty or Admin only." }, { status: 403 });
+export async function POST(request: NextRequest) {
+  const session = getSessionFromRequest(request);
+  if (!session || !ALLOWED_ROLES.includes(session.role)) {
+    return NextResponse.json({ error: "Faculty access required." }, { status: 403 });
   }
-
-  try {
-    const body = await req.json();
-    const { subject, departmentId, semester, section, date } = body;
-
-    if (!subject || !departmentId) {
-      return NextResponse.json(
-        { error: "Subject and department are required." },
-        { status: 400 }
-      );
-    }
-
-    const sessionDate = date ? new Date(date) : new Date();
-    const lockedAt = new Date(sessionDate.getTime() + 24 * 60 * 60 * 1000);
-
-    const newSession = await prisma.attendanceSession.create({
-      data: {
-        subject,
-        facultyId: sessionUser.userId,
-        departmentId,
-        semester: semester || 1,
-        section: section || "A",
-        date: sessionDate,
-        createdAt: sessionDate,
-        lockedAt,
-        isLockedOverride: false,
-      },
-      include: {
-        department: true,
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      session: newSession,
-      lockoutStatus: checkAttendanceLockout({
-        createdAt: newSession.createdAt,
-        isLockedOverride: false,
-      }),
-    });
-  } catch (error: unknown) {
-    console.error("Create session error:", error);
-    const message = error instanceof Error ? error.message : "Failed to create session";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  return NextResponse.json(
+    { error: "Create attendance from the Classroom Roll-Call Ledger using its date and subject controls." },
+    { status: 410 }
+  );
 }
 
-export async function PUT(req: NextRequest) {
-  const sessionUser = getSessionFromRequest(req);
-  if (!sessionUser || !["FACULTY", "HOD", "PRINCIPAL"].includes(sessionUser.role)) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
+export async function PUT(request: NextRequest) {
+  const session = getSessionFromRequest(request);
+  if (!session || !ALLOWED_ROLES.includes(session.role)) {
+    return NextResponse.json({ error: "Faculty access required." }, { status: 403 });
   }
-
-  try {
-    const body = await req.json();
-    const { sessionId, records } = body;
-
-    if (!sessionId || !Array.isArray(records)) {
-      return NextResponse.json(
-        { error: "sessionId and records array are required." },
-        { status: 400 }
-      );
-    }
-
-    const session = await prisma.attendanceSession.findUnique({
-      where: { id: sessionId },
-    });
-
-    if (!session) {
-      return NextResponse.json({ error: "Attendance session not found." }, { status: 404 });
-    }
-
-    const lockout = checkAttendanceLockout({
-      createdAt: session.createdAt,
-      isLockedOverride: session.isLockedOverride,
-    });
-
-    if (lockout.isLocked) {
-      return NextResponse.json(
-        {
-          error:
-            "Attendance session is locked. 24 hours have elapsed since creation. Requires HOD or Principal override to edit.",
-          isLocked: true,
-          lockedAt: session.lockedAt,
-        },
-        { status: 403 }
-      );
-    }
-
-    await prisma.$transaction(
-      records.map((r) =>
-        prisma.sessionAttendanceRecord.upsert({
-          where: {
-            sessionId_studentId: {
-              sessionId,
-              studentId: r.studentId,
-            },
-          },
-          update: {
-            status: r.status,
-            remarks: r.remarks,
-          },
-          create: {
-            sessionId,
-            studentId: r.studentId,
-            status: r.status,
-            remarks: r.remarks,
-          },
-        })
-      )
-    );
-
-    return NextResponse.json({
-      success: true,
-      message: `Successfully recorded attendance for ${records.length} students.`,
-      updatedCount: records.length,
-    });
-  } catch (error: unknown) {
-    console.error("Attendance submission error:", error);
-    const message = error instanceof Error ? error.message : "Failed to record attendance";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  return NextResponse.json(
+    { error: "Update attendance from the Classroom Roll-Call Ledger using its date and subject controls." },
+    { status: 410 }
+  );
 }

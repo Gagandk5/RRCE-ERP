@@ -10,8 +10,6 @@ import {
   Clock,
   Database,
   RefreshCw,
-  Lock,
-  Unlock,
   LogOut,
   Shield,
 } from "lucide-react";
@@ -28,9 +26,8 @@ export default function PrincipalPortal() {
   });
   const [departments, setDepartments] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
-  const [lockedSessions, setLockedSessions] = useState<any[]>([]);
+  const [attendanceSessions, setAttendanceSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [overrideLoading, setOverrideLoading] = useState<string | null>(null);
   const [seedLoading, setSeedLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -79,7 +76,7 @@ export default function PrincipalPortal() {
       const sessRes = await fetch("/api/attendance/session");
       if (sessRes.ok) {
         const data = await sessRes.json();
-        setLockedSessions(data.sessions || []);
+        setAttendanceSessions(data.sessions || []);
       }
     } catch (e) {
       console.error("Failed to load dashboard data:", e);
@@ -95,33 +92,6 @@ export default function PrincipalPortal() {
       router.refresh();
     } catch (e) {
       console.error("Logout failed:", e);
-    }
-  }
-
-  async function handleUnlockOverride(sessionId: string) {
-    setOverrideLoading(sessionId);
-    setMessage(null);
-    try {
-      const res = await fetch("/api/attendance/unlock", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId,
-          reason: "Executive Principal Override for late attendance submission.",
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setMessage("Principal Override Granted: Attendance session unlocked for 24h editing.");
-        await loadDashboardData();
-      } else {
-        setMessage(data.error || "Override request failed.");
-      }
-    } catch {
-      setMessage("Failed to submit override.");
-    } finally {
-      setOverrideLoading(null);
     }
   }
 
@@ -301,67 +271,34 @@ export default function PrincipalPortal() {
           </div>
         </div>
 
-        <div className="lg:col-span-5 bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-4">
+        <div className="lg:col-span-5 space-y-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2 text-slate-900 font-bold text-sm border-b border-slate-100 pb-3">
-            <Lock className="w-4 h-4 text-slate-700" />
-            24-Hour Attendance Lockout Review
+            <Clock className="w-4 h-4 text-slate-700" />
+            Recent Attendance Sessions
           </div>
 
           <div className="space-y-2.5">
-            {lockedSessions.length === 0 ? (
+            {attendanceSessions.length === 0 ? (
               <p className="text-xs text-slate-400 italic">No attendance sessions recorded yet.</p>
             ) : (
-              lockedSessions.map((session) => {
-                const isLocked = session.lockoutStatus?.isLocked && !session.isLockedOverride;
-                return (
+              attendanceSessions.map((session) => (
                   <div
                     key={session.id}
-                    className={`p-3 rounded-md border ${
-                      session.isLockedOverride
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-900"
-                        : isLocked
-                        ? "bg-amber-50 border-amber-200 text-amber-900"
-                        : "bg-slate-50 border-slate-200 text-slate-700"
-                    }`}
+                    className="rounded-md border border-slate-200 bg-slate-50 p-3 text-slate-700"
                   >
                     <div className="flex items-center justify-between font-bold">
                       <span>{session.subject}</span>
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase border ${
-                          session.isLockedOverride
-                            ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                            : isLocked
-                            ? "bg-amber-100 text-amber-800 border-amber-200"
-                            : "bg-blue-100 text-blue-800 border-blue-200"
-                        }`}
-                      >
-                        {session.isLockedOverride ? "Unlocked (Override)" : isLocked ? "Locked (>24h)" : "Active"}
+                      <span className="rounded border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600">
+                        Historical dates supported
                       </span>
                     </div>
 
                     <div className="mt-1 text-[11px] opacity-80 flex items-center justify-between font-mono">
                       <span>Faculty: Prof. {session.faculty?.firstName} {session.faculty?.lastName}</span>
-                      <span>{session.department?.code} Sem {session.semester}</span>
+                      <span>{session.department?.code} Sem {session.semester} · {new Date(session.date).toLocaleDateString("en-IN")}</span>
                     </div>
-
-                    {isLocked && (
-                      <div className="mt-2.5 pt-2 border-t border-amber-200 flex items-center justify-between">
-                        <span className="text-[11px] text-amber-800 font-medium">
-                          Lockout enforced.
-                        </span>
-                        <button
-                          onClick={() => handleUnlockOverride(session.id)}
-                          disabled={overrideLoading === session.id}
-                          className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-[11px] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50"
-                        >
-                          <Unlock className="w-3 h-3" />
-                          {overrideLoading === session.id ? "Unlocking..." : "Principal Override"}
-                        </button>
-                      </div>
-                    )}
                   </div>
-                );
-              })
+                ))
             )}
           </div>
         </div>

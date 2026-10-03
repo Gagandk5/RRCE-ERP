@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import { formatINR } from "@/lib/utils";
 import { ProfileAvatar } from "@/components/ProfileContext";
 
@@ -10,25 +11,42 @@ export default function StudentOverviewPage() {
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [attendanceSummary, setAttendanceSummary] = useState({ totalHeld: 0, totalAttended: 0 });
+  const [lowAttendanceAlerts, setLowAttendanceAlerts] = useState<Array<{
+    subjectId: string;
+    code: string;
+    name: string;
+    percentage: number;
+    threshold: number;
+  }>>([]);
 
   useEffect(() => {
     loadStudentData();
     async function loadAttendanceSummary() {
       try {
         const response = await fetch("/api/student/attendance", { cache: "no-store" });
-        if (!response.ok) return;
+        if (!response.ok) throw new Error("Could not load attendance summary.");
         const data = await response.json();
         setAttendanceSummary({
           totalHeld: data.totalHeld || 0,
           totalAttended: data.totalAttended || 0,
         });
+        setLowAttendanceAlerts(data.alerts || []);
       } catch (error) {
         console.error("Failed to load attendance summary:", error);
       }
     }
     void loadAttendanceSummary();
     const refreshTimer = window.setInterval(() => void loadAttendanceSummary(), 10000);
-    return () => window.clearInterval(refreshTimer);
+    window.addEventListener("focus", loadAttendanceSummary);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void loadAttendanceSummary();
+    };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(refreshTimer);
+      window.removeEventListener("focus", loadAttendanceSummary);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, []);
 
   async function loadStudentData() {
@@ -158,6 +176,38 @@ export default function StudentOverviewPage() {
           </span>
         </div>
       </div>
+
+      {lowAttendanceAlerts.length > 0 && (
+        <section
+          aria-labelledby="attendance-alerts-heading"
+          className="rounded-2xl border border-rose-200 bg-rose-50 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] sm:p-5"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
+            <div className="min-w-0 flex-1">
+              <h2 id="attendance-alerts-heading" className="text-xs font-bold tracking-wider text-rose-900">
+                ATTENDANCE ALERTS
+              </h2>
+              <p className="mt-1 text-xs text-rose-800">
+                Subject attendance below the required 85% threshold.
+              </p>
+              <ul className="mt-3 space-y-2">
+                {lowAttendanceAlerts.map((alert) => (
+                  <li key={alert.subjectId} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-rose-200/80 pt-2 text-xs">
+                    <span className="font-semibold text-rose-950">{alert.name}</span>
+                    <span className="font-mono font-bold text-rose-800">
+                      {alert.percentage.toFixed(1)}% · Below {alert.threshold}%
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Link href="/student/attendance" className="shrink-0 text-xs font-semibold text-rose-800 underline underline-offset-2">
+              Details
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* 2. STATUS CARDS (RESPONSIVE GRID: 1 COL MOBILE, 2 COL TABLET, 3 COL DESKTOP) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">

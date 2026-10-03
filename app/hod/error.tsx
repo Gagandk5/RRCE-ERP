@@ -23,7 +23,7 @@ export default function HodError({
         </div>
         <h2 className="text-lg font-bold text-slate-900 mb-1">Department Desk Error</h2>
         <p className="text-xs text-slate-600 mb-6">
-          Could not load the department governance or lockout override desk.
+          Could not load the department governance dashboard.
         </p>
 
         <div className="flex gap-2 justify-center">

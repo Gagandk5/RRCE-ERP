@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession, resolveSessionUser } from "@/lib/auth";
+import { isFutureAttendanceDate } from "@/lib/attendance";
 import prisma from "@/lib/prisma";
-import { checkAttendanceLockout } from "@/lib/utils";
 
 export type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE";
 
@@ -30,6 +30,9 @@ export async function submitAttendance(data: AttendanceSubmission) {
 	const date = new Date(`${data.date}T00:00:00.000Z`);
 	if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== data.date) {
 		return { success: false, error: "Choose a valid attendance date." };
+	}
+	if (isFutureAttendanceDate(data.date)) {
+		return { success: false, error: "Attendance cannot be entered for a future date." };
 	}
 
 	try {
@@ -69,30 +72,6 @@ export async function submitAttendance(data: AttendanceSubmission) {
 			where: existingSessionWhere,
 		});
 
-		if (existingSession) {
-			const lockout = checkAttendanceLockout({
-				createdAt: existingSession.createdAt,
-				isLockedOverride: existingSession.isLockedOverride,
-			});
-			if (lockout.isLocked && session.role !== "HOD" && session.role !== "PRINCIPAL") {
-				return {
-					success: false,
-					error: "Attendance session is locked. 24 hours have elapsed since creation. Requires HOD or Principal override to edit.",
-					isLocked: true,
-				};
-			}
-		} else {
-			const now = Date.now();
-			const elapsed = now - date.getTime();
-			if (elapsed > 36 * 60 * 60 * 1000 && session.role !== "HOD" && session.role !== "PRINCIPAL") {
-				return {
-					success: false,
-					error: "Cannot create attendance records for dates older than 24 hours without HOD unlock.",
-					isLocked: true,
-				};
-			}
-		}
-
 		const studentIds = Array.from(new Set(data.records.map((record) => record.studentId)));
 		if (studentIds.length !== data.records.length) {
 			return { success: false, error: "The roster contains duplicate students." };
@@ -125,8 +104,8 @@ export async function submitAttendance(data: AttendanceSubmission) {
 					semester: subject.semester,
 					section: subject.section,
 					date,
-					createdAt: date > new Date() ? new Date() : date,
-					lockedAt: new Date(date.getTime() + 24 * 60 * 60 * 1000),
+					createdAt: new Date(),
+					lockedAt: null,
 					isLockedOverride: false,
 				},
 			});

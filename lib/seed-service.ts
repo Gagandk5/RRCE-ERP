@@ -2,26 +2,7 @@ import prisma from "./prisma";
 import { hashPassword } from "./auth";
 import { generateDefaultPassword, generateUSN } from "./utils";
 import { DEPARTMENTS, STAFF_ACCOUNTS, BCA_2025_STUDENTS, getSeedPassword } from "../prisma/seed-data";
-
-const SUBJECT_CATALOG = [
-  { code: "B25BCA301", name: "Digital Principles & Computer Organization", semester: 3, section: "A" },
-  { code: "B25BCA302", name: "OOP in C++ & Lab", semester: 3, section: "A" },
-  { code: "B25BCA303", name: "Operating System Concepts", semester: 3, section: "A" },
-  { code: "B25BCA304", name: "RDBMS & Lab", semester: 3, section: "A" },
-  { code: "B25BCA305", name: "Software Engineering", semester: 3, section: "A" },
-  { code: "B25BCA306", name: "Reasoning & Aptitude", semester: 3, section: "A" },
-  { code: "B25BCAL307", name: "OOP C++ Lab", semester: 3, section: "A" },
-];
-
-const FACULTY_COURSE_MAPPINGS = [
-  { email: "jaishankar.m@rrce.org", code: "B25BCA301" },
-  { email: "shreya.s@rrce.org", code: "B25BCA302" },
-  { email: "thilagavallii.s@rrce.org", code: "B25BCA303" },
-  { email: "pushpalatha.g@rrce.org", code: "B25BCA304" },
-  { email: "deeraj.c@rrce.org", code: "B25BCA305" },
-  { email: "darshan.p@rrce.org", code: "B25BCA306" },
-  { email: "muruganandham.sk@rrce.org", code: "B25BCAL307" },
-];
+import { seedBcaTimetable } from "./bca-timetable-seed";
 
 export async function runDatabaseSeed() {
   console.log("Starting RRCE ERP database seed with real course assignments...");
@@ -71,52 +52,7 @@ export async function runDatabaseSeed() {
   }
 
   const bcaDeptId = deptMap.get("BCA")!;
-  for (const subject of SUBJECT_CATALOG) {
-    await prisma.subject.upsert({
-      where: {
-        code_departmentId_semester_section: {
-          code: subject.code,
-          departmentId: bcaDeptId,
-          semester: subject.semester,
-          section: subject.section,
-        },
-      },
-      update: { name: subject.name, isActive: true },
-      create: {
-        code: subject.code,
-        name: subject.name,
-        departmentId: bcaDeptId,
-        semester: subject.semester,
-        section: subject.section,
-        isActive: true,
-      },
-    });
-  }
-
-  for (const mapping of FACULTY_COURSE_MAPPINGS) {
-    const facultyId = staffMap.get(mapping.email);
-    if (!facultyId) continue;
-    const subjectRecord = await prisma.subject.findFirst({
-      where: {
-        code: mapping.code,
-        departmentId: bcaDeptId,
-      },
-    });
-    if (!subjectRecord) continue;
-
-    await prisma.facultyCourseAssignment.upsert({
-      where: { facultyId_subjectId: { facultyId, subjectId: subjectRecord.id } },
-      update: { isActive: true, departmentId: bcaDeptId, semester: subjectRecord.semester, section: subjectRecord.section },
-      create: {
-        facultyId,
-        subjectId: subjectRecord.id,
-        departmentId: bcaDeptId,
-        semester: subjectRecord.semester,
-        section: subjectRecord.section,
-        isActive: true,
-      },
-    });
-  }
+  const timetableSeed = await seedBcaTimetable(bcaDeptId, staffMap);
 
   const studentIds: string[] = [];
   for (const student of BCA_2025_STUDENTS) {
@@ -229,8 +165,6 @@ export async function runDatabaseSeed() {
         section: "A",
         date: recentPast,
         createdAt: recentPast,
-        lockedAt: new Date(recentPast.getTime() + 24 * 60 * 60 * 1000),
-        isLockedOverride: false,
       },
     });
 
@@ -251,7 +185,8 @@ export async function runDatabaseSeed() {
         departmentsSeeded: DEPARTMENTS.length,
         staffSeeded: STAFF_ACCOUNTS.length,
         studentSeeded: BCA_2025_STUDENTS.length,
-        courseAssignments: FACULTY_COURSE_MAPPINGS.length,
+        courseAssignments: timetableSeed.courseAssignmentsCount,
+        timetableSlots: timetableSeed.timetableSlotsCount,
       }),
     },
   });
@@ -261,6 +196,7 @@ export async function runDatabaseSeed() {
     departmentsCount: DEPARTMENTS.length,
     staffCount: STAFF_ACCOUNTS.length,
     studentsCount: BCA_2025_STUDENTS.length,
-    courseAssignmentsCount: FACULTY_COURSE_MAPPINGS.length,
+    courseAssignmentsCount: timetableSeed.courseAssignmentsCount,
+    timetableSlotsCount: timetableSeed.timetableSlotsCount,
   };
 }

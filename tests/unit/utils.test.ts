@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { generateUSN, generateDefaultPassword, checkAttendanceLockout, formatINR } from "@/lib/utils";
+import { generateUSN, generateDefaultPassword, formatINR } from "@/lib/utils";
+import { getAttendanceDateString, isFutureAttendanceDate } from "@/lib/attendance";
 
 describe("lib/utils - Institutional Utilities", () => {
   it("should generate standardized USN correctly", () => {
@@ -22,25 +23,15 @@ describe("lib/utils - Institutional Utilities", () => {
     expect(pwd3).toBe("ALR050108");
   });
 
-  it("should check 24-hour attendance lockout rule accurately", () => {
-    // Session created 2 hours ago (not locked)
-    const recent = new Date(Date.now() - 2 * 60 * 60 * 1000);
-    const recentCheck = checkAttendanceLockout({ createdAt: recent });
-    expect(recentCheck.isLocked).toBe(false);
-    expect(recentCheck.remainingMs).toBeGreaterThan(0);
+  it("should compare attendance dates in the institutional timezone and reject only future dates", () => {
+    const beforeKolkataMidnight = new Date("2026-10-03T18:29:00.000Z");
+    const afterKolkataMidnight = new Date("2026-10-03T18:31:00.000Z");
 
-    // Session created 26 hours ago (locked)
-    const old = new Date(Date.now() - 26 * 60 * 60 * 1000);
-    const oldCheck = checkAttendanceLockout({ createdAt: old });
-    expect(oldCheck.isLocked).toBe(true);
-    expect(oldCheck.remainingMs).toBe(0);
-
-    // Session with override active (never locked)
-    const overrideCheck = checkAttendanceLockout({
-      createdAt: old,
-      isLockedOverride: true,
-    });
-    expect(overrideCheck.isLocked).toBe(false);
+    expect(getAttendanceDateString(beforeKolkataMidnight)).toBe("2026-10-03");
+    expect(getAttendanceDateString(afterKolkataMidnight)).toBe("2026-10-04");
+    expect(isFutureAttendanceDate("2026-10-04", beforeKolkataMidnight)).toBe(true);
+    expect(isFutureAttendanceDate("2026-10-03", beforeKolkataMidnight)).toBe(false);
+    expect(isFutureAttendanceDate("2026-09-01", beforeKolkataMidnight)).toBe(false);
   });
 
   it("should format Indian Rupee currency correctly", () => {

@@ -25,9 +25,20 @@ export default function FacultyLayout({
   const [facultyUser, setFacultyUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     fetchSession();
+  }, [pathname]);
+
+  useEffect(() => {
+    function syncActiveTab() {
+      setActiveTab(new URLSearchParams(window.location.search).get("tab") || "overview");
+    }
+
+    syncActiveTab();
+    window.addEventListener("popstate", syncActiveTab);
+    return () => window.removeEventListener("popstate", syncActiveTab);
   }, [pathname]);
 
   async function fetchSession() {
@@ -59,7 +70,7 @@ export default function FacultyLayout({
       name: "Today's Schedule",
       href: "/faculty",
       icon: LayoutDashboard,
-      active: pathname === "/faculty",
+      active: pathname === "/faculty" && activeTab === "overview",
     },
     {
       name: "Roll-Call Attendance",
@@ -71,27 +82,27 @@ export default function FacultyLayout({
       name: "Timetable & Planner",
       href: "/faculty?tab=schedule",
       icon: CalendarDays,
-      active: false,
+      active: pathname === "/faculty" && (activeTab === "schedule" || activeTab === "calendar"),
     },
     {
       name: "Marks Entry (CIE)",
       href: "/faculty?tab=marks",
       icon: GraduationCap,
-      active: false,
+      active: pathname === "/faculty" && activeTab === "marks",
     },
     {
       name: "Mentorship & Proctoring",
       href: "/faculty?tab=risk",
       icon: Users,
-      active: false,
+      active: pathname === "/faculty" && activeTab === "risk",
     },
   ];
 
   const displayName = facultyUser
     ? `${facultyUser.firstName} ${facultyUser.lastName}`
-    : "Prof. Jaishankar M";
-  const displayEmail = facultyUser?.email || "jaishankar.m@rrce.org";
-  const displayDept = facultyUser?.departmentCode || "BCA";
+    : loading ? "Loading faculty profile…" : "Faculty";
+  const displayEmail = facultyUser?.email || "";
+  const displayDept = facultyUser?.department?.name || facultyUser?.department?.code || "Department not set";
 
   const initials = displayName
     .split(" ")
@@ -116,12 +127,12 @@ export default function FacultyLayout({
                   RRCE Faculty
                 </span>
                 <span className="text-[10px] text-zinc-500 font-mono block leading-tight">
-                  Department of {displayDept}
+                    {displayDept}
                 </span>
               </div>
             </Link>
             <span className="font-mono text-[10px] bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-md font-semibold border border-zinc-200/80 shrink-0">
-              AY 2025–26 • Sem 3
+              AY 2026–27 • ODD SEM
             </span>
           </div>
 
@@ -136,6 +147,12 @@ export default function FacultyLayout({
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={() => setActiveTab(
+                    item.name === "Timetable & Planner" ? "schedule" :
+                    item.name === "Marks Entry (CIE)" ? "marks" :
+                    item.name === "Mentorship & Proctoring" ? "risk" :
+                    "overview"
+                  )}
                   className={`rounded-xl px-3.5 py-2.5 text-xs font-medium transition-colors flex items-center gap-3 ${
                     item.active
                       ? "bg-zinc-100 text-zinc-950 font-semibold border border-zinc-200/60 shadow-2xs"
@@ -197,8 +214,8 @@ export default function FacultyLayout({
           <span className="font-semibold text-sm text-zinc-900">
             RRCE Faculty
           </span>
-          <span className="text-[10px] font-mono bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-200">
-            Sem 3
+          <span className="max-w-32 truncate text-[10px] font-mono bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-200">
+            {displayDept}
           </span>
         </Link>
 

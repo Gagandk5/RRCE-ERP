@@ -983,7 +983,7 @@ export default function AdmissionsPortal() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-600">
                   <div className="bg-white p-2 rounded border border-slate-200">
                     <span className="font-semibold block text-slate-800">Attendance Records</span>
-                    <span className="text-[10px] text-slate-500">Governed exclusively by Faculty Roll-Call & VTU Lockout protocols. Admissions cannot modify attendance.</span>
+                    <span className="text-[10px] text-slate-500">Attendance is managed by faculty through the Roll-Call ledger. Admissions cannot modify attendance.</span>
                   </div>
                   <div className="bg-white p-2 rounded border border-slate-200">
                     <span className="font-semibold block text-slate-800">CIE & Semester Marks</span>

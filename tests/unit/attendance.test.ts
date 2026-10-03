@@ -3,6 +3,7 @@ import {
   countsAsPresent,
   isValidAttendanceStatus,
   computeAttendancePercentage,
+  isBelowAttendanceThreshold,
   summarizeSessionAttendance,
 } from "@/lib/attendance";
 
@@ -25,6 +26,13 @@ describe("lib/attendance - Institutional Attendance Logic", () => {
     expect(computeAttendancePercentage(15, 20)).toBe(75.0);
     expect(computeAttendancePercentage(0, 10)).toBe(0);
     expect(computeAttendancePercentage(5, 0)).toBe(0);
+  });
+
+  it("triggers low attendance strictly below 85 percent", () => {
+    expect(isBelowAttendanceThreshold(84, 100)).toBe(true);
+    expect(isBelowAttendanceThreshold(17, 20)).toBe(false);
+    expect(isBelowAttendanceThreshold(86, 100)).toBe(false);
+    expect(isBelowAttendanceThreshold(0, 0)).toBe(false);
   });
 
   it("should summarize session attendance records properly", () => {

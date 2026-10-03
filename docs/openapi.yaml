@@ -195,7 +195,7 @@ paths:
           description: Attendance sessions and timetable slots for logged-in professor.
     post:
       summary: Mark or Update Attendance
-      description: Records PRESENT/ABSENT/LATE status for batch of students. Locked after 24 hours unless overridden by HOD.
+      description: Creates or updates attendance for an assigned subject and class date. Today and past dates are allowed; future dates are rejected.
       requestBody:
         required: true
         content:
@@ -203,11 +203,15 @@ paths:
             schema:
               type: object
               required:
-                - sessionId
+                - subjectId
+                - date
                 - records
               properties:
-                sessionId:
+                subjectId:
                   type: string
+                date:
+                  type: string
+                  format: date
                 records:
                   type: array
                   items:
@@ -225,31 +229,36 @@ paths:
         200:
           description: Attendance saved.
 
-  /attendance/unlock:
-    post:
-      summary: Override 24-Hour Attendance Lockout
-      description: Allows HOD or Principal to unlock historical attendance sessions with audit logging.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - sessionId
-                - reason
-              properties:
-                sessionId:
-                  type: string
-                reason:
-                  type: string
+  /attendance/session:
+    get:
+      summary: List scoped attendance session summaries
+      description: Faculty see only their own sessions, HODs see only their department, and Principals may filter the institution-wide list.
       responses:
         200:
-          description: Session unlocked.
+          description: Scoped attendance session summaries without lockout fields or student rosters.
+    post:
+      summary: Legacy attendance session creation
+      responses:
+        410:
+          description: Create attendance through the Faculty Roll-Call Ledger.
+    put:
+      summary: Legacy attendance session update
+      responses:
+        410:
+          description: Update attendance through the Faculty Roll-Call Ledger.
+
+  /attendance/unlock:
+    post:
+      summary: Legacy attendance unlock endpoint
+      description: Attendance is editable for any valid date up to today. No administrative unlock is required; this legacy endpoint returns HTTP 410.
+      responses:
+        410:
+          description: Attendance unlocks are no longer needed.
 
   /timetable:
     get:
       summary: Get Academic Timetable
+      description: Faculty receive only the 2026–27 timetable slots that match their active subject assignments, plus detected clashes. The planner's academic calendar is maintained separately from daily schedule data.
       parameters:
         - name: dept
           in: query
@@ -257,4 +266,4 @@ paths:
             type: string
       responses:
         200:
-          description: Weekly timetable slots.
+          description: Weekly timetable slots and clash summary.
