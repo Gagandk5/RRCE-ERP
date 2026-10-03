@@ -67,6 +67,7 @@ export async function GET(req: NextRequest) {
             firstName: user.firstName,
             lastName: user.lastName,
             phone: user.phone,
+            photoUrl: user.photoUrl,
             isPasswordResetRequired: user.isPasswordResetRequired,
             department: user.department,
             studentProfile: user.studentProfile,

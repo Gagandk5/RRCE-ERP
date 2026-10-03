@@ -245,7 +245,10 @@ export default function StudentLayout({
 
           {/* STUDENT PROFILE IDENTITY */}
           <div className="flex items-center gap-2.5">
-            <ProfileAvatar sizeClassName="h-8 w-8 sm:h-9 sm:w-9" />
+            <ProfileAvatar
+              sizeClassName="h-8 w-8 sm:h-9 sm:w-9"
+              name={`${student?.user?.firstName || ""} ${student?.user?.lastName || ""}`.trim()}
+            />
             <div className="text-left hidden sm:block">
               <span className="text-xs font-semibold text-zinc-900 block leading-tight">
                 {student?.user?.firstName

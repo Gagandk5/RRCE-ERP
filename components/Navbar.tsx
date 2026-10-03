@@ -44,7 +44,7 @@ export default function Navbar() {
 
   async function checkSession() {
     try {
-      const res = await fetch("/api/auth/me");
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setCurrentUser(data.user || null);

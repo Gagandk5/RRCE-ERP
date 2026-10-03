@@ -129,7 +129,10 @@ export default function StudentOverviewPage() {
       {/* 1. UNIFIED HEADER CARD */}
       <div className="bg-white rounded-2xl border border-zinc-200/70 p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
         <div className="flex items-center gap-3.5 sm:gap-4">
-          <ProfileAvatar sizeClassName="h-12 w-12 sm:h-16 sm:w-16 shrink-0" />
+          <ProfileAvatar
+            sizeClassName="h-12 w-12 sm:h-16 sm:w-16 shrink-0"
+            name={`${student?.user?.firstName || ""} ${student?.user?.lastName || ""}`.trim()}
+          />
           <div>
             <h1 className="text-lg sm:text-xl font-semibold text-zinc-900 tracking-tight">
               Good morning, {student?.user?.firstName || (loading ? "..." : "Student")}
